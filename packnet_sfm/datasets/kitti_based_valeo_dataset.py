@@ -7,7 +7,7 @@ import os
 from torch.utils.data import Dataset
 
 from packnet_sfm.datasets.kitti_based_valeo_dataset_utils import \
-    pose_from_oxts_packet, read_calib_file, transform_from_rot_trans
+    pose_from_oxts_packet, read_calib_file, read_raw_calib_files_camera_valeo, transform_from_rot_trans
 from packnet_sfm.utils.image_valeo import load_convert_image
 from packnet_sfm.geometry.pose_utils import invert_pose_numpy
 
@@ -75,7 +75,7 @@ class KITTIBasedValeoDataset(Dataset):
     """
     def __init__(self, root_dir, file_list, train=True,
                  data_transform=None, depth_type=None, with_pose=False,
-                 back_context=0, forward_context=0, strides=(1,)):
+                 back_context=0, forward_context=0, strides=(1,), cameras=None):
         # Assertions
         backward_context = back_context
         assert backward_context >= 0 and forward_context >= 0, 'Invalid contexts'
@@ -102,6 +102,9 @@ class KITTIBasedValeoDataset(Dataset):
         self.calibration_cache = {}
         self.imu2velo_calib_cache = {}
         self.sequence_origin_cache = {}
+
+        self.cameras = cameras
+        self.num_cameras = len(cameras)
 
         with open(file_list, "r") as f:
             data = f.readlines()
@@ -149,17 +152,36 @@ class KITTIBasedValeoDataset(Dataset):
         return os.path.abspath(os.path.join(image_file, "../../../.."))
 
     @staticmethod
-    def _get_intrinsics(image_file, calib_data):
+    def _get_current_folder(image_file):
+        """Get the current folder from image_file."""
+        return os.path.dirname(image_file)
+
+    def _get_intrinsics(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
-        for cam in ['left', 'right']:
+        for cam in self.cameras:
             # Check for both cameras, if found replace and return intrinsics
-            if IMAGE_FOLDER[cam] in image_file:
-                return np.reshape(calib_data[IMAGE_FOLDER[cam].replace('image', 'P_rect')], (3, 4))[:, :3]
+            if cam in image_file:
+                #intr = calib_data[cam]['intrinsics']
+                base_intr = calib_data[cam]['base_intrinsics']
+                fx = fy = 0.5 * float(base_intr['img_width_px'])
+                cx = 0.5 * float(base_intr['img_width_px']) + float(base_intr['cx_offset_px'])
+                cy = 0.5 * float(base_intr['img_height_px']) + float(base_intr['cx_offset_px'])
+                return np.array([[fx, 0, cx],
+                                 [0, fy, cy],
+                                 [0,  0,  1]])
+
+    # @staticmethod
+    # def _read_raw_calib_file(folder):
+    #     """Read raw calibration files from folder."""
+    #     return read_calib_file(os.path.join(folder, CALIB_FILE['cam2cam']))
 
     @staticmethod
-    def _read_raw_calib_file(folder):
+    def _read_raw_calib_files(folder, cameras):
         """Read raw calibration files from folder."""
-        return read_calib_file(os.path.join(folder, CALIB_FILE['cam2cam']))
+        data = {}
+        for camera in cameras:
+            data[camera] = read_raw_calib_files_camera_valeo(folder, camera)
+        return data
 
 ########################################################################################################################
 #### DEPTH
@@ -365,12 +387,13 @@ class KITTIBasedValeoDataset(Dataset):
         }
 
         # Add intrinsics
-        parent_folder = self._get_parent_folder(self.paths[idx])
-        if parent_folder in self.calibration_cache:
-            c_data = self.calibration_cache[parent_folder]
+        #parent_folder = self._get_parent_folder(self.paths[idx])
+        current_folder = self._get_current_folder(self.paths[idx])
+        if current_folder in self.calibration_cache:
+            c_data = self.calibration_cache[current_folder]
         else:
-            c_data = self._read_raw_calib_file(parent_folder)
-            self.calibration_cache[parent_folder] = c_data
+            c_data = self._read_raw_calib_files(current_folder, self.cameras)
+            self.calibration_cache[current_folder] = c_data
         sample.update({
             'intrinsics': self._get_intrinsics(self.paths[idx], c_data),
         })

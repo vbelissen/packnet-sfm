@@ -28,7 +28,7 @@ datasets:
     train:
         batch_size: 1
         dataset: ['Image']
-        path: ['/home/vbelissen/data/datasets/Valeo_test/fisheye']
+        path: ['/home/vbelissen/data/datasets/Valeo_test/img_fisheye']
         split: ['Video_oImageFront_{:0d}']
         depth_type: ['']
         repeat: [1]

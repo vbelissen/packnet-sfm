@@ -28,9 +28,10 @@ datasets:
     train:
         batch_size: 1
         dataset: ['KITTIValeo']
-        path: ['/home/vbelissen/data/datasets/Valeo_test/perspective']
+        path: ['/home/vbelissen/data/datasets/Valeo_test/img_perspective']
         split: ['test.txt']
         depth_type: ['']
+        cameras: [['Front']]
         repeat: [1]
     validation:
         dataset: ['KITTI']

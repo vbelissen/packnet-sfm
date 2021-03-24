@@ -3,6 +3,8 @@
 from collections import namedtuple
 
 import numpy as np
+import os
+import csv
 
 __author__ = "Lee Clement"
 __email__ = "lee.clement@robotics.utias.utoronto.ca"
@@ -38,9 +40,9 @@ def rotx(t):
     """
     c = np.cos(t)
     s = np.sin(t)
-    return np.array([[1,  0,  0],
-                     [0,  c, -s],
-                     [0,  s,  c]])
+    return np.array([[1, 0, 0],
+                     [0, c, -s],
+                     [0, s, c]])
 
 
 def roty(t):
@@ -59,9 +61,9 @@ def roty(t):
     """
     c = np.cos(t)
     s = np.sin(t)
-    return np.array([[c,  0,  s],
-                     [0,  1,  0],
-                     [-s, 0,  c]])
+    return np.array([[c, 0, s],
+                     [0, 1, 0],
+                     [-s, 0, c]])
 
 
 def rotz(t):
@@ -80,9 +82,9 @@ def rotz(t):
     """
     c = np.cos(t)
     s = np.sin(t)
-    return np.array([[c, -s,  0],
-                     [s,  c,  0],
-                     [0,  0,  1]])
+    return np.array([[c, -s, 0],
+                     [s, c, 0],
+                     [0, 0, 1]])
 
 
 def transform_from_rot_trans(R, t):
@@ -135,6 +137,15 @@ def read_calib_file(filepath):
     return data
 
 
+def read_raw_calib_files_camera_valeo(folder, camera):
+    data = {}
+    types_calib = ['intrinsics', 'base_intrinsics', 'extrinsics']
+    for type_calib in types_calib:
+        raw_file = open(os.path.join(folder, 'cam_' + camera + '_' + type_calib + '.txt'), 'r')
+        data[type_calib] = dict(list(csv.DictReader(raw_file))[0])
+    return data
+
+
 def pose_from_oxts_packet(raw_data, scale):
     """
     Helper method to compute a SE(3) pose matrix from an OXTS packet
@@ -159,7 +170,7 @@ def pose_from_oxts_packet(raw_data, scale):
     # Use a Mercator projection to get the translation vector
     tx = scale * packet.lon * np.pi * er / 180.
     ty = scale * er * \
-        np.log(np.tan((90. + packet.lat) * np.pi / 360.))
+         np.log(np.tan((90. + packet.lat) * np.pi / 360.))
     tz = packet.alt
     t = np.array([tx, ty, tz])
 
@@ -219,5 +230,3 @@ def load_oxts_packets_and_poses(oxts_files):
                 oxts.append(OxtsData(packet, T_w_imu))
 
     return oxts
-
-

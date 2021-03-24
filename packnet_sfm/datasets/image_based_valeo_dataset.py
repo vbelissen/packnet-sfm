@@ -46,7 +46,7 @@ def read_files(directory, ext=('.png', '.jpg', '.jpeg'), skip_empty=True):
 class ImageBasedValeoDataset(Dataset):
     def __init__(self, root_dir, split, data_transform=None,
                  forward_context=0, back_context=0, strides=(1,),
-                 depth_type=None, **kwargs):
+                 depth_type=None, cameras=None, **kwargs):
         super().__init__()
         # Asserts
         assert depth_type is None or depth_type == '', \
@@ -61,6 +61,9 @@ class ImageBasedValeoDataset(Dataset):
         self.forward_context = forward_context
         self.has_context = self.backward_context + self.forward_context > 0
         self.strides = 1
+
+        self.cameras = cameras
+        self.num_cameras = len(cameras)
 
         self.files = []
         file_tree = read_files(root_dir)

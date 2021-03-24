@@ -541,6 +541,7 @@ def setup_dataset(config, mode, requirements, **kwargs):
             dataset = KITTIBasedValeoDataset(
                 config.path[i], path_split,
                 **dataset_args, **dataset_args_i,
+                cameras=config.cameras[i],
             )
         # Image-based Valeo dataset
         elif config.dataset[i] == 'ImageValeo':
@@ -548,6 +549,7 @@ def setup_dataset(config, mode, requirements, **kwargs):
             dataset = ImageBasedValeoDataset(
                 config.path[i], config.split[i],
                 **dataset_args, **dataset_args_i,
+                cameras=config.cameras[i],
             )
         else:
             ValueError('Unknown dataset %d' % config.dataset[i])

@@ -1,0 +1,44 @@
+arch:
+    max_epochs: 50
+model:
+    name: 'SelfSupModel_cpu'
+    optimizer:
+        name: 'Adam'
+        depth:
+            lr: 0.0002
+        pose:
+            lr: 0.0002
+    scheduler:
+        name: 'StepLR'
+        step_size: 30
+        gamma: 0.5
+    depth_net:
+        name: 'DepthResNet'
+        version: '18pt'
+    pose_net:
+        name: 'PoseResNet'
+        version: '18pt'
+    params:
+        crop: 'garg'
+        min_depth: 0.0
+        max_depth: 80.0
+datasets:
+    augmentation:
+        image_shape: (480, 640)
+    train:
+        batch_size: 1
+        dataset: ['KITTIValeo']
+        path: ['/home/vbelissen/data/datasets/Valeo_test/perspective']
+        split: ['test.txt']
+        depth_type: ['']
+        repeat: [1]
+    validation:
+        dataset: ['KITTI']
+        path: ['/home/vbelissen/data/datasets/KITTI_tiny']
+        split: ['kitti_tiny.txt']
+        depth_type: ['velodyne']
+    test:
+        dataset: ['KITTI']
+        path: ['/home/vbelissen/data/datasets/KITTI_tiny']
+        split: ['kitti_tiny.txt']
+        depth_type: ['velodyne']

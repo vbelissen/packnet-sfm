@@ -142,9 +142,9 @@ class KITTIBasedValeoDataset(Dataset):
         """Get next file given next idx and current file."""
         base, ext = os.path.splitext(os.path.basename(file))
         base_splitted = base.split('_')
-        base_number = base_splitted[2]
+        base_number = base_splitted[-1]
         base_camera = base_splitted[1][6:]
-        return os.path.join(os.path.dirname(file), '_'.join(base_splitted[:-1]) + '_' + str(idx) + ext)
+        return os.path.join(os.path.dirname(file), '_'.join(base_splitted[:-1]) + '_' + str(idx).zfill(len(base_number)) + ext)
 
     @staticmethod
     def _get_parent_folder(image_file):
@@ -233,7 +233,7 @@ class KITTIBasedValeoDataset(Dataset):
         """
         base, ext = os.path.splitext(os.path.basename(sample_name))
         base_splitted = base.split('_')
-        base_number = base_splitted[2]
+        base_number = base_splitted[-1]
         base_camera = base_splitted[1][6:]
         parent_folder = os.path.dirname(sample_name)
         f_idx = int(base_number)
@@ -349,9 +349,9 @@ class KITTIBasedValeoDataset(Dataset):
         # Find origin frame in this sequence to determine scale & origin translation
         base, ext = os.path.splitext(os.path.basename(image_file))
         base_splitted = base.split('_')
-        base_number = base_splitted[2]
+        base_number = base_splitted[-1]
         base_camera = base_splitted[1][6:]
-        origin_frame = os.path.join(os.path.dirname(image_file), '_'.join(base_splitted[:-1]) + '_0' + ext)
+        origin_frame = os.path.join(os.path.dirname(image_file), '_'.join(base_splitted[:-1]) + '_' + str(0).zfill(len(base_number)) + ext)
         # Get origin data
         origin_oxts_data = self._get_oxts_data(origin_frame)
         lat = origin_oxts_data[0]

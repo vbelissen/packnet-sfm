@@ -249,7 +249,9 @@ class KITTIBasedValeoDataset(Dataset):
         if parent_folder in self._cache:
             max_num_files = self._cache[parent_folder]
         else:
-            max_num_files = len(glob.glob(os.path.join(parent_folder, '*' + ext)))
+            max_num_files1 = len(glob.glob(os.path.join(parent_folder, '*' + ext)))
+            max_num_files2 = int(os.path.splitext(os.path.basename(sorted(glob.glob(os.path.join(parent_folder, '*' + ext)))[-1]))[0].split('_')[-1]) + 1
+            max_num_files = np.max([max_num_files1, max_num_files2])
             self._cache[parent_folder] = max_num_files
 
         # Check bounds

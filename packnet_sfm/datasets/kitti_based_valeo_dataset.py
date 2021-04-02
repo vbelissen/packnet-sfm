@@ -27,6 +27,13 @@ CALIB_FILE = {
 PNG_DEPTH_DATASETS = ['groundtruth']
 OXTS_POSE_DATA = 'oxts'
 
+CAM_NAMES_CONVERT = {
+    'Front': 'cam_0',
+    'Left':  'cam_1',
+    'Rear':  'cam_2',
+    'Right': 'cam_3',
+}
+
 ########################################################################################################################
 #### FUNCTIONS
 ########################################################################################################################
@@ -160,7 +167,7 @@ class KITTIBasedValeoDataset(Dataset):
         """Get intrinsics from the calib_data dictionary."""
         for cam in self.cameras:
             # Check for both cameras, if found replace and return intrinsics
-            if cam in image_file:
+            if cam in image_file or CAM_NAMES_CONVERT[cam] in image_file:
                 #intr = calib_data[cam]['intrinsics']
                 base_intr = calib_data[cam]['base_intrinsics']
                 fx = fy = 0.5 * float(base_intr['img_width_px'])

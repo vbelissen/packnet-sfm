@@ -262,7 +262,7 @@ class KITTIBasedValeoDataset(Dataset):
         # Backward context
         c_idx = f_idx
         backward_context_idxs = []
-        while len(backward_context_idxs) < backward_context and c_idx > 0:
+        while len(backward_context_idxs) < backward_context and c_idx >= 0:
             c_idx -= stride
             filename = self._get_next_file(c_idx, sample_name)
             if os.path.exists(filename):

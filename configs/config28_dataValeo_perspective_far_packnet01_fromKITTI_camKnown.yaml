@@ -1,7 +1,7 @@
 arch:
     max_epochs: 20
 model:
-    checkpoint_path: '/home/users/vbelissen/packnet_pretrained/PackNet01_MR_selfsup_D.ckpt'
+    checkpoint_path: '/home/users/vbelissen/packnet_pretrained/PackNet01_MR_selfsup_K.ckpt'
     name: 'SelfSupModel'
     optimizer:
         name: 'Adam'

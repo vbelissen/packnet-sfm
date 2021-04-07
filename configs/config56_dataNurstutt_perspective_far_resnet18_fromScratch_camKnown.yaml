@@ -1,24 +1,23 @@
 arch:
     max_epochs: 20
 model:
-    checkpoint_path: '/home/users/vbelissen/packnet_pretrained/PackNet01_MR_selfsup_D.ckpt'
     name: 'SelfSupModel'
     optimizer:
         name: 'Adam'
         depth:
-            lr: 0.000045
+            lr: 0.0002
         pose:
-            lr: 0.000045
+            lr: 0.0002
     scheduler:
         name: 'StepLR'
         step_size: 30
         gamma: 0.5
     depth_net:
-        name: 'PackNet01'
-        version: '1A'
+        name: 'DepthResNet'
+        version: '18pt'
     pose_net:
-        name: 'PoseNet'
-        version: ''
+        name: 'PoseResNet'
+        version: '18pt'
     params:
         crop: ''
         min_depth: 0.0
@@ -27,10 +26,10 @@ datasets:
     augmentation:
         image_shape: (480, 640)
     train:
-        batch_size: 2
+        batch_size: 9
         dataset: ['KITTIValeo']
         path: ['/data/vbelissen/valeo_data_ready2train/data']
-        split: ['valeo_train_perspective_shuffled.txt']
+        split: ['nurstutt_train_perspective_shuffled_20000.txt']
         depth_type: ['']
         cameras: [['Front']]
         repeat: [2]

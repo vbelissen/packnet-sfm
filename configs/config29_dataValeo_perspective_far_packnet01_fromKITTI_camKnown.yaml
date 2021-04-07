@@ -1,14 +1,13 @@
 arch:
     max_epochs: 20
 model:
-    checkpoint_path: '/home/users/vbelissen/packnet_pretrained/PackNet01_MR_selfsup_D.ckpt'
     name: 'SelfSupModel'
     optimizer:
         name: 'Adam'
         depth:
-            lr: 0.000045
+            lr: 0.00009
         pose:
-            lr: 0.000045
+            lr: 0.00009
     scheduler:
         name: 'StepLR'
         step_size: 30

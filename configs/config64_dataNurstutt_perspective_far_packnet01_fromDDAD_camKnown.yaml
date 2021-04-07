@@ -30,7 +30,7 @@ datasets:
         batch_size: 2
         dataset: ['KITTIValeo']
         path: ['/data/vbelissen/valeo_data_ready2train/data']
-        split: ['valeo_train_perspective_shuffled.txt']
+        split: ['nurstutt_train_perspective_shuffled_20000.txt']
         depth_type: ['']
         cameras: [['Front']]
         repeat: [2]

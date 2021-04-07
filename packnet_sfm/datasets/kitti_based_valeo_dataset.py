@@ -206,13 +206,12 @@ class KITTIBasedValeoDataset(Dataset):
 
     def _get_depth_file(self, image_file):
         """Get the corresponding depth file from an image file."""
-        for cam in ['left', 'right']:
-            if IMAGE_FOLDER[cam] in image_file:
-                depth_file = image_file.replace(
-                    IMAGE_FOLDER[cam] + '/data', 'proj_depth/{}/{}'.format(
-                        self.depth_type, IMAGE_FOLDER[cam]))
-                if self.depth_type not in PNG_DEPTH_DATASETS:
-                    depth_file = depth_file.replace('png', 'npz')
+        for cam in self.cameras:#['left', 'right']:
+            if cam in image_file or CAM_NAMES_CONVERT[cam] in image_file:#if IMAGE_FOLDER[cam] in image_file:
+                depth_file = image_file
+                depth_file = depth_file.replace('images', 'depth_maps')
+                depth_file = depth_file.replace('cam', 'velodyne')
+                depth_file = depth_file.replace('jpg', 'npz')
                 return depth_file
 
     def _get_sample_context(self, sample_name,

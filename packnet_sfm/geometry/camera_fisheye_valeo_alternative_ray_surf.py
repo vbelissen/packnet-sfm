@@ -3,7 +3,6 @@
 from functools import lru_cache
 import torch
 import torch.nn as nn
-import math
 
 from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics
@@ -11,45 +10,33 @@ from packnet_sfm.utils.image import image_grid
 
 ########################################################################################################################
 
-class CameraFisheye(nn.Module):
+class CameraFisheyeAlternative(nn.Module):
     """
     Differentiable camera class implementing reconstruction and projection
     functions for a pinhole model.
     """
-    def __init__(self,
-                 poly_coeffs,
-                 principal_point=torch.Tensor([0., 0.]),
-                 scale_factors=torch.Tensor([1., 1.]),
-                 Tcw=None):
+    def __init__(self, K, Tcw=None):
         """
         Initializes the Camera class
 
         Parameters
         ----------
-        intrinsics : dictionary (keys : ax, ay, cx, cy, c1, c2, c3, c5)
+        K : torch.Tensor [3,3]
             Camera intrinsics
-            poly_coeffs [c1, c2, c3, c4]
-            principal_point [cx, cy]
-            scale_factors [ax, ay]
         Tcw : Pose
             Camera -> World pose transformation
         """
         super().__init__()
-        self.poly_coeffs = poly_coeffs
-        self.principal_point = principal_point
-        self.scale_factors = scale_factors
-        #self.K = K
-        self.Tcw = Pose.identity(3) if Tcw is None else Tcw#Pose.identity(len(K)) if Tcw is None else Tcw
+        self.K = K
+        self.Tcw = Pose.identity(len(K)) if Tcw is None else Tcw
 
-    # def __len__(self):
-    #     """Batch size of the camera intrinsics"""
-    #     return len(self.K)
+    def __len__(self):
+        """Batch size of the camera intrinsics"""
+        return len(self.K)
 
     def to(self, *args, **kwargs):
         """Moves object to a specific device"""
-        self.poly_coeffs = self.poly_coeffs.to(*args, **kwargs)
-        self.principal_point = self.principal_point.to(*args, **kwargs)
-        self.scale_factors = self.scale_factors.to(*args, **kwargs)
+        self.K = self.K.to(*args, **kwargs)
         self.Tcw = self.Tcw.to(*args, **kwargs)
         return self
 
@@ -179,34 +166,20 @@ class CameraFisheye(nn.Module):
         B, C, H, W = X.shape
         assert C == 3
 
-        # World to camera:
+        # Project 3D points onto the camera image plane
         if frame == 'c':
-            Xc = X.view(B, 3, -1) # [B, 3, HW]
+            Xc = self.K.bmm(X.view(B, 3, -1))
         elif frame == 'w':
-            Xc = (self.Tcw @ X).view(B, 3, -1) # [B, 3, HW]
+            Xc = self.K.bmm((self.Tcw @ X).view(B, 3, -1))
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
 
-        # Project 3D points onto the camera image plane
-        X = Xc[:, 0] # [B, HW]
-        Y = Xc[:, 1] # [B, HW]
-        Z = Xc[:, 2] # [B, HW]
-        phi = torch.atan2(Y, X) # [B, HW]
-        rc = torch.sqrt(torch.pow(X, 2) + torch.pow(Y, 2)) # [B, HW]
-        theta_1 = math.pi / 2 - torch.atan2(Z, rc) # [B, HW]
-        theta_2 = torch.pow(theta_1, 2) # [B, HW]
-        theta_3 = torch.pow(theta_1, 3) # [B, HW]
-        theta_4 = torch.pow(theta_1, 4) # [B, HW]
-        rho = self.poly_coeffs[0] * theta_1 \
-              + self.poly_coeffs[1] * theta_2 \
-              + self.poly_coeffs[2] * theta_3 \
-              + self.poly_coeffs[3] * theta_4 # [B, HW]
-        u = rho * torch.cos(phi) * self.scale_factors[0] + self.principal_point[0] # [B, HW]
-        v = rho * torch.sin(phi) * self.scale_factors[1] + self.principal_point[1] # [B, HW]
-
         # Normalize points
-        Xnorm = 2 * u / (W - 1) - 1.
-        Ynorm = 2 * v / (H - 1) - 1.
+        X = Xc[:, 0]
+        Y = Xc[:, 1]
+        Z = Xc[:, 2].clamp(min=1e-5)
+        Xnorm = 2 * (X / Z) / (W - 1) - 1.
+        Ynorm = 2 * (Y / Z) / (H - 1) - 1.
 
         # Clamp out-of-bounds pixels
         # Xmask = ((Xnorm > 1) + (Xnorm < -1)).detach()

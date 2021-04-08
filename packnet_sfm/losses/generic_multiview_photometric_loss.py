@@ -146,7 +146,7 @@ class GenericMultiViewPhotometricLoss(LossBase):
         self.canonical_ray_surface = torch.tensor(
             #np.load("kitti_ray_template.npy"))
             #np.load("omnicam_ray_template.npy"))
-            np.load("dummy_ray_template_288.npy"))
+            np.load("dummy_ray_template_240_384.npy"))
 
         # Asserts
         if self.automask_loss:

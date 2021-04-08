@@ -24,7 +24,7 @@ model:
         max_depth: 80.0
 datasets:
     augmentation:
-        image_shape: (256, 256)
+        image_shape: (288, 288)
     train:
         batch_size: 1
         dataset: ['ImageValeo']

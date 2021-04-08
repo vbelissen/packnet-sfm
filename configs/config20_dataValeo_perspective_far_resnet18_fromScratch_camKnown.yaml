@@ -1,14 +1,13 @@
 arch:
     max_epochs: 20
 model:
-    checkpoint_path: '/home/users/vbelissen/packnet_pretrained/ResNet18_MR_selfsup_D.ckpt'
     name: 'SemiSupModel'
     optimizer:
         name: 'Adam'
         depth:
-            lr: 0.0001
+            lr: 0.0002
         pose:
-            lr: 0.0001
+            lr: 0.0002
     scheduler:
         name: 'StepLR'
         step_size: 30

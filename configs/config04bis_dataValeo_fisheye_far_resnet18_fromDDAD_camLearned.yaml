@@ -1,13 +1,14 @@
 arch:
     max_epochs: 50
 model:
+    checkpoint_path: '/home/users/vbelissen/packnet_pretrained/ResNet18_MR_selfsup_D.ckpt'
     name: 'GenericSelfSupModel'
     optimizer:
         name: 'Adam'
         depth:
-            lr: 0.0002
+            lr: 0.0001
         pose:
-            lr: 0.0002
+            lr: 0.0001
     scheduler:
         name: 'StepLR'
         step_size: 30
@@ -27,11 +28,12 @@ datasets:
         image_shape: (224, 384)
     train:
         batch_size: 1
-        dataset: ['ImageValeo']
-        path: ['/data/vbelissen/valeo_data_ready2train/data/dataset_valeo_cea_2017_2018/images/fisheye/train']
-        split: ['{:09}']
+        dataset: ['KITTIValeo']
+        path: ['/data/vbelissen/valeo_data_ready2train/data']
+        split: ['valeo_train_fisheye_shuffled.txt']
         depth_type: ['']
-        repeat: [1]
+        cameras: [['Front']]
+        repeat: [2]
     validation:
         dataset: ['KITTI']
         path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/KITTI_tiny']
@@ -42,3 +44,9 @@ datasets:
         path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/KITTI_tiny']
         split: ['kitti_tiny.txt']
         depth_type: ['velodyne']
+checkpoint:
+    save_top_k: 0
+    filepath: '/home/users/vbelissen/saved_models' # Where the models will be saved
+    monitor: 'abs_rel_pp_gt' # which metric is observed
+    monitor_index: 0 # from which validation dataset the metric is observed
+    mode: 'min' # if the metric is minimized or maximized

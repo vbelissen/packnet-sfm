@@ -27,7 +27,7 @@ datasets:
         image_shape: (224, 384)
     train:
         batch_size: 1
-        dataset: ['ImageValeo']
+        dataset: ['ImageValeoBis']
         path: ['/data/vbelissen/valeo_data_ready2train/data/dataset_valeo_cea_2017_2018/images/fisheye/train']
         split: ['{:09}']
         depth_type: ['']

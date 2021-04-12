@@ -6,7 +6,7 @@ import torch.nn as nn
 import math
 
 from packnet_sfm.geometry.pose import Pose
-from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics
+from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics, get_roots_table_tensor
 from packnet_sfm.utils.image import image_grid
 
 ########################################################################################################################
@@ -144,6 +144,9 @@ class CameraFisheye(nn.Module):
         # Create flat index grid
         grid = image_grid(B, H, W, depth.dtype, depth.device, normalized=False)  # [B,3,H,W]
         flat_grid = grid.view(B, 3, -1)  # [B,3,HW]
+
+        theta_tensor = get_roots_table_tensor(self.poly_coeffs, self.principal_point, self.scale_factors, H, W)
+        flat_theta_tensor = theta_tensor.flatten()
 
         # Estimate the outward rays in the camera frame
         xnorm = (self.Kinv.bmm(flat_grid)).view(B, 3, H, W)

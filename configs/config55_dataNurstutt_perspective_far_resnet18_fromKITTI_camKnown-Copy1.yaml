@@ -35,14 +35,14 @@ datasets:
         cameras: [['Front']]
         repeat: [2]
     validation:
-        dataset: ['KITTIValeo']
-        path: ['/data/vbelissen/valeo_data_ready2train/data']
-        split: ['valeo_test_sync_perspective_shuffled.txt']
+        dataset: ['KITTI']
+        path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/KITTI_tiny']
+        split: ['kitti_tiny.txt']
         depth_type: ['velodyne']
     test:
-        dataset: ['KITTIValeo']
-        path: ['/data/vbelissen/valeo_data_ready2train/data']
-        split: ['valeo_test_sync_perspective_shuffled.txt']
+        dataset: ['KITTI']
+        path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/KITTI_tiny']
+        split: ['kitti_tiny.txt']
         depth_type: ['velodyne']
 checkpoint:
     save_top_k: 0

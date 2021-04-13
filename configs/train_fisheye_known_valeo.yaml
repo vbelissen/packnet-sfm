@@ -1,7 +1,7 @@
 arch:
-    max_epochs: 1
+    max_epochs: 20
 model:
-    name: 'SelfSupModel'
+    name: 'SelfSupModel_fisheye_valeo'
     optimizer:
         name: 'Adam'
         depth:
@@ -19,19 +19,20 @@ model:
         name: 'PoseResNet'
         version: '18pt'
     params:
-        crop: 'garg'
+        crop: ''
         min_depth: 0.0
-        max_depth: 80.0
+        max_depth: 150.0
 datasets:
     augmentation:
-        image_shape: (192, 640)
+        image_shape: (160, 256)
     train:
         batch_size: 1
-        dataset: ['KITTI']
-        path: ['/home/vbelissen/test_data/datasets/KITTI_tiny']
-        split: ['kitti_tiny.txt']
-        depth_type: ['velodyne']
-        repeat: [1000]
+        dataset: ['KITTIValeoFisheye']
+        path: ['/home/vbelissen/test_data/valeo_data_ready2train/data']
+        split: ['valeo_train_fisheye_small.txt']
+        depth_type: ['']
+        cameras: [['Front']]
+        repeat: [2]
     validation:
         dataset: ['KITTI']
         path: ['/home/vbelissen/test_data/datasets/KITTI_tiny']
@@ -42,3 +43,9 @@ datasets:
         path: ['/home/vbelissen/test_data/datasets/KITTI_tiny']
         split: ['kitti_tiny.txt']
         depth_type: ['velodyne']
+checkpoint:
+    save_top_k: 0
+    filepath: '/home/vbelissen/Downloads/temp_saved_models' # Where the models will be saved
+    monitor: 'abs_rel_pp_gt' # which metric is observed
+    monitor_index: 0 # from which validation dataset the metric is observed
+    mode: 'min' # if the metric is minimized or maximized

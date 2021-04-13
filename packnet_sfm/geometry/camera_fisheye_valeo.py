@@ -4,10 +4,13 @@ from functools import lru_cache
 import torch
 import torch.nn as nn
 import math
+import numpy as np
+import os
 
 from packnet_sfm.geometry.pose import Pose
-from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics, get_roots_table_tensor
-from packnet_sfm.utils.image import image_grid
+from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics_fisheye, get_roots_table_tensor
+from packnet_sfm.utils.image_valeo import image_grid, centered_2d_grid
+
 
 ########################################################################################################################
 
@@ -17,6 +20,7 @@ class CameraFisheye(nn.Module):
     functions for a pinhole model.
     """
     def __init__(self,
+                 path_to_theta_lut,
                  poly_coeffs,
                  principal_point=torch.Tensor([0., 0.]),
                  scale_factors=torch.Tensor([1., 1.]),
@@ -35,11 +39,12 @@ class CameraFisheye(nn.Module):
             Camera -> World pose transformation
         """
         super().__init__()
+        self.path_to_theta_lut = path_to_theta_lut
         self.poly_coeffs = poly_coeffs
         self.principal_point = principal_point
         self.scale_factors = scale_factors
         #self.K = K
-        self.Tcw = Pose.identity(3) if Tcw is None else Tcw#Pose.identity(len(K)) if Tcw is None else Tcw
+        self.Tcw = Pose.identity(1) if Tcw is None else Tcw#Pose.identity(len(K)) if Tcw is None else Tcw
 
     # def __len__(self):
     #     """Batch size of the camera intrinsics"""
@@ -47,6 +52,7 @@ class CameraFisheye(nn.Module):
 
     def to(self, *args, **kwargs):
         """Moves object to a specific device"""
+        #self.path_to_theta_lut = self.path_to_theta_lut.to(*args, **kwargs)
         self.poly_coeffs = self.poly_coeffs.to(*args, **kwargs)
         self.principal_point = self.principal_point.to(*args, **kwargs)
         self.scale_factors = self.scale_factors.to(*args, **kwargs)
@@ -111,14 +117,23 @@ class CameraFisheye(nn.Module):
             Scaled version of the current cmaera
         """
         # If single value is provided, use for both dimensions
-        if y_scale is None:
-            y_scale = x_scale
+        if y_scale is not None:
+            assert y_scale == x_scale
         # If no scaling is necessary, return same camera
-        if x_scale == 1. and y_scale == 1.:
+        if x_scale == 1.:
             return self
         # Scale intrinsics and return new camera with same Pose
-        K = scale_intrinsics(self.K.clone(), x_scale, y_scale)
-        return CameraFisheye(K, Tcw=self.Tcw)
+        poly_coeffs, principal_point = \
+            scale_intrinsics_fisheye(self.poly_coeffs.clone(), self.principal_point.clone(), x_scale)
+        path_to_theta_lut_clone = self.path_to_theta_lut.clone()
+        dir = os.path.dirname(path_to_theta_lut_clone)
+        base_clone, ext = os.path.splitext(os.path.basename(path_to_theta_lut_clone))
+        base_clone_splitted = base_clone.split('_')
+        base_clone_splitted[2] = int(x_scale * base_clone_splitted[2])
+        base_clone_splitted[3] = int(x_scale * base_clone_splitted[3])
+        path_to_theta_lut = os.path.join(dir, base_clone_splitted.join('_') + '.npy')
+        #K = scale_intrinsics(self.K.clone(), x_scale, y_scale)
+        return CameraFisheye(path_to_theta_lut, poly_coeffs, principal_point, scale_factors=self.scale_factors, Tcw=self.Tcw)
 
 ########################################################################################################################
 
@@ -141,17 +156,24 @@ class CameraFisheye(nn.Module):
         B, C, H, W = depth.shape
         assert C == 1
 
-        # Create flat index grid
-        grid = image_grid(B, H, W, depth.dtype, depth.device, normalized=False)  # [B,3,H,W]
-        flat_grid = grid.view(B, 3, -1)  # [B,3,HW]
+        device = depth.get_device()
 
-        theta_tensor = get_roots_table_tensor(self.poly_coeffs, self.principal_point, self.scale_factors, H, W)
-        flat_theta_tensor = theta_tensor.flatten()
+        theta_tensor = torch.zeros(B, 1, H, W)
+        for b in range(B):
+            theta_tensor[b, 0] = torch.from_numpy(np.load(self.path_to_theta_lut[b]))
+        theta_tensor = theta_tensor.to(device)
+        #get_roots_table_tensor(self.poly_coeffs, self.principal_point, self.scale_factors, H, W).to(device)
 
-        # Estimate the outward rays in the camera frame
-        xnorm = (self.Kinv.bmm(flat_grid)).view(B, 3, H, W)
-        # Scale rays to metric depth
-        Xc = xnorm * depth
+        rc = depth * torch.sin(theta_tensor)
+
+        yi, xi = centered_2d_grid(H, W, self.principal_point, self.scale_factors)
+        phi = torch.atan2(yi, xi).to(device)
+
+        xc = rc * torch.cos(phi)
+        yc = rc * torch.sin(phi)
+        zc = depth * torch.cos(theta_tensor)
+
+        Xc = torch.cat([xc, yc, zc], dim=1)
 
         # If in camera frame of reference
         if frame == 'c':
@@ -190,6 +212,11 @@ class CameraFisheye(nn.Module):
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
 
+        c1 = self.poly_coeffs.squeeze()[0]
+        c2 = self.poly_coeffs.squeeze()[1]
+        c3 = self.poly_coeffs.squeeze()[2]
+        c4 = self.poly_coeffs.squeeze()[3]
+
         # Project 3D points onto the camera image plane
         X = Xc[:, 0] # [B, HW]
         Y = Xc[:, 1] # [B, HW]
@@ -200,12 +227,9 @@ class CameraFisheye(nn.Module):
         theta_2 = torch.pow(theta_1, 2) # [B, HW]
         theta_3 = torch.pow(theta_1, 3) # [B, HW]
         theta_4 = torch.pow(theta_1, 4) # [B, HW]
-        rho = self.poly_coeffs[0] * theta_1 \
-              + self.poly_coeffs[1] * theta_2 \
-              + self.poly_coeffs[2] * theta_3 \
-              + self.poly_coeffs[3] * theta_4 # [B, HW]
-        u = rho * torch.cos(phi) * self.scale_factors[0] + self.principal_point[0] # [B, HW]
-        v = rho * torch.sin(phi) * self.scale_factors[1] + self.principal_point[1] # [B, HW]
+        rho = c1 * theta_1 + c2 * theta_2 + c3 * theta_3 + c4 * theta_4 # [B, HW]
+        u = rho * torch.cos(phi) * self.scale_factors.squeeze()[0] + self.principal_point.squeeze()[0] # [B, HW]
+        v = rho * torch.sin(phi) * self.scale_factors.squeeze()[1] + self.principal_point.squeeze()[1] # [B, HW]
 
         # Normalize points
         Xnorm = 2 * u / (W - 1) - 1.

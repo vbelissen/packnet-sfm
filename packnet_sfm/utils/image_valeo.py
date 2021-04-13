@@ -297,4 +297,40 @@ def image_grid(B, H, W, dtype, device, normalized=False):
     grid = torch.stack([xs, ys, ones], dim=1)
     return grid
 
+@lru_cache(maxsize=None)
+def centered_2d_grid(H, W, principal_point, scale_factors):
+    """
+    Create an image grid with a specific resolution
+
+    Parameters
+    ----------
+    B : int
+        Batch size
+    H : int
+        Height size
+    W : int
+        Width size
+    dtype : torch.dtype
+        Meshgrid type
+    device : torch.device
+        Meshgrid device
+    normalized : bool
+        True if grid is normalized between -1 and 1
+
+    Returns
+    -------
+    grid : torch.Tensor [B,3,H,W]
+        Image grid containing a meshgrid in x, y and 1
+    """
+
+    u = torch.linspace(0, W - 1, W)
+    v = torch.linspace(0, H - 1, H)
+
+    principal_point = principal_point.flatten()
+    scale_factors = scale_factors.flatten()
+    u = (u - (W - 1) / 2 - principal_point[0]) / scale_factors[0]
+    v = (v - (H - 1) / 2 - principal_point[1]) / scale_factors[1]
+    yi, xi = torch.meshgrid([v, u])
+    return yi, xi
+
 ########################################################################################################################

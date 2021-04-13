@@ -3,6 +3,8 @@
 import torch
 import torch.nn.functional as funct
 from scipy import optimize
+from functools import lru_cache
+from packnet_sfm.utils.image_valeo import centered_2d_grid
 
 
 ########################################################################################################################
@@ -24,30 +26,40 @@ def scale_intrinsics(K, x_scale, y_scale):
     return K
 
 
+def scale_intrinsics_fisheye(poly_coeffs, principal_point, x_scale):
+    """Scale intrinsics given x_scale and y_scale factors"""
+    return poly_coeffs * x_scale, principal_point * x_scale
+
+
+@lru_cache()
 def get_roots_table_tensor(poly_coeffs, principal_point, scale_factors, H, W):
     theta_tensor = torch.zeros(H, W)
 
+    c1 = poly_coeffs.squeeze()[0].cpu()
+    c2 = poly_coeffs.squeeze()[0].cpu()
+    c3 = poly_coeffs.squeeze()[0].cpu()
+    c4 = poly_coeffs.squeeze()[0].cpu()
+
+    yi, xi = centered_2d_grid(H, W, principal_point, scale_factors)
+
+    yi = yi.cpu()
+    xi = xi.cpu()
+
+    # print(xi)
+    # print(yi)
+
     def fun_rho_jac(theta):
-        return poly_coeffs[0] \
-               + 2 * poly_coeffs[1] * theta \
-               + 3 * poly_coeffs[2] * theta ** 2 \
-               + 4 * poly_coeffs[3] * theta ** 3
+        return c1 + 2 * c2 * theta + 3 * c3 * theta ** 2 + 4 * c4 * theta ** 3
 
+    i = 0
     for u in range(0, W):
-        x_centered = u - (W - 1) / 2
-        x_i = (x_centered - principal_point[0]) / scale_factors[0]
         for v in range(0, H):
-            y_centered = v - (W - 1) / 2
-            y_i = (y_centered - principal_point[1]) / scale_factors[1]
-
             def fun_rho(theta):
-                return poly_coeffs[0] * theta \
-                       + poly_coeffs[1] * theta ** 2 \
-                       + poly_coeffs[2] * theta ** 3 \
-                       + poly_coeffs[3] * theta ** 4 \
-                       - (x_i ** 2 + y_i ** 2) ** .5
+                return c1 * theta + c2 * theta ** 2 + c3 * theta ** 3 + c4 * theta ** 4 - (xi[v, u] ** 2 + yi[v, u] ** 2) ** .5
 
-            theta_tensor[int(v), int(u)] = (optimize.root(fun_rho, [0], jac=fun_rho_jac, method='hybr').x)[0]
+            theta_tensor[v, u] = (optimize.root(fun_rho, [0], jac=fun_rho_jac, method='hybr').x)[0]
+            print(i/(H*W))
+            i += 1
     return theta_tensor
 
 

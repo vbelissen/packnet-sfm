@@ -1,7 +1,7 @@
 arch:
     max_epochs: 20
 model:
-    name: 'SelfSupModel_fisheye_valeo'
+    name: 'SelfSupModel'
     optimizer:
         name: 'Adam'
         depth:
@@ -27,9 +27,9 @@ datasets:
         image_shape: (160, 256)
     train:
         batch_size: 12
-        dataset: ['KITTIValeoFisheye']
+        dataset: ['KITTIValeo']
         path: ['/home/vbelissen/test_data/valeo_data_ready2train/data']
-        split: ['valeo_train_fisheye_small.txt']
+        split: ['valeo_train_perspective_small.txt']
         depth_type: ['']
         cameras: [['Front']]
         repeat: [50]

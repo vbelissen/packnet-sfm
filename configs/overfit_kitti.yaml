@@ -26,7 +26,7 @@ datasets:
     augmentation:
         image_shape: (192, 640)
     train:
-        batch_size: 1
+        batch_size: 2
         dataset: ['KITTI']
         path: ['/home/vbelissen/test_data/datasets/KITTI_tiny']
         split: ['kitti_tiny.txt']

@@ -44,7 +44,7 @@ class CameraFisheye(nn.Module):
         self.principal_point = principal_point
         self.scale_factors = scale_factors
         #self.K = K
-        self.Tcw = Pose.identity(1) if Tcw is None else Tcw#Pose.identity(len(K)) if Tcw is None else Tcw
+        self.Tcw = Pose.identity(len(poly_coeffs)) if Tcw is None else Tcw#Pose.identity(len(K)) if Tcw is None else Tcw
 
     # def __len__(self):
     #     """Batch size of the camera intrinsics"""
@@ -172,6 +172,7 @@ class CameraFisheye(nn.Module):
         xc = rc * torch.cos(phi)
         yc = rc * torch.sin(phi)
         zc = depth * torch.cos(theta_tensor)
+        #print(zc[0, 0, :, 127])
 
         Xc = torch.cat([xc, yc, zc], dim=1)
 
@@ -212,10 +213,11 @@ class CameraFisheye(nn.Module):
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
 
-        c1 = self.poly_coeffs.squeeze()[0]
-        c2 = self.poly_coeffs.squeeze()[1]
-        c3 = self.poly_coeffs.squeeze()[2]
-        c4 = self.poly_coeffs.squeeze()[3]
+        c1 = self.poly_coeffs[:, 0].unsqueeze(1)
+        c2 = self.poly_coeffs[:, 1].unsqueeze(1)
+        c3 = self.poly_coeffs[:, 2].unsqueeze(1)
+        c4 = self.poly_coeffs[:, 3].unsqueeze(1)
+        print(c4)
 
         # Project 3D points onto the camera image plane
         X = Xc[:, 0] # [B, HW]
@@ -227,9 +229,10 @@ class CameraFisheye(nn.Module):
         theta_2 = torch.pow(theta_1, 2) # [B, HW]
         theta_3 = torch.pow(theta_1, 3) # [B, HW]
         theta_4 = torch.pow(theta_1, 4) # [B, HW]
+
         rho = c1 * theta_1 + c2 * theta_2 + c3 * theta_3 + c4 * theta_4 # [B, HW]
-        u = rho * torch.cos(phi) * self.scale_factors.squeeze()[0] + self.principal_point.squeeze()[0] # [B, HW]
-        v = rho * torch.sin(phi) * self.scale_factors.squeeze()[1] + self.principal_point.squeeze()[1] # [B, HW]
+        u = rho * torch.cos(phi) * self.scale_factors[:, 0].unsqueeze(1) + self.principal_point[:, 0].unsqueeze(1) # [B, HW]
+        v = rho * torch.sin(phi) * self.scale_factors[:, 1].unsqueeze(1) + self.principal_point[:, 1].unsqueeze(1) # [B, HW]
 
         # Normalize points
         Xnorm = 2 * u / (W - 1) - 1.

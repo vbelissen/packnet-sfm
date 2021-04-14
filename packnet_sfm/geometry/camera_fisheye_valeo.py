@@ -217,7 +217,6 @@ class CameraFisheye(nn.Module):
         c2 = self.poly_coeffs[:, 1].unsqueeze(1)
         c3 = self.poly_coeffs[:, 2].unsqueeze(1)
         c4 = self.poly_coeffs[:, 3].unsqueeze(1)
-        print(c4)
 
         # Project 3D points onto the camera image plane
         X = Xc[:, 0] # [B, HW]

@@ -230,12 +230,13 @@ class CameraFisheye(nn.Module):
         theta_4 = torch.pow(theta_1, 4) # [B, HW]
 
         rho = c1 * theta_1 + c2 * theta_2 + c3 * theta_3 + c4 * theta_4 # [B, HW]
+        rho = rho * ((X != 0) | (Y != 0) | (Z != 0))
         u = rho * torch.cos(phi) * self.scale_factors[:, 0].unsqueeze(1) + self.principal_point[:, 0].unsqueeze(1) # [B, HW]
         v = rho * torch.sin(phi) * self.scale_factors[:, 1].unsqueeze(1) + self.principal_point[:, 1].unsqueeze(1) # [B, HW]
 
         # Normalize points
-        Xnorm = 2 * u / (W - 1) - 1.
-        Ynorm = 2 * v / (H - 1) - 1.
+        Xnorm = 2 * u / (W - 1)# - 1.
+        Ynorm = 2 * v / (H - 1)# - 1.
 
         # Clamp out-of-bounds pixels
         # Xmask = ((Xnorm > 1) + (Xnorm < -1)).detach()

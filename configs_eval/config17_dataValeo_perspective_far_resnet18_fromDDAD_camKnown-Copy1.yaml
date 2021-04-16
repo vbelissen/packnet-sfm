@@ -1,0 +1,52 @@
+arch:
+    max_epochs: 8
+model:
+    checkpoint_path: '/home/users/vbelissen/saved_models/default_config-config17_dataValeo_perspective_far_resnet18_fromDDAD_camKnown-2021.04.02-12h40m32s/epoch=11_KITTI_tiny-kitti_tiny-velodyne-abs_rel_pp_gt=0.501.ckpt'
+    name: 'SelfSupModel'
+    optimizer:
+        name: 'Adam'
+        depth:
+            lr: 0.0001
+        pose:
+            lr: 0.0001
+    scheduler:
+        name: 'StepLR'
+        step_size: 30
+        gamma: 0.5
+    depth_net:
+        name: 'DepthResNet'
+        version: '18pt'
+    pose_net:
+        name: 'PoseResNet'
+        version: '18pt'
+    params:
+        crop: ''
+        min_depth: 0.0
+        max_depth: 150.0
+datasets:
+    augmentation:
+        image_shape: (480, 640)
+    train:
+        batch_size: 10
+        dataset: ['KITTIValeo']
+        path: ['/data/vbelissen/valeo_data_ready2train/data']
+        split: ['valeo_train_perspective_shuffled.txt']
+        depth_type: ['']
+        cameras: [['Front']]
+        repeat: [2]
+    validation:
+        dataset: ['KITTI']
+        path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/KITTI_tiny']
+        split: ['kitti_tiny.txt']
+        depth_type: ['velodyne']
+    test:
+        dataset: ['KITTI']
+        path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/KITTI_tiny']
+        split: ['kitti_tiny.txt']
+        depth_type: ['velodyne']
+checkpoint:
+    save_top_k: 0
+    filepath: '/home/users/vbelissen/saved_models' # Where the models will be saved
+    monitor: 'abs_rel_pp_gt' # which metric is observed
+    monitor_index: 0 # from which validation dataset the metric is observed
+    mode: 'min' # if the metric is minimized or maximized

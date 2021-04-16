@@ -5,6 +5,7 @@ import torch.nn as nn
 import math
 import numpy as np
 import os
+from tqdm import tqdm
 
 from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics_fisheye, get_roots_table_tensor
@@ -163,6 +164,23 @@ pcl.paint_uniform_color([1.0, 0.0, 0])
 depth_map_valeo_reprojected = project(valeo_point_cloud, frame='w')
 depth_map_valeo_reprojected_numpy = depth_map_valeo_reprojected.numpy()
 print(depth_map_valeo_reprojected_numpy.shape)
+
+new_depth_map = np.zeros((800, 1280))
+for h in tqdm(range(800)):
+    for w in range(1280):
+        u = int((1280-1)/2*(1+depth_map_valeo_reprojected_numpy[0, h, w, 0]))
+        v = int((800-1)/2*(1+depth_map_valeo_reprojected_numpy[0, h, w, 1]))
+        cop = np.zeros(3)
+        cop[0:2] = principal_point.numpy()[0, :]
+        d = np.linalg.norm(valeo_point_cloud[0, :, h, w] - cop)
+        if 0 <= v < 800 and 0 <= u < 1280:
+            new_depth_map[v, u] = d
+        else:
+            print('error')
+
+max_depth_new = np.max(new_depth_map[np.nonzero(new_depth_map)])
+cv2.imshow("new_depth_map", cv2.applyColorMap((new_depth_map/max_depth_new*255).astype(np.uint8), cv2.COLORMAP_HSV))
+cv2.waitKey()
 
 # pcl_reconstruct = o3d.geometry.PointCloud()
 # pcl_reconstruct.points = o3d.utility.Vector3dVector(point3d)

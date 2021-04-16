@@ -39,10 +39,11 @@ datasets:
         split: ['kitti_tiny.txt']
         depth_type: ['velodyne']
     test:
-        dataset: ['KITTI']
-        path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/KITTI_tiny']
-        split: ['kitti_tiny.txt']
+        dataset: ['KITTIValeoFisheye']
+        path: ['/data/vbelissen/valeo_data_ready2train/data']
+        split: ['valeo_test_sync_fisheye.txt']
         depth_type: ['velodyne']
+        cameras: [['Front']]
 checkpoint:
     save_top_k: 0
     filepath: '/home/users/vbelissen/saved_models' # Where the models will be saved

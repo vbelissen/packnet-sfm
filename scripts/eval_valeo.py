@@ -4,7 +4,7 @@ import argparse
 import torch
 
 from packnet_sfm.models.model_wrapper_valeo import ModelWrapper
-from packnet_sfm.trainers.horovod_trainer import HorovodTrainer
+from packnet_sfm.trainers.horovod_trainer_valeo import HorovodTrainer
 from packnet_sfm.utils.config import parse_test_file
 from packnet_sfm.utils.load import set_debug
 from packnet_sfm.utils.horovod import hvd_init
@@ -14,9 +14,12 @@ def parse_args():
     """Parse arguments for training script"""
     parser = argparse.ArgumentParser(description='PackNet-SfM evaluation script')
     parser.add_argument('--checkpoint', type=str, help='Checkpoint (.ckpt)')
+    parser.add_argument('--filename', type=str, help='File name for saving metrics')
     parser.add_argument('--config', type=str, default=None, help='Configuration (.yaml)')
     parser.add_argument('--half', action="store_true", help='Use half precision (fp16)')
     args = parser.parse_args()
+    assert args.filename is not None, \
+        'You need to provide a filename'
     assert args.checkpoint.endswith('.ckpt'), \
         'You need to provide a .ckpt file as checkpoint'
     assert args.config is None or args.config.endswith('.yaml'), \
@@ -24,7 +27,7 @@ def parse_args():
     return args
 
 
-def test(ckpt_file, cfg_file, half):
+def test(ckpt_file, cfg_file, half, filename):
     """
     Monocular depth estimation test script.
 
@@ -58,9 +61,9 @@ def test(ckpt_file, cfg_file, half):
     trainer = HorovodTrainer(**config.arch)
 
     # Test model
-    trainer.test(model_wrapper)
+    trainer.test(model_wrapper, filename)
 
 
 if __name__ == '__main__':
     args = parse_args()
-    test(args.checkpoint, args.config, args.half)
+    test(args.checkpoint, args.config, args.half, args.filename)

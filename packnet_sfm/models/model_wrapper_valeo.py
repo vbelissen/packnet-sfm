@@ -254,7 +254,7 @@ class ModelWrapper(torch.nn.Module):
             **metrics_dict
         }
 
-    def test_epoch_end(self, output_data_batch):
+    def test_epoch_end(self, output_data_batch, filename):
         """Finishes a test epoch."""
 
         # Reduce depth metrics
@@ -265,7 +265,7 @@ class ModelWrapper(torch.nn.Module):
         metrics_dict = create_dict(
             metrics_data, self.metrics_keys, self.metrics_modes,
             self.config.datasets.test)
-
+        np.save(filename, metrics_dict)
         # Print stuff
         self.print_metrics(metrics_data, self.config.datasets.test)
 

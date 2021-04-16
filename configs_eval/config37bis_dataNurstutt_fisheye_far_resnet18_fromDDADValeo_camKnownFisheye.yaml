@@ -30,10 +30,10 @@ datasets:
         batch_size: 2
         dataset: ['KITTIValeoFisheye']
         path: ['/data/vbelissen/valeo_data_ready2train/data']
-        split: ['nurstutt_train_fisheye_shuffled_20000.txt']
+        split: ['nurstutt_small_fisheye_train_shuffled.txt']
         depth_type: ['']
         cameras: [['Front']]
-        repeat: [2]
+        repeat: [24
     validation:
         dataset: ['KITTIValeoFisheye']
         path: ['/data/vbelissen/valeo_data_ready2train/data']

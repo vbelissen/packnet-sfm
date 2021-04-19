@@ -148,7 +148,7 @@ class GenericMultiViewPhotometricLoss(LossBase):
             #np.load("omnicam_ray_template.npy"))
             #np.load("dummy_ray_template_240_384.npy"))
             #np.load("dummy_ray_template_224_384.npy"))
-            np.load("dummy_ray_template_640_416.npy"))
+            np.load("dummy_ray_template_512_320.npy"))
 
         # Asserts
         if self.automask_loss:

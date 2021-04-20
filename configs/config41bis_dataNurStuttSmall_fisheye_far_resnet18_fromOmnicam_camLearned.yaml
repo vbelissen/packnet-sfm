@@ -1,19 +1,20 @@
 arch:
     max_epochs: 20
 model:
-    name: 'SelfSupModel_fisheye_woodscape'
+    checkpoint_path: '/home/users/vbelissen/packnet_pretrained/omnicam_pretrained.ckpt'
+    name: 'GenericSelfSupModel'
     optimizer:
         name: 'Adam'
         depth:
-            lr: 0.0002
+            lr: 0.0001
         pose:
-            lr: 0.0002
+            lr: 0.0001
     scheduler:
         name: 'StepLR'
         step_size: 30
         gamma: 0.5
     depth_net:
-        name: 'DepthResNet'
+        name: 'RaySurfaceResNet'
         version: '18pt'
     pose_net:
         name: 'PoseResNet'
@@ -24,17 +25,15 @@ model:
         max_depth: 150.0
 datasets:
     augmentation:
-        image_shape: (480, 640)
+        image_shape: (224, 384)
     train:
-        batch_size: 7
-        dataset: ['WoodscapeFisheye']
-        path: ['/data/vbelissen/Woodscape']
-        split: ['woodscape_FV_train.txt']
+        batch_size: 1
+        dataset: ['KITTIValeo']
+        path: ['/data/vbelissen/valeo_data_ready2train/data']
+        split: ['nurstutt_small_fisheye_train_shuffled.txt']
         depth_type: ['']
         cameras: [['Front']]
-        repeat: [2]
-        back_context: 1
-        forward_context: 0
+        repeat: [4]
     validation:
         dataset: ['KITTI']
         path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/KITTI_tiny']

@@ -276,6 +276,7 @@ class WoodscapeFisheye(Dataset):
             max_num_files = self._cache[parent_folder]
         else:
             max_num_files = len(glob.glob(os.path.join(parent_folder, '*' + ext)))/4 # 4 cameras
+            print(max_num_files)
             self._cache[parent_folder] = max_num_files
 
         # Check bounds

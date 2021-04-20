@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 from packnet_sfm.utils.image import match_scales
-from packnet_sfm.geometry.camera_fisheye_valeo import CameraFisheye
+from packnet_sfm.geometry.camera_fisheye_woodscape import CameraFisheyeWoodscape
 from packnet_sfm.geometry.camera_fisheye_valeo_utils import view_synthesis
 from packnet_sfm.utils.depth import calc_smoothness, inv2depth
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
@@ -156,11 +156,11 @@ class MultiViewPhotometricLoss(LossBase):
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
-            cams.append(CameraFisheye(path_to_theta_lut=path_to_theta_lut,
+            cams.append(CameraFisheyeWoodscape(path_to_theta_lut=path_to_theta_lut,
                                       poly_coeffs=poly_coeffs.float(),
                                       principal_point=principal_point.float(),
                                       scale_factor_y=scale_factor_y.float()).scaled(scale_factor).to(device))
-            ref_cams.append(CameraFisheye(path_to_theta_lut=ref_path_to_theta_lut,
+            ref_cams.append(CameraFisheyeWoodscape(path_to_theta_lut=ref_path_to_theta_lut,
                                           poly_coeffs=ref_poly_coeffs.float(),
                                           principal_point=ref_principal_point.float(),
                                           scale_factor_y=ref_scale_factor_y.float(), Tcw=pose).scaled(scale_factor).to(device))

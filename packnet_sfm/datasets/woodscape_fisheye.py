@@ -198,7 +198,7 @@ class WoodscapeFisheye(Dataset):
             if cam in image_file or CAM_NAMES_CONVERT[cam] in image_file:
                 # intr = calib_data[cam]['intrinsics']
                 intr = c_data[cam]['intrinsics']
-                intr_string = 'theta_tensor_' \
+                intr_string1 = 'theta_tensor_' \
                               + intr['cxoffs_pix'] \
                               + intr['cyoffs_pix'] \
                               + '966.0' \
@@ -209,10 +209,27 @@ class WoodscapeFisheye(Dataset):
                               + intr['fisheyeAmt4'] \
                               + intr['cam_aspect'] \
                               + '_1280_960.npy'
-
-                return os.path.join(self._get_parent_folder(image_file),
+                intr_string2 = 'theta_tensor_' \
+                               + intr['cxoffs_pix'] \
+                               + intr['cyoffs_pix'] \
+                               + '966' \
+                               + '1280' \
+                               + intr['fisheyeAmt1'] \
+                               + intr['fisheyeAmt2'] \
+                               + intr['fisheyeAmt3'] \
+                               + intr['fisheyeAmt4'] \
+                               + intr['cam_aspect'] \
+                               + '_1280_960.npy'
+                path1 = os.path.join(self._get_parent_folder(image_file),
                                     'calibration_theta_lut/',
-                                    intr_string)
+                                    intr_string1)
+                path2 = os.path.join(self._get_parent_folder(image_file),
+                                     'calibration_theta_lut/',
+                                     intr_string2)
+                if os.path.isfile(path1):
+                    return path1
+                else:
+                    return path2
 
 ########################################################################################################################
 #### DEPTH

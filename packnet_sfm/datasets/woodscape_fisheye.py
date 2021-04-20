@@ -148,11 +148,8 @@ class WoodscapeFisheye(Dataset):
         """Get next file given next idx and current file."""
         parent_folder = os.path.abspath(os.path.join(file, "../.."))
         base, ext = os.path.splitext(os.path.basename(file))
-        base_splitted = base.split('_')
-        base_number_length = len(base_splitted[0])
-        base_splitted[0] = str(idx).zfill(base_number_length)
         #print(os.path.join(parent_folder, 'previous_images/', '_'.join(base_splitted) + '_prev' + ext))
-        return os.path.join(parent_folder, 'previous_images/', '_'.join(base_splitted) + '_prev' + ext)
+        return os.path.join(parent_folder, 'previous_images/', base + '_prev' + ext)
 
     @staticmethod
     def _get_parent_folder(image_file):
@@ -186,11 +183,11 @@ class WoodscapeFisheye(Dataset):
     #     return read_calib_file(os.path.join(folder, CALIB_FILE['cam2cam']))
 
     @staticmethod
-    def _read_raw_calib_files(idx, path, cameras):
+    def _read_raw_calib_files(path, cameras):
         """Read raw calibration files from idx."""
         data = {}
         for camera in cameras:
-            data[camera] = read_raw_calib_files_woodscape(idx, path, CAM_NAMES_CONVERT[camera])
+            data[camera] = read_raw_calib_files_woodscape(path)
         return data
 
     def _get_path_to_theta_lut(self, image_file, c_data):
@@ -420,7 +417,7 @@ class WoodscapeFisheye(Dataset):
         }
 
         # Add intrinsics
-        c_data = self._read_raw_calib_files(idx, self.paths[idx], self.cameras)
+        c_data = self._read_raw_calib_files(self.paths[idx], self.cameras)
 
         poly_coeffs, principal_point, scale_factor_y = self._get_intrinsics(self.paths[idx], c_data)
         sample.update({

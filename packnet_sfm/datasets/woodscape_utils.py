@@ -138,12 +138,13 @@ def read_calib_file(filepath):
     return data
 
 
-def read_raw_calib_files_woodscape(idx, path, camera):
+def read_raw_calib_files_woodscape(path):
     parent_folder = os.path.abspath(os.path.join(path, "../.."))
+    base, ext = os.path.splitext(os.path.basename(path))
     data = {}
     types_calib = ['intrinsics', 'extrinsics']
     types_calib_ws = ['intrinsic', 'extrinsic']
-    with open(os.path.join(parent_folder, 'calibration/', str(idx).zfill(5) + '_' + camera + '.json')) as f:
+    with open(os.path.join(parent_folder, 'calibration/', base + '.json')) as f:
         data_json = json.load(f)
     for i_type_calib in range(2):
         type_calib = types_calib[i_type_calib]

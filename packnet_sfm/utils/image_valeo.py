@@ -326,7 +326,9 @@ def centered_2d_grid(H, W, principal_point, scale_factors):
     u = torch.linspace(0, W - 1, W)
     v = torch.linspace(0, H - 1, H)
 
+    print(principal_point.shape)
     principal_point = principal_point.flatten()
+    print(principal_point.shape)
     scale_factors = scale_factors.flatten()
     u = (u - (W - 1) / 2 - principal_point[0]) / scale_factors[0]
     v = (v - (H - 1) / 2 - principal_point[1]) / scale_factors[1]

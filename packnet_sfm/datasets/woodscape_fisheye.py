@@ -186,11 +186,11 @@ class WoodscapeFisheye(Dataset):
     #     return read_calib_file(os.path.join(folder, CALIB_FILE['cam2cam']))
 
     @staticmethod
-    def _read_raw_calib_files(idx, cameras):
+    def _read_raw_calib_files(idx, path, cameras):
         """Read raw calibration files from idx."""
         data = {}
         for camera in cameras:
-            data[camera] = read_raw_calib_files_woodscape(idx, CAM_NAMES_CONVERT[camera])
+            data[camera] = read_raw_calib_files_woodscape(idx, path, CAM_NAMES_CONVERT[camera])
         return data
 
     def _get_path_to_theta_lut(self, image_file, c_data):
@@ -420,7 +420,7 @@ class WoodscapeFisheye(Dataset):
         }
 
         # Add intrinsics
-        c_data = self._read_raw_calib_files(idx, self.cameras)
+        c_data = self._read_raw_calib_files(idx, self.paths[idx], self.cameras)
 
         poly_coeffs, principal_point, scale_factor_y = self._get_intrinsics(self.paths[idx], c_data)
         sample.update({

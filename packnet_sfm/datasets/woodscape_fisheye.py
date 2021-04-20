@@ -211,7 +211,7 @@ class WoodscapeFisheye(Dataset):
                               + intr['fisheyeAmt3'] \
                               + intr['fisheyeAmt4'] \
                               + intr['cam_aspect'] \
-                              + '_960_1280.npy'
+                              + '_1280_960.npy'
 
                 return os.path.join(self._get_parent_folder(image_file),
                                     'calibration_theta_lut/',
@@ -275,8 +275,7 @@ class WoodscapeFisheye(Dataset):
         if parent_folder in self._cache:
             max_num_files = self._cache[parent_folder]
         else:
-            max_num_files = len(glob.glob(os.path.join(parent_folder, '*' + ext)))/4 # 4 cameras
-            print(max_num_files)
+            max_num_files = len(glob.glob(os.path.join(parent_folder, '*' + ext)))
             self._cache[parent_folder] = max_num_files
 
         # Check bounds

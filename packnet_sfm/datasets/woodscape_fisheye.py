@@ -151,7 +151,7 @@ class WoodscapeFisheye(Dataset):
         base_splitted = base.split('_')
         base_number_length = len(base_splitted[0])
         base_splitted[0] = str(idx).zfill(base_number_length)
-        #print(os.path.join(parent_folder, 'previous_images/', '_'.join(base_splitted) + ext))
+        print(os.path.join(parent_folder, 'previous_images/', '_'.join(base_splitted) + ext))
         return os.path.join(parent_folder, 'previous_images/', '_'.join(base_splitted) + ext)
 
     @staticmethod

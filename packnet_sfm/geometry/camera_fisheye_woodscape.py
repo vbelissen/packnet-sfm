@@ -232,8 +232,8 @@ class CameraFisheyeWoodscape(nn.Module):
 
         rho = c1 * theta_1 + c2 * theta_2 + c3 * theta_3 + c4 * theta_4 # [B, HW]
         rho = rho * ((X != 0) | (Y != 0) | (Z != 0))
-        u = rho * torch.cos(phi) * self.scale_factors[:, 0].unsqueeze(1) + self.principal_point[:, 0].unsqueeze(1) # [B, HW]
-        v = rho * torch.sin(phi) * self.scale_factors[:, 1].unsqueeze(1) + self.principal_point[:, 1].unsqueeze(1) # [B, HW]
+        u = rho * torch.cos(phi) + self.principal_point[:, 0].unsqueeze(1) # [B, HW]
+        v = rho * torch.sin(phi) * self.scale_factor_y + self.principal_point[:, 1].unsqueeze(1) # [B, HW]
 
         # Normalize points
         Xnorm = 2 * u / (W - 1)# - 1.

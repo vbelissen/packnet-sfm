@@ -115,7 +115,7 @@ class WoodscapeFisheye(Dataset):
 
         with open(file_list, "r") as f:
             data = f.readlines()
-        print(data)
+
         self.paths = []
         # Get file list from data
         for i, fname in enumerate(data):
@@ -127,7 +127,7 @@ class WoodscapeFisheye(Dataset):
                 depth = self._get_depth_file(path)
                 if depth is not None and os.path.exists(depth):
                     self.paths.append(path)
-
+        print(self.paths)
         # If using context, filter file list
         if self.with_context:
             paths_with_context = []

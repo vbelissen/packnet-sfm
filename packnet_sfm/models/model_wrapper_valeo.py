@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch.utils.data import ConcatDataset, DataLoader
 
-from packnet_sfm.datasets.transforms_valeo import get_transforms, get_transforms_fisheye
+from packnet_sfm.datasets.transforms_valeo import get_transforms, get_transforms_fisheye, get_transforms_woodscape_fisheye
 from packnet_sfm.utils.depth import inv2depth, post_process_inv_depth, compute_depth_metrics
 from packnet_sfm.utils.horovod import print0, world_size, rank, on_rank_0
 from packnet_sfm.utils.image import flip_lr
@@ -513,6 +513,12 @@ def setup_dataset(config, mode, requirements, **kwargs):
                 'with_pose': requirements['gt_pose'],
                 'data_transform': get_transforms_fisheye(mode, **kwargs)
             }
+        elif config.dataset[i] == 'WoodscapeFisheye':
+            dataset_args_i = {
+                'depth_type': config.depth_type[i] if requirements['gt_depth'] else None,
+                'with_pose': requirements['gt_pose'],
+                'data_transform': get_transforms_woodscape_fisheye(mode, **kwargs)
+            }
         else:
             dataset_args_i = {
                 'depth_type': config.depth_type[i] if requirements['gt_depth'] else None,
@@ -554,6 +560,13 @@ def setup_dataset(config, mode, requirements, **kwargs):
         elif config.dataset[i] == 'KITTIValeoFisheye':
             from packnet_sfm.datasets.kitti_based_valeo_dataset_fisheye import KITTIBasedValeoDatasetFisheye
             dataset = KITTIBasedValeoDatasetFisheye(
+                config.path[i], path_split,
+                **dataset_args, **dataset_args_i,
+                cameras=config.cameras[i],
+            )
+        elif config.dataset[i] == 'WoodscapeFisheye':
+            from packnet_sfm.datasets.woodscape_fisheye import WoodscapeFisheye
+            dataset = WoodscapeFisheye(
                 config.path[i], path_split,
                 **dataset_args, **dataset_args_i,
                 cameras=config.cameras[i],

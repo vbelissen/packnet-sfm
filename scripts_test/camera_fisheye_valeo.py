@@ -11,6 +11,8 @@ from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics_fisheye, get_roots_table_tensor
 from packnet_sfm.utils.image_valeo import image_grid, centered_2d_grid
 
+from scipy.spatial.transform import Rotation as R
+
 from PIL import Image
 import os
 import re
@@ -29,6 +31,8 @@ principal_point   = torch.Tensor([0.046296, -7.33178]).unsqueeze(0)
 scale_factors     = torch.Tensor([1., 1./1.00173]).unsqueeze(0)
 Tcw               = Pose.identity(len(poly_coeffs))
 Twc               = Tcw.inverse()
+
+r = R.from_quat([1, 0, 0, 0])
 
 depth_map_valeo = np.zeros((1, 1, 800, 1280))
 depth_map_valeo[0, 0, :, :] = \
@@ -171,7 +175,8 @@ for h in tqdm(range(800)):
         u = int((1280-1)/2*(1+depth_map_valeo_reprojected_numpy[0, h, w, 0]))
         v = int((800-1)/2*(1+depth_map_valeo_reprojected_numpy[0, h, w, 1]))
         cop = np.zeros(3)
-        cop[0:2] = principal_point.numpy()[0, :]
+        #cop[0:2] = principal_point.numpy()[0, :]
+        #cop = np.array([ 3.691   , -0.      ,  0.474331]).astype('float32')
         d = np.linalg.norm(valeo_point_cloud[0, :, h, w] - cop)
         if 0 <= v < 800 and 0 <= u < 1280:
             new_depth_map[v, u] = d
@@ -186,5 +191,18 @@ cv2.waitKey()
 # pcl_reconstruct.points = o3d.utility.Vector3dVector(point3d)
 # pcl_reconstruct.paint_uniform_color([0.0, 0.0, 1.0])
 
-o3d.visualization.draw_geometries([pcl])#, pcl_reconstruct])
+new_depth_map_tensor = np.zeros((1, 1, 800, 1280))
+new_depth_map_tensor[0, 0] = new_depth_map
+new_depth_map_tensor = new_depth_map_tensor.astype('float32')
+new_depth_map_tensor = torch.from_numpy(new_depth_map_tensor)
+
+valeo_point_cloud_2 = reconstruct(new_depth_map_tensor, frame='w')
+print(valeo_point_cloud_2.shape)
+valeo_point_cloud_2_flattened = valeo_point_cloud_2.view(1, 3, -1).transpose(1, 2).squeeze()
+
+pcl_2 = o3d.geometry.PointCloud()
+pcl_2.points = o3d.utility.Vector3dVector(valeo_point_cloud_2_flattened)
+pcl_2.paint_uniform_color([0.0, 1.0, 0])
+
+o3d.visualization.draw_geometries([pcl, pcl_2])#, pcl_reconstruct])
 

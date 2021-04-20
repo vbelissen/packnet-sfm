@@ -24,7 +24,7 @@ model:
         max_depth: 150.0
 datasets:
     augmentation:
-        image_shape: (240, 320)
+        image_shape: (480, 640)
     train:
         batch_size: 1
         dataset: ['WoodscapeFisheye']

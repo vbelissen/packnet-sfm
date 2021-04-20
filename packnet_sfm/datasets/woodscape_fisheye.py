@@ -146,18 +146,18 @@ class WoodscapeFisheye(Dataset):
     @staticmethod
     def _get_next_file(idx, file):
         """Get next file given next idx and current file."""
-        parent_folder = os.path.abspath(os.path.join(file, ".."))
+        parent_folder = os.path.abspath(os.path.join(file, "../.."))
         base, ext = os.path.splitext(os.path.basename(file))
         base_splitted = base.split('_')
         base_number_length = len(base_splitted[0])
         base_splitted[0] = str(idx).zfill(base_number_length)
-        print(os.path.join(parent_folder, 'previous_images/', '_'.join(base_splitted) + ext))
+        #print(os.path.join(parent_folder, 'previous_images/', '_'.join(base_splitted) + ext))
         return os.path.join(parent_folder, 'previous_images/', '_'.join(base_splitted) + ext)
 
     @staticmethod
     def _get_parent_folder(image_file):
         """Get the parent folder from image_file."""
-        return os.path.abspath(os.path.join(image_file, ".."))
+        return os.path.abspath(os.path.join(image_file, "../.."))
 
     @staticmethod
     def _get_current_folder(image_file):

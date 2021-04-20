@@ -363,7 +363,7 @@ def centered_2d_grid_woodscape(H, W, principal_point, scale_factor_y):
     v = torch.linspace(0, H - 1, H)
 
     principal_point = principal_point.flatten()
-    scale_factor_y = scale_factor_y.flatten()
+    scale_factor_y = scale_factor_y.flatten().to('cpu')
     u = (u - (W - 1) / 2 - principal_point[0])
     v = (v - (H - 1) / 2 - principal_point[1]) / scale_factor_y
     yi, xi = torch.meshgrid([v, u])

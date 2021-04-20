@@ -127,7 +127,7 @@ class WoodscapeFisheye(Dataset):
                 depth = self._get_depth_file(path)
                 if depth is not None and os.path.exists(depth):
                     self.paths.append(path)
-        print(self.paths)
+
         # If using context, filter file list
         if self.with_context:
             paths_with_context = []
@@ -136,9 +136,8 @@ class WoodscapeFisheye(Dataset):
                     backward_context_idxs, forward_context_idxs = \
                         self._get_sample_context(
                             file, backward_context, forward_context, stride)
-                    if backward_context_idxs is not None and forward_context_idxs is not None:
+                    if backward_context_idxs is not None:
                         paths_with_context.append(self.paths[idx])
-                        self.forward_context_paths.append(forward_context_idxs)
                         self.backward_context_paths.append(backward_context_idxs[::-1])
             self.paths = paths_with_context
 

@@ -33,6 +33,8 @@ datasets:
         depth_type: ['']
         cameras: [['Front']]
         repeat: [2]
+        back_context: 1
+        forward_context: 0
     validation:
         dataset: ['KITTI']
         path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/KITTI_tiny']

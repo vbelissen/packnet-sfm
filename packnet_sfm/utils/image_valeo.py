@@ -323,8 +323,8 @@ def centered_2d_grid(B, H, W, dtype, device, principal_point, scale_factors):
         Image grid containing a meshgrid in x, y and 1
     """
 
-    u = torch.linspace(0, W - 1, W, device=device, dtype=dtype)
-    v = torch.linspace(0, H - 1, H, device=device, dtype=dtype)
+    u = torch.linspace(0, W - 1, W)
+    v = torch.linspace(0, H - 1, H)
 
     v, u = torch.meshgrid([v, u])
     v = v.repeat([B, 1, 1])
@@ -367,8 +367,8 @@ def centered_2d_grid_woodscape(B, H, W, dtype, device, principal_point, scale_fa
         Image grid containing a meshgrid in x, y and 1
     """
 
-    u = torch.linspace(0, W - 1, W, device=device, dtype=dtype)
-    v = torch.linspace(0, H - 1, H, device=device, dtype=dtype)
+    u = torch.linspace(0, W - 1, W)
+    v = torch.linspace(0, H - 1, H)
 
     v, u = torch.meshgrid([v, u])
     v = v.repeat([B, 1, 1])

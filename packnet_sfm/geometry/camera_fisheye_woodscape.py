@@ -177,6 +177,9 @@ class CameraFisheyeWoodscape(nn.Module):
 
         Xc = torch.cat([xc, yc, zc], dim=1)
 
+        print(xc.shape)
+        print(yc.shape)
+        print(zc.shape)
         print(Xc.shape)
         print(self.Twc.shape)
 

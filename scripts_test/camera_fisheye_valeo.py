@@ -79,6 +79,12 @@ def reconstruct(depth, frame='w'):
 
     Xc = torch.cat([xc, yc, zc], dim=1)
 
+    print(xc.shape)
+    print(yc.shape)
+    print(zc.shape)
+    print(Xc.shape)
+    print(Twc.shape)
+
     # If in camera frame of reference
     if frame == 'c':
         return Xc

@@ -168,6 +168,10 @@ class CameraFisheyeWoodscape(nn.Module):
         rc = depth * torch.sin(theta_tensor)
 
         xi, yi = meshgrid(B, H, W, depth.dtype, depth.device, normalized=False)
+        print(xi.shape)
+        print(yi.shape)
+        print(self.principal_point.shape)
+        print(self.scale_factor_y.shape)
 
         xi = (xi - (W - 1) / 2 - self.principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
         yi = (yi - (H - 1) / 2 - self.principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])) / self.scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W])

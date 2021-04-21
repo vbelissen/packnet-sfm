@@ -9,7 +9,7 @@ import os
 
 from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics_fisheye, get_roots_table_tensor
-from packnet_sfm.utils.image_valeo import image_grid, centered_2d_grid
+from packnet_sfm.utils.image_valeo import image_grid, centered_2d_grid, meshgrid
 
 
 ########################################################################################################################
@@ -166,7 +166,13 @@ class CameraFisheye(nn.Module):
 
         rc = depth * torch.sin(theta_tensor)
 
-        yi, xi = centered_2d_grid(B, H, W, depth.dtype, depth.device, self.principal_point, self.scale_factors)
+        #yi, xi = centered_2d_grid(B, H, W, depth.dtype, depth.device, self.principal_point, self.scale_factors)
+
+        xi, yi = meshgrid(B, H, W, depth.dtype, depth.device, normalized=False)
+
+        xi = ((xi - (W - 1) / 2 - self.principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])) / self.scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
+        yi = ((yi - (H - 1) / 2 - self.principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])) / self.scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
+
         phi = torch.atan2(yi, xi).to(device)
 
         xc = rc * torch.cos(phi)

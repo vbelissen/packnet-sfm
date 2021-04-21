@@ -162,7 +162,7 @@ class CameraFisheyeWoodscape(nn.Module):
         theta_tensor = torch.zeros(B, 1, H, W)
         for b in range(B):
             theta_tensor[b, 0] = torch.from_numpy(np.load(self.path_to_theta_lut[b]))
-        theta_tensor = theta_tensor.detach()#.to(device)
+        theta_tensor = theta_tensor.to(device)
         #get_roots_table_tensor(self.poly_coeffs, self.principal_point, self.scale_factors, H, W).to(device)
 
         rc = depth * torch.sin(theta_tensor)

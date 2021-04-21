@@ -330,11 +330,11 @@ def centered_2d_grid(B, H, W, dtype, device, principal_point, scale_factors):
     v = v.repeat([B, 1, 1])
     u = u.repeat([B, 1, 1])
 
-    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
-    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
 
-    scale_factors_u = scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
-    scale_factors_v = scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    scale_factors_u = scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    scale_factors_v = scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
 
     u = (u - (W - 1) / 2 - principal_point_u) / scale_factors_u
     v = (v - (H - 1) / 2 - principal_point_v) / scale_factors_v
@@ -374,10 +374,10 @@ def centered_2d_grid_woodscape(B, H, W, dtype, device, principal_point, scale_fa
     v = v.repeat([B, 1, 1])
     u = u.repeat([B, 1, 1])
 
-    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
-    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
 
-    scale_factor_y_v = scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    scale_factor_y_v = scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
 
     u = (u - (W - 1) / 2 - principal_point_u)
     v = (v - (H - 1) / 2 - principal_point_v) / scale_factor_y_v

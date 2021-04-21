@@ -177,6 +177,9 @@ class CameraFisheyeWoodscape(nn.Module):
 
         Xc = torch.cat([xc, yc, zc], dim=1)
 
+        print(Xc.shape)
+        print(self.Twc.shape)
+
         # If in camera frame of reference
         if frame == 'c':
             return Xc

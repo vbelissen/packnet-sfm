@@ -9,7 +9,7 @@ import os
 
 from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.geometry.camera_fisheye_woodscape_utils import scale_intrinsics_fisheye, get_roots_table_tensor
-from packnet_sfm.utils.image_valeo import image_grid, centered_2d_grid, centered_2d_grid_woodscape
+from packnet_sfm.utils.image_valeo import image_grid, centered_2d_grid, centered_2d_grid_woodscape, meshgrid
 
 
 ########################################################################################################################
@@ -167,7 +167,12 @@ class CameraFisheyeWoodscape(nn.Module):
 
         rc = depth * torch.sin(theta_tensor)
 
-        yi, xi = centered_2d_grid_woodscape(B, H, W, depth.dtype, depth.device, self.principal_point, self.scale_factor_y)
+        xi, yi = meshgrid(B, H, W, depth.dtype, depth.device, normalized=False)
+
+        xi = (xi - (W - 1) / 2 - self.principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
+        yi = (yi - (H - 1) / 2 - self.principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])) / self.scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+
+        #yi, xi = centered_2d_grid_woodscape(B, H, W, depth.dtype, depth.device, self.principal_point, self.scale_factor_y)
         phi = torch.atan2(yi, xi).to(device)
 
         xc = rc * torch.cos(phi)

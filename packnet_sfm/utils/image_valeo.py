@@ -323,18 +323,18 @@ def centered_2d_grid(B, H, W, dtype, device, principal_point, scale_factors):
         Image grid containing a meshgrid in x, y and 1
     """
 
-    u = torch.linspace(0, W - 1, W)
-    v = torch.linspace(0, H - 1, H)
+    u = torch.linspace(0, W - 1, W, device=device, dtype=dtype)
+    v = torch.linspace(0, H - 1, H, device=device, dtype=dtype)
 
     v, u = torch.meshgrid([v, u])
     v = v.repeat([B, 1, 1])
     u = u.repeat([B, 1, 1])
 
-    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
-    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
 
-    scale_factors_u = scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
-    scale_factors_v = scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    scale_factors_u = scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    scale_factors_v = scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
 
     u = (u - (W - 1) / 2 - principal_point_u) / scale_factors_u
     v = (v - (H - 1) / 2 - principal_point_v) / scale_factors_v
@@ -367,20 +367,20 @@ def centered_2d_grid_woodscape(B, H, W, dtype, device, principal_point, scale_fa
         Image grid containing a meshgrid in x, y and 1
     """
 
-    u = torch.linspace(0, W - 1, W)
-    v = torch.linspace(0, H - 1, H)
+    u = torch.linspace(0, W - 1, W, device=device, dtype=dtype)
+    v = torch.linspace(0, H - 1, H, device=device, dtype=dtype)
 
     v, u = torch.meshgrid([v, u])
     v = v.repeat([B, 1, 1])
     u = u.repeat([B, 1, 1])
 
-    #principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
-    #principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
 
-    #scale_factor_y_v = scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    scale_factor_y_v = scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W])
 
-    u = (u - (W - 1) / 2 - principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu'))
-    v = (v - (H - 1) / 2 - principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')) / scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    u = (u - (W - 1) / 2 - principal_point_u)
+    v = (v - (H - 1) / 2 - principal_point_v) / scale_factor_y_v
     #yi, xi = torch.meshgrid([v, u])
     return v.unsqueeze(1), u.unsqueeze(1)#yi, xi # [B, 1, H, W]
 

@@ -339,7 +339,7 @@ def centered_2d_grid(B, H, W, dtype, device, principal_point, scale_factors):
     u = (u - (W - 1) / 2 - principal_point_u) / scale_factors_u
     v = (v - (H - 1) / 2 - principal_point_v) / scale_factors_v
     #yi, xi = torch.meshgrid([v, u])
-    return v, u#yi, xi
+    return v.unsqueeze(1), u.unsqueeze(1)#yi, xi
 
 @lru_cache(maxsize=None)
 def centered_2d_grid_woodscape(B, H, W, dtype, device, principal_point, scale_factor_y):
@@ -382,6 +382,6 @@ def centered_2d_grid_woodscape(B, H, W, dtype, device, principal_point, scale_fa
     u = (u - (W - 1) / 2 - principal_point_u)
     v = (v - (H - 1) / 2 - principal_point_v) / scale_factor_y_v
     #yi, xi = torch.meshgrid([v, u])
-    return v, u#yi, xi
+    return v.unsqueeze(1), u.unsqueeze(1)#yi, xi # [B, 1, H, W]
 
 ########################################################################################################################

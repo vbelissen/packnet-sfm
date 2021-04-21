@@ -374,13 +374,13 @@ def centered_2d_grid_woodscape(B, H, W, dtype, device, principal_point, scale_fa
     v = v.repeat([B, 1, 1])
     u = u.repeat([B, 1, 1])
 
-    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
-    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    #principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    #principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
 
-    scale_factor_y_v = scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
+    #scale_factor_y_v = scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
 
-    u = (u - (W - 1) / 2 - principal_point_u)
-    v = (v - (H - 1) / 2 - principal_point_v) / scale_factor_y_v
+    u = (u - (W - 1) / 2 - principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu'))
+    v = (v - (H - 1) / 2 - principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')) / scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W]).to('cpu')
     #yi, xi = torch.meshgrid([v, u])
     return v.unsqueeze(1), u.unsqueeze(1)#yi, xi # [B, 1, H, W]
 

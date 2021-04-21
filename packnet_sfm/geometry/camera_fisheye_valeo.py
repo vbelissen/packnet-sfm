@@ -166,7 +166,7 @@ class CameraFisheye(nn.Module):
 
         rc = depth * torch.sin(theta_tensor)
 
-        yi, xi = centered_2d_grid(H, W, self.principal_point, self.scale_factors)
+        yi, xi = centered_2d_grid(B, H, W, depth.dtype, depth.device, self.principal_point, self.scale_factors)
         phi = torch.atan2(yi, xi).to(device)
 
         xc = rc * torch.cos(phi)

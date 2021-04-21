@@ -298,7 +298,7 @@ def image_grid(B, H, W, dtype, device, normalized=False):
     return grid
 
 @lru_cache(maxsize=None)
-def centered_2d_grid(H, W, principal_point, scale_factors):
+def centered_2d_grid(B, H, W, dtype, device, principal_point, scale_factors):
     """
     Create an image grid with a specific resolution
 
@@ -323,22 +323,26 @@ def centered_2d_grid(H, W, principal_point, scale_factors):
         Image grid containing a meshgrid in x, y and 1
     """
 
-    u = torch.linspace(0, W - 1, W)
-    v = torch.linspace(0, H - 1, H)
+    u = torch.linspace(0, W - 1, W, device=device, dtype=dtype)
+    v = torch.linspace(0, H - 1, H, device=device, dtype=dtype)
 
-    print(principal_point.shape)
-    print(principal_point)
-    principal_point = principal_point.flatten()
-    print(principal_point.shape)
-    print(principal_point)
-    scale_factors = scale_factors.flatten()
-    u = (u - (W - 1) / 2 - principal_point[0]) / scale_factors[0]
-    v = (v - (H - 1) / 2 - principal_point[1]) / scale_factors[1]
-    yi, xi = torch.meshgrid([v, u])
-    return yi, xi
+    v, u = torch.meshgrid([v, u])
+    v = v.repeat([B, 1, 1])
+    u = u.repeat([B, 1, 1])
+
+    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+
+    scale_factors_u = scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    scale_factors_v = scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+
+    u = (u - (W - 1) / 2 - principal_point_u) / scale_factors_u
+    v = (v - (H - 1) / 2 - principal_point_v) / scale_factors_v
+    #yi, xi = torch.meshgrid([v, u])
+    return v, u#yi, xi
 
 @lru_cache(maxsize=None)
-def centered_2d_grid_woodscape(H, W, principal_point, scale_factor_y):
+def centered_2d_grid_woodscape(B, H, W, dtype, device, principal_point, scale_factor_y):
     """
     Create an image grid with a specific resolution
 
@@ -363,14 +367,21 @@ def centered_2d_grid_woodscape(H, W, principal_point, scale_factor_y):
         Image grid containing a meshgrid in x, y and 1
     """
 
-    u = torch.linspace(0, W - 1, W)
-    v = torch.linspace(0, H - 1, H)
+    u = torch.linspace(0, W - 1, W, device=device, dtype=dtype)
+    v = torch.linspace(0, H - 1, H, device=device, dtype=dtype)
 
-    principal_point = principal_point.flatten()
-    scale_factor_y = scale_factor_y.flatten().to('cpu')
-    u = (u - (W - 1) / 2 - principal_point[0])
-    v = (v - (H - 1) / 2 - principal_point[1]) / scale_factor_y
-    yi, xi = torch.meshgrid([v, u])
-    return yi, xi
+    v, u = torch.meshgrid([v, u])
+    v = v.repeat([B, 1, 1])
+    u = u.repeat([B, 1, 1])
+
+    principal_point_u = principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+    principal_point_v = principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+
+    scale_factor_y_v = scale_factor_y.unsqueeze(1).unsqueeze(2).repeat([1, H, W])
+
+    u = (u - (W - 1) / 2 - principal_point_u)
+    v = (v - (H - 1) / 2 - principal_point_v) / scale_factor_y_v
+    #yi, xi = torch.meshgrid([v, u])
+    return v, u#yi, xi
 
 ########################################################################################################################

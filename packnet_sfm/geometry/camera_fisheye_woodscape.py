@@ -167,7 +167,7 @@ class CameraFisheyeWoodscape(nn.Module):
 
         rc = depth * torch.sin(theta_tensor)
 
-        yi, xi = centered_2d_grid_woodscape(H, W, self.principal_point, self.scale_factor_y)
+        yi, xi = centered_2d_grid_woodscape(B, H, W, depth.dtype, depth.device, self.principal_point, self.scale_factor_y)
         phi = torch.atan2(yi, xi).to(device)
 
         xc = rc * torch.cos(phi)

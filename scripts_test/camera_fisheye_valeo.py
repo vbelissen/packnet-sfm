@@ -69,7 +69,7 @@ def reconstruct(depth, frame='w'):
 
     rc = depth * torch.sin(theta_tensor)
 
-    yi, xi = centered_2d_grid(H, W, principal_point, scale_factors)
+    yi, xi = centered_2d_grid(B, H, W, depth.dtype, depth.device, principal_point, scale_factors)
     phi = torch.atan2(yi, xi)
 
     xc = rc * torch.cos(phi)

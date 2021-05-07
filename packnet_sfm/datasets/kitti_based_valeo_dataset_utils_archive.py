@@ -5,7 +5,6 @@ from collections import namedtuple
 import numpy as np
 import os
 import csv
-import yaml
 
 __author__ = "Lee Clement"
 __email__ = "lee.clement@robotics.utias.utoronto.ca"
@@ -138,14 +137,12 @@ def read_calib_file(filepath):
     return data
 
 
-def read_raw_calib_files_camera_valeo(base_folder, split_type, seq_name, camera):
-    with open(os.path.join(base_folder,
-                           'calibrations',
-                           'fisheye',
-                           split_type,
-                           seq_name,
-                           seq_name + '_' + camera + '.yml')) as fisheye_cam_file:
-        data = yaml.load(fisheye_cam_file, Loader=yaml.FullLoader)
+def read_raw_calib_files_camera_valeo(folder, camera):
+    data = {}
+    types_calib = ['intrinsics', 'base_intrinsics', 'extrinsics']
+    for type_calib in types_calib:
+        raw_file = open(os.path.join(folder, 'cam_' + camera + '_' + type_calib + '.txt'), 'r')
+        data[type_calib] = dict(list(csv.DictReader(raw_file))[0])
     return data
 
 

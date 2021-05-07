@@ -8,7 +8,7 @@ import numpy as np
 import os
 
 from packnet_sfm.geometry.pose import Pose
-from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics_fisheye, scale_path_to_theta_lut
+from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics_fisheye, get_roots_table_tensor
 from packnet_sfm.utils.image_valeo import image_grid, centered_2d_grid, meshgrid
 
 
@@ -61,6 +61,45 @@ class CameraFisheye(nn.Module):
 
 ########################################################################################################################
 
+    @property
+    def fx(self):
+        """Focal length in x"""
+        return self.K[:, 0, 0]
+
+    @property
+    def fy(self):
+        """Focal length in y"""
+        return self.K[:, 1, 1]
+
+    @property
+    def cx(self):
+        """Principal point in x"""
+        return self.K[:, 0, 2]
+
+    @property
+    def cy(self):
+        """Principal point in y"""
+        return self.K[:, 1, 2]
+
+    @property
+    @lru_cache()
+    def Twc(self):
+        """World -> Camera pose transformation (inverse of Tcw)"""
+        return self.Tcw.inverse()
+
+    @property
+    @lru_cache()
+    def Kinv(self):
+        """Inverse intrinsics (for lifting)"""
+        Kinv = self.K.clone()
+        Kinv[:, 0, 0] = 1. / self.fx
+        Kinv[:, 1, 1] = 1. / self.fy
+        Kinv[:, 0, 2] = -1. * self.cx / self.fx
+        Kinv[:, 1, 2] = -1. * self.cy / self.fy
+        return Kinv
+
+########################################################################################################################
+
     def scaled(self, x_scale, y_scale=None):
         """
         Returns a scaled version of the camera (changing intrinsics)
@@ -84,15 +123,17 @@ class CameraFisheye(nn.Module):
         if x_scale == 1.:
             return self
         # Scale intrinsics and return new camera with same Pose
-        poly_coeffs, principal_point = scale_intrinsics_fisheye(self.poly_coeffs.clone(),
-                                                                self.principal_point.clone(),
-                                                                x_scale)
-        path_to_theta_lut = scale_path_to_theta_lut(self.path_to_theta_lut.clone(), x_scale)
-        return CameraFisheye(path_to_theta_lut,
-                             poly_coeffs,
-                             principal_point,
-                             scale_factors=self.scale_factors,
-                             Tcw=self.Tcw)
+        poly_coeffs, principal_point = \
+            scale_intrinsics_fisheye(self.poly_coeffs.clone(), self.principal_point.clone(), x_scale)
+        path_to_theta_lut_clone = self.path_to_theta_lut.clone()
+        dir = os.path.dirname(path_to_theta_lut_clone)
+        base_clone, ext = os.path.splitext(os.path.basename(path_to_theta_lut_clone))
+        base_clone_splitted = base_clone.split('_')
+        base_clone_splitted[2] = int(x_scale * base_clone_splitted[2])
+        base_clone_splitted[3] = int(x_scale * base_clone_splitted[3])
+        path_to_theta_lut = os.path.join(dir, base_clone_splitted.join('_') + '.npy')
+        #K = scale_intrinsics(self.K.clone(), x_scale, y_scale)
+        return CameraFisheye(path_to_theta_lut, poly_coeffs, principal_point, scale_factors=self.scale_factors, Tcw=self.Tcw)
 
 ########################################################################################################################
 
@@ -129,10 +170,8 @@ class CameraFisheye(nn.Module):
 
         xi, yi = meshgrid(B, H, W, depth.dtype, depth.device, normalized=False)
 
-        xi = ((xi - (W - 1) / 2 - self.principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
-              * self.scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
-        yi = ((yi - (H - 1) / 2 - self.principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
-              * self.scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
+        xi = ((xi - (W - 1) / 2 - self.principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])) / self.scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
+        yi = ((yi - (H - 1) / 2 - self.principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])) / self.scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
 
         phi = torch.atan2(yi, xi).to(device)
 
@@ -198,8 +237,8 @@ class CameraFisheye(nn.Module):
 
         rho = c1 * theta_1 + c2 * theta_2 + c3 * theta_3 + c4 * theta_4 # [B, HW]
         rho = rho * ((X != 0) | (Y != 0) | (Z != 0))
-        u = rho * torch.cos(phi) / self.scale_factors[:, 0].unsqueeze(1) + self.principal_point[:, 0].unsqueeze(1) # [B, HW]
-        v = rho * torch.sin(phi) / self.scale_factors[:, 1].unsqueeze(1) + self.principal_point[:, 1].unsqueeze(1) # [B, HW]
+        u = rho * torch.cos(phi) * self.scale_factors[:, 0].unsqueeze(1) + self.principal_point[:, 0].unsqueeze(1) # [B, HW]
+        v = rho * torch.sin(phi) * self.scale_factors[:, 1].unsqueeze(1) + self.principal_point[:, 1].unsqueeze(1) # [B, HW]
 
         # Normalize points
         Xnorm = 2 * u / (W - 1)# - 1.

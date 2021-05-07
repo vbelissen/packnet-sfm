@@ -30,17 +30,6 @@ def scale_intrinsics_fisheye(poly_coeffs, principal_point, x_scale):
     """Scale intrinsics given x_scale and y_scale factors"""
     return poly_coeffs * x_scale, principal_point * x_scale
 
-def scale_path_to_theta_lut(path_to_theta_lut, x_scale):
-    path_to_theta_lut_clone = path_to_theta_lut
-    splitted_path = path_to_theta_lut_clone.split('_')
-    w_res_str = splitted_path[-2]
-    splitted_path[-2] = str(int(x_scale * int(w_res_str)))
-    h_res_str_with_ext = splitted_path[-1]
-    h_res_str_splitted = h_res_str_with_ext.split('.')
-    h_res_new = str(int(x_scale * int(h_res_str_splitted[0])))
-    splitted_path[-1] = '.'.join([h_res_new, h_res_str_splitted[1]])
-    path_to_theta_lut_clone = '_'.join(splitted_path)
-    return path_to_theta_lut_clone
 
 @lru_cache()
 def get_roots_table_tensor(poly_coeffs, principal_point, scale_factors, H, W):

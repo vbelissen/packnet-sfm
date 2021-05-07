@@ -336,8 +336,8 @@ def centered_2d_grid(B, H, W, dtype, device, principal_point, scale_factors):
     scale_factors_u = scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
     scale_factors_v = scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])
 
-    u = (u - (W - 1) / 2 - principal_point_u) * scale_factors_u
-    v = (v - (H - 1) / 2 - principal_point_v) * scale_factors_v
+    u = (u - (W - 1) / 2 - principal_point_u) / scale_factors_u
+    v = (v - (H - 1) / 2 - principal_point_v) / scale_factors_v
     #yi, xi = torch.meshgrid([v, u])
     return v.unsqueeze(1), u.unsqueeze(1)#yi, xi
 

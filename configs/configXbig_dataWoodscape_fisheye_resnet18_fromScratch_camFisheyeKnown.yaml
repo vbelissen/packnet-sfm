@@ -24,9 +24,9 @@ model:
         max_depth: 150.0
 datasets:
     augmentation:
-        image_shape: (480, 640)
+        image_shape: (960, 1280)
     train:
-        batch_size: 12
+        batch_size: 3
         dataset: ['WoodscapeFisheye']
         path: ['/data/vbelissen/Woodscape']
         split: ['woodscape_FV_train.txt']

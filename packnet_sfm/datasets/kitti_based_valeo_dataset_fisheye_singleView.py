@@ -111,6 +111,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
             else:
                 # Check if the depth file exists
                 depth = self._get_depth_file(path)
+                print(depth)
                 if depth is not None and os.path.exists(depth):
                     self.paths.append(path)
 

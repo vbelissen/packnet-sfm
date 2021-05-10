@@ -95,13 +95,24 @@ def resize_sample_image_and_intrinsics_fisheye(sample, shape,
         'path_to_theta_lut'
     ]):
         path_to_theta_lut = sample[key]
-        dir = os.path.dirname(path_to_theta_lut)
-        base_clone, ext = os.path.splitext(os.path.basename(path_to_theta_lut))
-        base_clone_splitted = base_clone.split('_')
-        base_clone_splitted[2] = str(int(rescale_factor_h * float(base_clone_splitted[2])))
-        base_clone_splitted[3] = str(int(rescale_factor_h * float(base_clone_splitted[3])))
-        path_to_theta_lut = os.path.join(dir, '_'.join(base_clone_splitted) + '.npy')
-        sample[key] = path_to_theta_lut
+
+        path_to_theta_lut_clone = path_to_theta_lut
+        splitted_path = path_to_theta_lut_clone.split('_')
+        w_res_str = splitted_path[-2]
+        splitted_path[-2] = str(int(rescale_factor_h * int(w_res_str)))
+        h_res_str_with_ext = splitted_path[-1]
+        h_res_str_splitted = h_res_str_with_ext.split('.')
+        h_res_new = str(int(rescale_factor_h * int(h_res_str_splitted[0])))
+        splitted_path[-1] = '.'.join([h_res_new, h_res_str_splitted[1]])
+        sample[key] = '_'.join(splitted_path)
+
+        # dir = os.path.dirname(path_to_theta_lut)
+        # base_clone, ext = os.path.splitext(os.path.basename(path_to_theta_lut))
+        # base_clone_splitted = base_clone.split('_')
+        # base_clone_splitted[2] = str(int(rescale_factor_h * float(base_clone_splitted[2])))
+        # base_clone_splitted[3] = str(int(rescale_factor_h * float(base_clone_splitted[3])))
+        # path_to_theta_lut = os.path.join(dir, '_'.join(base_clone_splitted) + '.npy')
+        # sample[key] = path_to_theta_lut
     # Scale images
     for key in filter_dict(sample, [
         'rgb', 'rgb_original',

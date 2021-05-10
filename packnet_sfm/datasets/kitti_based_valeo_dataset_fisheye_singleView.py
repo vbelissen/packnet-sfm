@@ -208,7 +208,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                             'fisheye',
                             self._get_split_type(image_file),
                             self._get_sequence_name(image_file),
-                            self._get_sequence_name(image_file) + self._get_camera_name(image_file) + '_1280_800.npy')
+                            self._get_sequence_name(image_file) + '_' + self._get_camera_name(image_file) + '_1280_800.npy')
 
 ########################################################################################################################
 #### DEPTH

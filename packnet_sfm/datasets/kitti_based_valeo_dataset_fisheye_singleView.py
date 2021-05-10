@@ -111,7 +111,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
             else:
                 # Check if the depth file exists
                 depth = self._get_depth_file(path)
-                print(depth)
+                #print(depth)
                 if depth is not None and os.path.exists(depth):
                     self.paths.append(path)
 
@@ -236,7 +236,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                                 self._get_split_type(image_file),
                                 self._get_sequence_name(image_file),
                                 self._get_camera_name(image_file).replace('cam', 'velodyne'),
-                                base.replace('cam', 'velodyne').replace('jpg', 'npz'))
+                                base.replace('cam', 'velodyne') + '.npz')
 
     def _get_sample_context(self, sample_name,
                             backward_context, forward_context, stride=1):

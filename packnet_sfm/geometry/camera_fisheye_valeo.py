@@ -60,6 +60,12 @@ class CameraFisheye(nn.Module):
         return self
 
 ########################################################################################################################
+    @property
+    @lru_cache()
+    def Twc(self):
+        """World -> Camera pose transformation (inverse of Tcw)"""
+        return self.Tcw.inverse()
+########################################################################################################################
 
     def scaled(self, x_scale, y_scale=None):
         """

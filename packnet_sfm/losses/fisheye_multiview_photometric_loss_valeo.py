@@ -92,7 +92,7 @@ class MultiViewPhotometricLoss(LossBase):
     def __init__(self, num_scales=4, ssim_loss_weight=0.85, occ_reg_weight=0.1, smooth_loss_weight=0.1,
                  C1=1e-4, C2=9e-4, photometric_reduce_op='mean', disp_norm=True, clip_loss=0.5,
                  progressive_scaling=0.0, padding_mode='zeros',
-                 automask_loss=False, **kwargs):
+                 automask_loss=False, mask_ego=True, **kwargs):
         super().__init__()
         self.n = num_scales
         self.progressive_scaling = progressive_scaling
@@ -106,6 +106,7 @@ class MultiViewPhotometricLoss(LossBase):
         self.clip_loss = clip_loss
         self.padding_mode = padding_mode
         self.automask_loss = automask_loss
+        self.mask_ego = mask_ego
         self.progressive_scaling = ProgressiveScaling(
             progressive_scaling, self.n)
 
@@ -333,28 +334,29 @@ class MultiViewPhotometricLoss(LossBase):
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
 
-        device = image.get_device()
+        if self.mask_ego:
+            device = image.get_device()
 
-        B = len(path_to_ego_mask)
+            B = len(path_to_ego_mask)
 
-        ego_mask_tensor     = torch.zeros(B, 1, 800, 1280)
-        ref_ego_mask_tensor = torch.zeros(B, 1, 800, 1280)
-        for b in range(B):
-            ego_mask_tensor[b, 0]     = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
-            ref_ego_mask_tensor[b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[b])).float()
+            ego_mask_tensor     = torch.zeros(B, 1, 800, 1280)
+            ref_ego_mask_tensor = torch.zeros(B, 1, 800, 1280)
+            for b in range(B):
+                ego_mask_tensor[b, 0]     = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
+                ref_ego_mask_tensor[b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[b])).float()
 
-        ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
-        ref_ego_mask_tensors = []  # = torch.zeros(B, 1, 800, 1280)
-        for i in range(self.n):
-            B, C, H, W = images[i].shape
-            if W < 1280:
-                inv_scale_factor = int(1280 / W)
-                ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor).to(device))
-                ref_ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor).to(device))
-            else:
-                ego_mask_tensors.append(ego_mask_tensor.to(device))
-                ref_ego_mask_tensors.append(ref_ego_mask_tensor.to(device))
-            # ego_mask_tensor = ego_mask_tensor.to(device)
+            ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
+            ref_ego_mask_tensors = []  # = torch.zeros(B, 1, 800, 1280)
+            for i in range(self.n):
+                B, C, H, W = images[i].shape
+                if W < 1280:
+                    inv_scale_factor = int(1280 / W)
+                    ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor).to(device))
+                    ref_ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor).to(device))
+                else:
+                    ego_mask_tensors.append(ego_mask_tensor.to(device))
+                    ref_ego_mask_tensors.append(ref_ego_mask_tensor.to(device))
+                # ego_mask_tensor = ego_mask_tensor.to(device)
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
@@ -364,8 +366,11 @@ class MultiViewPhotometricLoss(LossBase):
                                              pose)
             # Calculate and store image loss
             #photometric_loss = self.calc_photometric_loss(ref_warped, images, path_to_ego_mask)
-            photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ref_ego_mask_tensors)],
-                                                          [a * b for a, b in zip(images,     ego_mask_tensors)])
+            if self.mask_ego:
+                photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ref_ego_mask_tensors)],
+                                                              [a * b for a, b in zip(images,     ego_mask_tensors)])
+            else:
+                photometric_loss = self.calc_photometric_loss(ref_warped, images)
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i])
             # If using automask
@@ -373,8 +378,11 @@ class MultiViewPhotometricLoss(LossBase):
                 # Calculate and store unwarped image loss
                 ref_images = match_scales(ref_image, inv_depths, self.n)
                 #unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
-                unwarped_image_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_images, ref_ego_mask_tensors)],
-                                                                 [a * b for a, b in zip(images,     ego_mask_tensors)])
+                if self.mask_ego:
+                    unwarped_image_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_images, ref_ego_mask_tensors)],
+                                                                     [a * b for a, b in zip(images,     ego_mask_tensors)])
+                else:
+                    unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
                 for i in range(self.n):
                     photometric_losses[i].append(unwarped_image_loss[i])
         # Calculate reduced photometric loss
@@ -382,8 +390,11 @@ class MultiViewPhotometricLoss(LossBase):
         # Include smoothness loss if requested
         if self.smooth_loss_weight > 0.0:
             #loss += self.calc_smoothness_loss(inv_depths, images)
-            loss += self.calc_smoothness_loss([a * b for a, b in zip(inv_depths, ego_mask_tensors)],
-                                              [a * b for a, b in zip(images,     ego_mask_tensors)])
+            if self.mask_ego:
+                loss += self.calc_smoothness_loss([a * b for a, b in zip(inv_depths, ego_mask_tensors)],
+                                                  [a * b for a, b in zip(images,     ego_mask_tensors)])
+            else:
+                loss += self.calc_smoothness_loss(inv_depths, images)
         # Return losses and metrics
         return {
             'loss': loss.unsqueeze(0),

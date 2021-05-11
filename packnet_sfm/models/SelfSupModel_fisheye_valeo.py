@@ -63,7 +63,7 @@ class SelfSupModel_fisheye_valeo(SfmModel):
             path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
             poses, return_logs=return_logs, progress=progress)
 
-    def forward(self, batch, return_logs=False, progress=0.0):
+    def forward(self, batch, mask_ego=True, return_logs=False, progress=0.0):
         """
         Processes a batch.
 

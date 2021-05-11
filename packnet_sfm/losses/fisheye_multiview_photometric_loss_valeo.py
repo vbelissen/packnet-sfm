@@ -333,6 +333,8 @@ class MultiViewPhotometricLoss(LossBase):
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
 
+        device = image.get_device()
+
         B = len(path_to_ego_mask)
 
         ego_mask_tensor     = torch.zeros(B, 1, 800, 1280)
@@ -347,11 +349,11 @@ class MultiViewPhotometricLoss(LossBase):
             B, C, H, W = images[i].shape
             if W < 1280:
                 inv_scale_factor = int(1280 / W)
-                ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
-                ref_ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor))
+                ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor).to(device))
+                ref_ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor).to(device))
             else:
-                ego_mask_tensors.append(ego_mask_tensor)
-                ref_ego_mask_tensors.append(ref_ego_mask_tensor)
+                ego_mask_tensors.append(ego_mask_tensor.to(device))
+                ref_ego_mask_tensors.append(ref_ego_mask_tensor.to(device))
             # ego_mask_tensor = ego_mask_tensor.to(device)
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):

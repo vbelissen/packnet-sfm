@@ -21,6 +21,7 @@ class CameraFisheye(nn.Module):
     """
     def __init__(self,
                  path_to_theta_lut,
+                 path_to_ego_mask,
                  poly_coeffs,
                  principal_point=torch.Tensor([0., 0.]),
                  scale_factors=torch.Tensor([1., 1.]),
@@ -40,6 +41,7 @@ class CameraFisheye(nn.Module):
         """
         super().__init__()
         self.path_to_theta_lut = path_to_theta_lut
+        self.path_to_ego_mask = path_to_ego_mask
         self.poly_coeffs = poly_coeffs
         self.principal_point = principal_point
         self.scale_factors = scale_factors
@@ -95,6 +97,7 @@ class CameraFisheye(nn.Module):
                                                                 x_scale)
         path_to_theta_lut = scale_path_to_theta_lut(self.path_to_theta_lut.clone(), x_scale)
         return CameraFisheye(path_to_theta_lut,
+                             self.path_to_ego_mask,
                              poly_coeffs,
                              principal_point,
                              scale_factors=self.scale_factors,

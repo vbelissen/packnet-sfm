@@ -211,6 +211,14 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                             self._get_sequence_name(image_file),
                             self._get_sequence_name(image_file) + '_' + self._get_camera_name(image_file) + '_1280_800.npy')
 
+    def _get_path_to_ego_mask(self, image_file):
+        """Get the current folder from image_file."""
+        return os.path.join(self._get_base_folder(image_file),
+                            'semantic_masks',
+                            'fisheye',
+                            self._get_split_type(image_file),
+                            self._get_sequence_name(image_file),
+                            self._get_sequence_name(image_file) + '_' + self._get_camera_name(image_file) + '.npy')
 ########################################################################################################################
 #### DEPTH
 ########################################################################################################################
@@ -460,6 +468,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
         sample.update({
             'path_to_theta_lut': self._get_path_to_theta_lut(self.paths[idx]),
+        })
+        sample.update({
+            'path_to_ego_mask': self._get_path_to_ego_mask(self.paths[idx]),
         })
         # Add pose information if requested
         if self.with_pose:

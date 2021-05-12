@@ -63,9 +63,11 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         Number of forward frames to consider as context
     strides : tuple
         List of context strides
+    with_geometric_context : bool
+        True if surrounding camera views are used in context
     """
     def __init__(self, root_dir, file_list, train=True,
-                 data_transform=None, depth_type=None, with_pose=False,
+                 data_transform=None, depth_type=None, with_pose=False, with_geometric_context=False,
                  back_context=0, forward_context=0, strides=(1,), cameras=None):
         # Assertions
         backward_context = back_context
@@ -87,6 +89,8 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         self.with_depth = depth_type is not '' and depth_type is not None
         self.with_pose = with_pose
 
+        self.with_geometric_context = with_geometric_context
+
         self._cache = {}
         self.pose_cache = {}
         self.oxts_cache = {}
@@ -102,22 +106,46 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         with open(file_list, "r") as f:
             data = f.readlines()
 
+        if self.with_geometric_context:
+            camera = self.cameras[0]
+            camera_index = int(camera.split('_')[-1])
+            file_list_left  = file_list.replace(camera, 'cam_' + str((camera_index - 1) % 4))
+            file_list_right = file_list.replace(camera, 'cam_' + str((camera_index + 1) % 4))
+            with open(file_list_left, "r") as f_left:
+                data_left = f_left.readlines()
+            with open(file_list_right, "r") as f_right:
+                data_right = f_right.readlines()
+            self.paths_left  = []
+            self.paths_right = []
+
         self.paths = []
         # Get file list from data
         for i, fname in enumerate(data):
             path = os.path.join(root_dir, fname.split()[0])
+            if self.with_geometric_context:
+                path_left  = os.path.join(root_dir, data_left[i].split()[0])
+                path_right = os.path.join(root_dir, data_right[i].split()[0])
             if not self.with_depth:
                 self.paths.append(path)
+                if self.with_geometric_context:
+                    self.paths_left.append(path_left)
+                    self.paths_right.append(path_right)
             else:
                 # Check if the depth file exists
                 depth = self._get_depth_file(path)
                 #print(depth)
                 if depth is not None and os.path.exists(depth):
                     self.paths.append(path)
+                    if self.with_geometric_context:
+                        self.paths_left.append(path_left)
+                        self.paths_right.append(path_right)
 
         # If using context, filter file list
         if self.with_context:
             paths_with_context = []
+            if self.with_geometric_context:
+                paths_with_context_left  = []
+                paths_with_context_right = []
             for stride in strides:
                 for idx, file in enumerate(self.paths):
                     backward_context_idxs, forward_context_idxs = \
@@ -127,7 +155,13 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                         paths_with_context.append(self.paths[idx])
                         self.forward_context_paths.append(forward_context_idxs)
                         self.backward_context_paths.append(backward_context_idxs[::-1])
+                        if self.with_geometric_context:
+                            paths_with_context_left.append(self.paths_left[idx])
+                            paths_with_context_right.append(self.paths_right[idx])
             self.paths = paths_with_context
+            if self.with_geometric_context:
+                self.paths_left  = paths_with_context_left
+                self.paths_right = paths_with_context_right
 
 ########################################################################################################################
 
@@ -491,6 +525,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                                self.forward_context_paths[idx]
             image_context_paths, _ = \
                 self._get_context_files(self.paths[idx], all_context_idxs)
+            if self.with_geometric_context:
+                image_context_paths.append(self.paths_left[idx])
+                image_context_paths.append(self.paths_right[idx])
             image_context = [load_convert_image(f) for f in image_context_paths]
             sample.update({
                 'rgb_context': image_context

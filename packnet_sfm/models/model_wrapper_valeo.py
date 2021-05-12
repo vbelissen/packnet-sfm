@@ -499,6 +499,7 @@ def setup_dataset(config, mode, requirements, **kwargs):
     dataset_args = {
         'back_context': config.back_context,
         'forward_context': config.forward_context,
+        'with_geometric_context': config.with_geometric_context,
     }
 
     # Loop over all datasets

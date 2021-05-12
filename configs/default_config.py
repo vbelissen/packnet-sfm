@@ -147,6 +147,7 @@ cfg.datasets.train.depth_type = ['']                # Training depth type
 cfg.datasets.train.cameras = [[]]                   # Training cameras (double list, one for each dataset)
 cfg.datasets.train.repeat = [1]                     # Number of times training dataset is repeated per epoch
 cfg.datasets.train.num_logs = 5                     # Number of training images to log
+cfg.datasets.train.with_geometric_context = False   #
 ########################################################################################################################
 ### DATASETS.VALIDATION
 ########################################################################################################################
@@ -161,6 +162,7 @@ cfg.datasets.validation.split = []                  # Validation split
 cfg.datasets.validation.depth_type = ['']           # Validation depth type
 cfg.datasets.validation.cameras = [[]]              # Validation cameras (double list, one for each dataset)
 cfg.datasets.validation.num_logs = 5                # Number of validation images to log
+cfg.datasets.validation.with_geometric_context = False   #
 ########################################################################################################################
 ### DATASETS.TEST
 ########################################################################################################################
@@ -175,6 +177,7 @@ cfg.datasets.test.split = []                        # Test split
 cfg.datasets.test.depth_type = ['']                 # Test depth type
 cfg.datasets.test.cameras = [[]]                    # Test cameras (double list, one for each dataset)
 cfg.datasets.test.num_logs = 5                      # Number of test images to log
+cfg.datasets.test.with_geometric_context = False    #
 ########################################################################################################################
 ### THESE SHOULD NOT BE CHANGED
 ########################################################################################################################

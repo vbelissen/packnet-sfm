@@ -4,7 +4,8 @@ import cv2
 import torch
 import torch.nn.functional as funct
 from functools import lru_cache
-from PIL import Image
+from PIL import Image, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 from packnet_sfm.utils.misc import same_shape
 

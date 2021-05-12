@@ -4,7 +4,8 @@ import cv2
 import numpy as np
 import random
 import torchvision.transforms as transforms
-from PIL import Image
+from PIL import Image, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 import os
 
 from packnet_sfm.utils.misc import filter_dict

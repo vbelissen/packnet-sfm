@@ -659,9 +659,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                     else:
                         image_context_pose.append(None)
 
-                sample.update({
-                    'pose_matrix_context': image_context_pose
-                })
+                # sample.update({
+                #     'pose_matrix_context': image_context_pose
+                # })
             if self.with_pose:
                 first_pose = sample['pose']
                 image_context_pose = [self._get_pose(f) for f in image_context_paths]

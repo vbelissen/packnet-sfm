@@ -586,7 +586,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 if calib_identifier in self.calibration_cache:
                     c_data = self.calibration_cache[calib_identifier]
                 else:
-                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, self.cameras)
+                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, camera_str)
                     self.calibration_cache[calib_identifier] = c_data
                 poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths_left[idx], c_data)
                 image_context_paths.append(self.paths_left[idx])
@@ -605,7 +605,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 if calib_identifier in self.calibration_cache:
                     c_data = self.calibration_cache[calib_identifier]
                 else:
-                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, self.cameras)
+                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, camera_str)
                     self.calibration_cache[calib_identifier] = c_data
                 poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths_right[idx], c_data)
                 image_context_paths.append(self.paths_right[idx])
@@ -650,7 +650,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                         if calib_identifier in self.calibration_cache:
                             c_data = self.calibration_cache[calib_identifier]
                         else:
-                            c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, self.cameras)
+                            c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, camera_str)
                             self.calibration_cache[calib_identifier] = c_data
                         context_pose = self._get_extrinsics_pose_matrix(f, c_data)
                         invert_context_pose = invert_pose_numpy(context_pose)

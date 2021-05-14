@@ -620,13 +620,13 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 'rgb_context': image_context
             })
             sample.update({
-                'poly_coeffs_context': poly_coeffs_context
+                'intrinsics_poly_coeffs_context': poly_coeffs_context
             })
             sample.update({
-                'principal_point_context': principal_point_context
+                'intrinsics_principal_point_context': principal_point_context
             })
             sample.update({
-                'scale_factors_context': scale_factors_context
+                'intrinsics_scale_factors_context': scale_factors_context
             })
             sample.update({
                 'path_to_theta_lut_context': path_to_theta_lut_context

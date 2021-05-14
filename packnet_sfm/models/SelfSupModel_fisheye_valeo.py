@@ -30,7 +30,8 @@ class SelfSupModel_fisheye_valeo(SfmModel):
         }
 
     def self_supervised_loss(self, image, ref_images, inv_depths, poses,
-                             path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
+                             path_to_theta_lut,         path_to_ego_mask,         poly_coeffs,         principal_point,         scale_factors,
+                             path_to_theta_lut_context, path_to_ego_mask_context, poly_coeffs_context, principal_point_context, scale_factors_context,
                              return_logs=False, progress=0.0):
         """
         Calculates the self-supervised photometric loss.
@@ -59,8 +60,8 @@ class SelfSupModel_fisheye_valeo(SfmModel):
         """
         return self._photometric_loss(
             image, ref_images, inv_depths,
-            path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
-            path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
+            path_to_theta_lut,         path_to_ego_mask,         poly_coeffs,         principal_point,         scale_factors,
+            path_to_theta_lut_context, path_to_ego_mask_context, poly_coeffs_context, principal_point_context, scale_factors_context,
             poses, return_logs=return_logs, progress=progress)
 
     def forward(self, batch, mask_ego=True, return_logs=False, progress=0.0):
@@ -94,7 +95,14 @@ class SelfSupModel_fisheye_valeo(SfmModel):
                 output['inv_depths'], output['poses'],
                 batch['path_to_theta_lut'],
                 batch['path_to_ego_mask'],
-                batch['intrinsics_poly_coeffs'], batch['intrinsics_principal_point'], batch['intrinsics_scale_factors'],
+                batch['intrinsics_poly_coeffs'],
+                batch['intrinsics_principal_point'],
+                batch['intrinsics_scale_factors'],
+                batch['path_to_theta_lut_context'],
+                batch['path_to_ego_mask_context'],
+                batch['intrinsics_poly_coeffs_context'],
+                batch['intrinsics_principal_point_context'],
+                batch['intrinsics_scale_factors_context'],
                 return_logs=return_logs, progress=progress)
             # Return loss and metrics
             return {

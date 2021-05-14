@@ -210,19 +210,18 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
     def _get_intrinsics(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
-        cam = self.cameras[0]
-        if cam in image_file:
-            #intr = calib_data[cam]['intrinsics']
-            base_intr = calib_data[cam]['base_intrinsics']
-            intr = calib_data[cam]['intrinsics']
-            poly_coeffs = np.array([float(intr['c1']),
-                                    float(intr['c2']),
-                                    float(intr['c3']),
-                                    float(intr['c4'])])
-            principal_point = np.array([float(base_intr['cx_offset_px']),
-                                        float(base_intr['cy_offset_px'])])
-            scale_factors = np.array([1., float(intr['pixel_aspect_ratio'])])
-            return poly_coeffs, principal_point, scale_factors
+        cam = self._get_camera_name(image_file)
+        #intr = calib_data[cam]['intrinsics']
+        base_intr = calib_data[cam]['base_intrinsics']
+        intr = calib_data[cam]['intrinsics']
+        poly_coeffs = np.array([float(intr['c1']),
+                                float(intr['c2']),
+                                float(intr['c3']),
+                                float(intr['c4'])])
+        principal_point = np.array([float(base_intr['cx_offset_px']),
+                                    float(base_intr['cy_offset_px'])])
+        scale_factors = np.array([1., float(intr['pixel_aspect_ratio'])])
+        return poly_coeffs, principal_point, scale_factors
 
     def _get_extrinsics_pose_matrix(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
@@ -566,15 +565,74 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                                self.forward_context_paths[idx]
             image_context_paths, _ = \
                 self._get_context_files(self.paths[idx], all_context_idxs)
-            same_timestep_as_origin = [False] * len(image_context_paths)
+            same_timestep_as_origin   = [False] \
+                                        * len(image_context_paths)
+            poly_coeffs_context       = [poly_coeffs] \
+                                        * len(image_context_paths)
+            principal_point_context   = [principal_point] \
+                                        * len(image_context_paths)
+            scale_factors_context     = [scale_factors] \
+                                        * len(image_context_paths)
+            path_to_theta_lut_context = [sample['path_to_theta_lut']] \
+                                        * len(image_context_paths)
+            path_to_ego_mask_context  = [sample['path_to_ego_mask']] \
+                                        * len(image_context_paths)
             if self.with_geometric_context:
+                base_folder_str = self._get_base_folder(self.paths_left[idx])
+                split_type_str  = self._get_split_type(self.paths_left[idx])
+                seq_name_str    = self._get_sequence_name(self.paths_left[idx])
+                camera_str      = self._get_camera_name(self.paths_left[idx])
+                calib_identifier = base_folder_str + split_type_str + seq_name_str + camera_str
+                if calib_identifier in self.calibration_cache:
+                    c_data = self.calibration_cache[calib_identifier]
+                else:
+                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, self.cameras)
+                    self.calibration_cache[calib_identifier] = c_data
+                poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths_left[idx], c_data)
                 image_context_paths.append(self.paths_left[idx])
+                same_timestep_as_origin.append(True)
+                poly_coeffs_context.append(poly_coeffs)
+                principal_point_context.append(principal_point)
+                scale_factors_context.append(scale_factors)
+                path_to_theta_lut_context.append(self._get_path_to_theta_lut(self.paths_left[idx]))
+                path_to_ego_mask_context.append(self._get_path_to_ego_mask(self.paths_left[idx]))
+
+                base_folder_str = self._get_base_folder(self.paths_right[idx])
+                split_type_str  = self._get_split_type(self.paths_right[idx])
+                seq_name_str    = self._get_sequence_name(self.paths_right[idx])
+                camera_str      = self._get_camera_name(self.paths_right[idx])
+                calib_identifier = base_folder_str + split_type_str + seq_name_str + camera_str
+                if calib_identifier in self.calibration_cache:
+                    c_data = self.calibration_cache[calib_identifier]
+                else:
+                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, self.cameras)
+                    self.calibration_cache[calib_identifier] = c_data
+                poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths_right[idx], c_data)
                 image_context_paths.append(self.paths_right[idx])
                 same_timestep_as_origin.append(True)
-                same_timestep_as_origin.append(True)
+                poly_coeffs_context.append(poly_coeffs)
+                principal_point_context.append(principal_point)
+                scale_factors_context.append(scale_factors)
+                path_to_theta_lut_context.append(self._get_path_to_theta_lut(self.paths_right[idx]))
+                path_to_ego_mask_context.append(self._get_path_to_ego_mask(self.paths_right[idx]))
             image_context = [load_convert_image(f) for f in image_context_paths]
             sample.update({
                 'rgb_context': image_context
+            })
+            sample.update({
+                'poly_coeffs_context': poly_coeffs_context
+            })
+            sample.update({
+                'principal_point_context': principal_point_context
+            })
+            sample.update({
+                'scale_factors_context': scale_factors_context
+            })
+            sample.update({
+                'path_to_theta_lut_context': path_to_theta_lut_context
+            })
+            sample.update({
+                'path_to_ego_mask_context': path_to_ego_mask_context
             })
             # Add context poses
             if self.with_geometric_context:
@@ -584,9 +642,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 for i, f in enumerate(image_context_paths):
                     if same_timestep_as_origin[i]:
                         base_folder_str = self._get_base_folder(f)
-                        split_type_str = self._get_split_type(f)
-                        seq_name_str = self._get_sequence_name(f)
-                        camera_str = self._get_camera_name(f)
+                        split_type_str  = self._get_split_type(f)
+                        seq_name_str    = self._get_sequence_name(f)
+                        camera_str      = self._get_camera_name(f)
                         calib_identifier = base_folder_str + split_type_str + seq_name_str + camera_str
                         # current_folder = self._get_current_folder(self.paths[idx])
                         if calib_identifier in self.calibration_cache:

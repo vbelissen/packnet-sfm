@@ -106,14 +106,43 @@ def resize_sample_image_and_intrinsics_fisheye(sample, shape,
         h_res_new = str(int(rescale_factor_h * int(h_res_str_splitted[0])))
         splitted_path[-1] = '.'.join([h_res_new, h_res_str_splitted[1]])
         sample[key] = '_'.join(splitted_path)
+    # Scale intrinsics
+    for key in filter_dict(sample, [
+        'intrinsics_poly_coeffs_context'
+    ]):
+        res = []
+        for k in sample[key]:
+            intrinsics_poly_coeffs = np.copy(k)
+            intrinsics_poly_coeffs *= rescale_factor_h
+            res.append(intrinsics_poly_coeffs)
+        sample[key] = res
+    for key in filter_dict(sample, [
+        'intrinsics_principal_point_context'
+    ]):
+        res = []
+        for k in sample[key]:
+            intrinsics_principal_point = np.copy(k)
+            intrinsics_principal_point *= rescale_factor_h
+            res.append(intrinsics_principal_point)
+        sample[key] = res
+    for key in filter_dict(sample, [
+        'path_to_theta_lut_context'
+    ]):
+        res = []
+        for k in sample[key]:
+            path_to_theta_lut = k
 
-        # dir = os.path.dirname(path_to_theta_lut)
-        # base_clone, ext = os.path.splitext(os.path.basename(path_to_theta_lut))
-        # base_clone_splitted = base_clone.split('_')
-        # base_clone_splitted[2] = str(int(rescale_factor_h * float(base_clone_splitted[2])))
-        # base_clone_splitted[3] = str(int(rescale_factor_h * float(base_clone_splitted[3])))
-        # path_to_theta_lut = os.path.join(dir, '_'.join(base_clone_splitted) + '.npy')
-        # sample[key] = path_to_theta_lut
+            path_to_theta_lut_clone = path_to_theta_lut
+            splitted_path = path_to_theta_lut_clone.split('_')
+            w_res_str = splitted_path[-2]
+            splitted_path[-2] = str(int(rescale_factor_h * int(w_res_str)))
+            h_res_str_with_ext = splitted_path[-1]
+            h_res_str_splitted = h_res_str_with_ext.split('.')
+            h_res_new = str(int(rescale_factor_h * int(h_res_str_splitted[0])))
+            splitted_path[-1] = '.'.join([h_res_new, h_res_str_splitted[1]])
+            res.append('_'.join(splitted_path))
+        sample[key] = res
+
     # Scale images
     for key in filter_dict(sample, [
         'rgb', 'rgb_original',

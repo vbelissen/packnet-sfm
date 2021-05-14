@@ -224,6 +224,43 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
             scale_factors = np.array([1., float(intr['pixel_aspect_ratio'])])
             return poly_coeffs, principal_point, scale_factors
 
+    def _get_extrinsics_pose_matrix(self, image_file, calib_data):
+        """Get intrinsics from the calib_data dictionary."""
+        cam = self._get_camera_name(image_file)
+        if image_file in self.pose_cache:
+            return self.pose_cache[image_file]
+
+        extr = calib_data[cam]['extrinsics']
+
+        t = np.array([float(extr['pos_x_m']), float(extr['pos_y_m']), float(extr['pos_z_m'])])
+
+        x_rad  = np.pi / 180. * float(extr['rot_x_deg'])
+        z1_rad = np.pi / 180. * float(extr['rot_z1_deg'])
+        z2_rad = np.pi / 180. * float(extr['rot_z2_deg'])
+        cosx  = np.cos(x_rad)
+        sinx  = np.sin(x_rad)
+        cosz1 = np.cos(z1_rad)
+        sinz1 = np.sin(z1_rad)
+        cosz2 = np.cos(z2_rad)
+        sinz2 = np.sin(z2_rad)
+
+        Rx  = np.array([[     1,     0,    0],
+                        [     0,  cosx, sinx],
+                        [     0, -sinx, cosx]])
+        Rz1 = np.array([[ cosz1, sinz1,    0],
+                        [-sinz1, cosz1,    0],
+                        [     0,     0,    1]])
+        Rz2 = np.array([[cosz2, -sinz2,    0],
+                        [sinz2,  cosz2,    0],
+                        [    0,      0,    1]])
+
+        R = np.matmul(Rz2, np.matmul(Rx, Rz1))
+
+        pose_matrix = transform_from_rot_trans(R, t).astype(np.float32)
+
+        self.pose_cache[image_file] = pose_matrix
+        return pose_matrix
+
     # @staticmethod
     # def _read_raw_calib_file(folder):
     #     """Read raw calibration files from folder."""
@@ -506,6 +543,10 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         sample.update({
             'path_to_ego_mask': self._get_path_to_ego_mask(self.paths[idx]),
         })
+        if self.with_geometric_context:
+            sample.update({
+                'pose_matrix': self._get_extrinsics_pose_matrix(self.paths[idx], c_data),
+            })
         # Add pose information if requested
         if self.with_pose:
             sample.update({
@@ -525,14 +566,44 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                                self.forward_context_paths[idx]
             image_context_paths, _ = \
                 self._get_context_files(self.paths[idx], all_context_idxs)
+            same_timestep_as_origin = [False] * len(image_context_paths)
             if self.with_geometric_context:
                 image_context_paths.append(self.paths_left[idx])
                 image_context_paths.append(self.paths_right[idx])
+                same_timestep_as_origin.append(True)
+                same_timestep_as_origin.append(True)
             image_context = [load_convert_image(f) for f in image_context_paths]
             sample.update({
                 'rgb_context': image_context
             })
             # Add context poses
+            if self.with_geometric_context:
+                first_pose = sample['pose_matrix']
+                image_context_pose = []
+
+                for i, f in enumerate(image_context_paths):
+                    if same_timestep_as_origin[i]:
+                        base_folder_str = self._get_base_folder(f)
+                        split_type_str = self._get_split_type(f)
+                        seq_name_str = self._get_sequence_name(f)
+                        camera_str = self._get_camera_name(f)
+                        calib_identifier = base_folder_str + split_type_str + seq_name_str + camera_str
+                        # current_folder = self._get_current_folder(self.paths[idx])
+                        if calib_identifier in self.calibration_cache:
+                            c_data = self.calibration_cache[calib_identifier]
+                        else:
+                            c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, self.cameras)
+                            self.calibration_cache[calib_identifier] = c_data
+                        context_pose = self._get_extrinsics_pose_matrix(f, c_data)
+                        invert_context_pose = invert_pose_numpy(context_pose)
+                        relative_pose = invert_context_pose @ first_pose
+                        image_context_pose.append(relative_pose)
+                    else:
+                        image_context_pose.append(None)
+
+                sample.update({
+                    'pose_matrix_context': image_context_pose
+                })
             if self.with_pose:
                 first_pose = sample['pose']
                 image_context_pose = [self._get_pose(f) for f in image_context_paths]

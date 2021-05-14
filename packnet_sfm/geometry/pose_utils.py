@@ -38,6 +38,39 @@ def euler2mat(angle):
 
 ########################################################################################################################
 
+def gcam2mat(angle):
+    """Convert gcam x, z1, z2 angles to rotation matrix"""
+    B = angle.size(0)
+    x, z1, z2 = angle[:, 0], angle[:, 1], angle[:, 2]
+
+    cosz1 = torch.cos(z1)
+    sinz1 = torch.sin(z1)
+
+    zeros = z1.detach() * 0
+    ones = zeros.detach() + 1
+    z1mat = torch.stack([cosz1, sinz1, zeros,
+                        -sinz1, cosz1, zeros,
+                        zeros, zeros, ones], dim=1).view(B, 3, 3)
+
+    cosx = torch.cos(x)
+    sinx = torch.sin(x)
+
+    xmat = torch.stack([ones, zeros, zeros,
+                        zeros, cosx, sinx,
+                        zeros, -sinx, cosx], dim=1).view(B, 3, 3)
+
+    cosz2 = torch.cos(z2)
+    sinz2 = torch.sin(z2)
+
+    z2mat = torch.stack([cosz2, -sinz2, zeros,
+                        sinz2, cosz2, zeros,
+                        zeros, zeros, ones], dim=1).view(B, 3, 3)
+
+    rot_mat = z2mat.bmm(xmat).bmm(z1mat)
+    return rot_mat
+
+########################################################################################################################
+
 def pose_vec2mat(vec, mode='euler'):
     """Convert Euler parameters to transformation matrix."""
     if mode is None:
@@ -45,6 +78,20 @@ def pose_vec2mat(vec, mode='euler'):
     trans, rot = vec[:, :3].unsqueeze(-1), vec[:, 3:]
     if mode == 'euler':
         rot_mat = euler2mat(rot)
+    else:
+        raise ValueError('Rotation mode not supported {}'.format(mode))
+    mat = torch.cat([rot_mat, trans], dim=2)  # [B,3,4]
+    return mat
+
+########################################################################################################################
+
+def pose_vec2mat_gcam(vec, mode='gcam'):
+    """Convert Euler parameters to transformation matrix."""
+    if mode is None:
+        return vec
+    trans, rot = vec[:, :3].unsqueeze(-1), vec[:, 3:]
+    if mode == 'gcam':
+        rot_mat = gcam2mat(rot)
     else:
         raise ValueError('Rotation mode not supported {}'.format(mode))
     mat = torch.cat([rot_mat, trans], dim=2)  # [B,3,4]

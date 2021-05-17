@@ -14,7 +14,7 @@ from cv2 import imwrite
 from packnet_sfm.models.model_wrapper_valeo import ModelWrapper
 from packnet_sfm.datasets.augmentations_valeo_fisheye import resize_image, to_tensor
 from packnet_sfm.utils.horovod import hvd_init, rank, world_size, print0
-from packnet_sfm.utils.image_valeo import load_image
+from packnet_sfm.utils.image_valeo import load_convert_image
 from packnet_sfm.utils.config import parse_test_file
 from packnet_sfm.utils.load import set_debug
 from packnet_sfm.utils.depth import write_depth, inv2depth, viz_inv_depth
@@ -132,7 +132,7 @@ def infer_and_save_pose(input_file_refs, input_file, model_wrapper, image_shape,
 
     # Load image
     def process_image(filename):
-        image = load_image(filename)
+        image = load_convert_image(filename)
         # Resize and to tensor
         image = resize_image(image, image_shape)
         image = to_tensor(image).unsqueeze(0)

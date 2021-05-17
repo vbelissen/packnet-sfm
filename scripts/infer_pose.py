@@ -11,10 +11,10 @@ import functools
 from glob import glob
 from cv2 import imwrite
 
-from packnet_sfm.models.model_wrapper import ModelWrapper
-from packnet_sfm.datasets.augmentations import resize_image, to_tensor
+from packnet_sfm.models.model_wrapper_valeo import ModelWrapper
+from packnet_sfm.datasets.augmentations_valeo_fisheye import resize_image, to_tensor
 from packnet_sfm.utils.horovod import hvd_init, rank, world_size, print0
-from packnet_sfm.utils.image import load_image
+from packnet_sfm.utils.image_valeo import load_image
 from packnet_sfm.utils.config import parse_test_file
 from packnet_sfm.utils.load import set_debug
 from packnet_sfm.utils.depth import write_depth, inv2depth, viz_inv_depth

@@ -208,7 +208,9 @@ def main(args):
     if args.limit:
         list_of_files = list_of_files[:args.limit]
     for fn1, fn2, fn3 in list_of_files:
-        infer_and_save_pose([fn1, fn3], fn2, model_wrapper, image_shape, args.half, args.save)
+        #infer_and_save_pose([fn1, fn3], fn2, model_wrapper, image_shape, args.half, args.save)
+        infer_and_save_pose([fn1], fn2, model_wrapper, image_shape, args.half, args.save)
+        infer_and_save_pose([fn3], fn2, model_wrapper, image_shape, args.half, args.save)
 
     position = np.zeros(3)
     orientation = np.eye(3)

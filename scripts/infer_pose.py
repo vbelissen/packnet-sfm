@@ -147,7 +147,7 @@ def infer_and_save_pose(input_file_refs, input_file, model_wrapper, image_shape,
 
     # Depth inference (returns predicted inverse depth)
     pose_tensor = model_wrapper.pose(image, image_ref)[0][0]  # take the pose from 1st to 2nd image
-    print(model_wrapper.pose(image, image_ref)[0][0])
+    print(model_wrapper.pose(image, image_ref))
     rot_matrix = euler_angles_to_matrix(pose_tensor[3:], convention="ZYX")
     translation = pose_tensor[:3]
 

@@ -210,7 +210,11 @@ def main(args):
         list_of_files = list_of_files[:args.limit]
     for fn1, fn2, fn3 in list_of_files:
         #infer_and_save_pose([fn1, fn3], fn2, model_wrapper, image_shape, args.half, args.save)
+        print(fn1)
+        print(fn2)
         infer_and_save_pose([fn1], fn2, model_wrapper, image_shape, args.half, args.save)
+        print(fn3)
+        print(fn2)
         infer_and_save_pose([fn3], fn2, model_wrapper, image_shape, args.half, args.save)
 
     position = np.zeros(3)

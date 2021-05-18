@@ -158,6 +158,7 @@ class MultiViewPhotometricLoss(LossBase):
         # Generate cameras for all scales
         cams, ref_cams = [], []
         pose_matrix_batch = torch.zeros(B, 4, 4)
+        print(pose.size())
         for b in range(B):
             if same_timestamp_as_origin[b]:
                 pose_matrix_batch[b, :, :] = pose[b, :, :]

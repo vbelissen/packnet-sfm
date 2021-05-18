@@ -377,6 +377,7 @@ class MultiViewPhotometricLoss(LossBase):
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
+            print(same_timestep_as_origin[j])
             ref_warped = self.warp_ref_image(inv_depths, ref_image,
                                              path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
                                              ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],

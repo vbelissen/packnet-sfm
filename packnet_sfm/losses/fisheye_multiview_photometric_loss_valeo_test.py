@@ -5,6 +5,7 @@ import torch.nn as nn
 import numpy as np
 
 from packnet_sfm.utils.image import match_scales
+from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.geometry.camera_fisheye_valeo import CameraFisheye
 from packnet_sfm.geometry.camera_fisheye_valeo_utils import view_synthesis
 from packnet_sfm.utils.depth import calc_smoothness, inv2depth
@@ -157,14 +158,14 @@ class MultiViewPhotometricLoss(LossBase):
         device = ref_image.get_device()
         # Generate cameras for all scales
         cams, ref_cams = [], []
-        print(pose.mat.size())
+        print(pose_matrix_context.size())
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
             if same_timestamp_as_origin[i]:
                 pose_matrix = pose
             else:
-                pose_matrix = pose_matrix_context
+                pose_matrix = Pose(pose_matrix_context)
             cams.append(CameraFisheye(path_to_theta_lut=path_to_theta_lut,
                                       path_to_ego_mask=path_to_ego_mask,
                                       poly_coeffs=poly_coeffs.float(),

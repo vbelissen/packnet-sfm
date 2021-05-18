@@ -33,6 +33,7 @@ class SelfSupModel_fisheye_valeo_testPose(SfmModel):
                              path_to_theta_lut,         path_to_ego_mask,         poly_coeffs,         principal_point,         scale_factors,
                              path_to_theta_lut_context, path_to_ego_mask_context, poly_coeffs_context, principal_point_context, scale_factors_context,
                              same_timestep_as_origin,
+                             pose_matrix_context,
                              return_logs=False, progress=0.0):
         """
         Calculates the self-supervised photometric loss.
@@ -64,6 +65,7 @@ class SelfSupModel_fisheye_valeo_testPose(SfmModel):
             path_to_theta_lut,         path_to_ego_mask,         poly_coeffs,         principal_point,         scale_factors,
             path_to_theta_lut_context, path_to_ego_mask_context, poly_coeffs_context, principal_point_context, scale_factors_context,
             same_timestep_as_origin,
+            pose_matrix_context,
             poses, return_logs=return_logs, progress=progress)
 
     def forward(self, batch, mask_ego=True, return_logs=False, progress=0.0):

@@ -126,6 +126,7 @@ def infer_and_save_pose(input_file_refs, input_file, model_wrapper, image_shape,
         Save format (npz or png)
     """
     base_name = os.path.basename(input_file)
+    base_name_ref0 = os.path.basename(input_file_refs[0])
 
     # change to half precision for evaluation if requested
     dtype = torch.float16 if half else None
@@ -151,7 +152,7 @@ def infer_and_save_pose(input_file_refs, input_file, model_wrapper, image_shape,
     rot_matrix = euler_angles_to_matrix(pose_tensor[3:], convention="ZYX")
     translation = pose_tensor[:3]
 
-    poses[base_name] = (rot_matrix, translation)
+    poses[base_name+base_name_ref0] = (rot_matrix, translation)
 
 
 def main(args):

@@ -163,7 +163,7 @@ class MultiViewPhotometricLoss(LossBase):
             if same_timestamp_as_origin[i]:
                 pose_matrix = pose
             else:
-                pose_matrix = torch.from_numpy(pose_matrix_context)
+                pose_matrix = pose_matrix_context
             cams.append(CameraFisheye(path_to_theta_lut=path_to_theta_lut,
                                       path_to_ego_mask=path_to_ego_mask,
                                       poly_coeffs=poly_coeffs.float(),

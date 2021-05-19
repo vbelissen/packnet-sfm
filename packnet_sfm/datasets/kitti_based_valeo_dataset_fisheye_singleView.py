@@ -255,7 +255,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
         R = np.matmul(Rz2, np.matmul(Rx, Rz1))
 
-        pose_matrix = transform_from_rot_trans(R, t).astype(np.float32)
+        T_other_convention = -np.dot(R,t)
+
+        pose_matrix = transform_from_rot_trans(R, T_other_convention).astype(np.float32)
 
         self.pose_cache[image_file] = pose_matrix
         return pose_matrix

@@ -234,9 +234,11 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         t = np.array([float(extr['pos_x_m']), float(extr['pos_y_m']), float(extr['pos_z_m'])])
 
         x_rad  = np.pi / 180. * float(extr['rot_x_deg'])
-        x_rad += np.pi # gcam
         z1_rad = np.pi / 180. * float(extr['rot_z1_deg'])
         z2_rad = np.pi / 180. * float(extr['rot_z2_deg'])
+        x_rad += np.pi  # gcam
+        z1_rad += np.pi  # gcam
+        z2_rad += np.pi  # gcam
         cosx  = np.cos(x_rad)
         sinx  = np.sin(x_rad)
         cosz1 = np.cos(z1_rad)
@@ -254,12 +256,12 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                         [sinz2,  cosz2,    0],
                         [    0,      0,    1]])
 
-        R = np.matmul(Rz2, np.matmul(Rx, Rz1))
+        R = np.matmul(Rz1, np.matmul(Rx, Rz2))
 
-        T_other_convention = t#-np.dot(R,t)
+        T_other_convention = -np.dot(R,t)
 
         pose_matrix = transform_from_rot_trans(R, T_other_convention).astype(np.float32)
-        pose_matrix = invert_pose_numpy(pose_matrix)
+        #pose_matrix = invert_pose_numpy(pose_matrix)
 
         self.pose_cache[image_file] = pose_matrix
         return pose_matrix

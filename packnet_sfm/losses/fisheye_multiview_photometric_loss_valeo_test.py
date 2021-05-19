@@ -158,13 +158,16 @@ class MultiViewPhotometricLoss(LossBase):
         device = ref_image.get_device()
         # Generate cameras for all scales
         cams, ref_cams = [], []
+        pose_matrix = torch.zeros(B, 4, 4)
+        for b in range(B):
+            if same_timestamp_as_origin[b]:
+                pose_matrix[b, :, :] = pose.mat[b, :, :]
+            else:
+                pose_matrix[b, :, :] = pose_matrix_context[b, :, :]
+        pose_matrix = Pose(pose_matrix)
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
-            if same_timestamp_as_origin[i]:
-                pose_matrix = pose
-            else:
-                pose_matrix = Pose(pose_matrix_context)
             cams.append(CameraFisheye(path_to_theta_lut=path_to_theta_lut,
                                       path_to_ego_mask=path_to_ego_mask,
                                       poly_coeffs=poly_coeffs.float(),

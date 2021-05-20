@@ -43,6 +43,7 @@ class SemiSupModel_fisheye_valeo(SelfSupModel_fisheye_valeo):
         }
 
     def supervised_loss(self, inv_depths, gt_inv_depths,
+                        path_to_ego_mask,
                         return_logs=False, progress=0.0):
         """
         Calculates the supervised loss.
@@ -65,6 +66,7 @@ class SemiSupModel_fisheye_valeo(SelfSupModel_fisheye_valeo):
         """
         return self._supervised_loss(
             inv_depths, gt_inv_depths,
+            path_to_ego_mask,
             return_logs=return_logs, progress=progress)
 
     def forward(self, batch, return_logs=False, progress=0.0):

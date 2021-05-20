@@ -21,7 +21,7 @@ class SemiSupModel_fisheye_valeo_reprojected_loss(SelfSupModel_fisheye_valeo):
     kwargs : dict
         Extra parameters
     """
-    def __init__(self, supervised_loss_weight=0.9, **kwargs):
+    def __init__(self, supervised_loss_weight=0.9, reprojected_loss_weight=10000., **kwargs):
         # Initializes SelfSupModel
         super().__init__(**kwargs)
         # If supervision weight is 0.0, use SelfSupModel directly
@@ -36,7 +36,7 @@ class SemiSupModel_fisheye_valeo_reprojected_loss(SelfSupModel_fisheye_valeo):
         self._train_requirements['gt_depth'] = self.supervised_loss_weight > 0
 
         self._reprojected_loss = ReprojectedLoss(**kwargs)
-        self.reprojected_loss_weight = 10000.
+        self.reprojected_loss_weight = reprojected_loss_weight# 10000.
 
     @property
     def logs(self):

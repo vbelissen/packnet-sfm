@@ -3,7 +3,7 @@
 import torch
 
 from packnet_sfm.models.SelfSupModel_fisheye_valeo import SfmModel, SelfSupModel_fisheye_valeo
-from packnet_sfm.losses.supervised_loss import SupervisedLoss
+from packnet_sfm.losses.supervised_loss_valeo import SupervisedLoss
 from packnet_sfm.models.model_utils import merge_outputs
 from packnet_sfm.utils.depth import depth2inv
 
@@ -101,6 +101,7 @@ class SemiSupModel_fisheye_valeo(SelfSupModel_fisheye_valeo):
             # Calculate and weight supervised loss
             sup_output = self.supervised_loss(
                 self_sup_output['inv_depths'], depth2inv(batch['depth']),
+                batch['path_to_ego_mask'],
                 return_logs=return_logs, progress=progress)
             loss += self.supervised_loss_weight * sup_output['loss']
             # Merge and return outputs

@@ -102,13 +102,14 @@ class SupervisedLoss(LossBase):
         Extra parameters
     """
     def __init__(self, supervised_method='sparse-l1',
-                 supervised_num_scales=4, progressive_scaling=0.0, **kwargs):
+                 supervised_num_scales=4, progressive_scaling=0.0, mask_ego=True, **kwargs):
         super().__init__()
         self.loss_func = get_loss_func(supervised_method)
         self.supervised_method = supervised_method
         self.n = supervised_num_scales
         self.progressive_scaling = ProgressiveScaling(
             progressive_scaling, self.n)
+        self.mask_ego = mask_ego
 
     ########################################################################################################################
 

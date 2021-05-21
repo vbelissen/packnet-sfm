@@ -107,6 +107,7 @@ cfg.model.loss.supervised_num_scales = 4        # Number of scales for supervise
 cfg.model.loss.supervised_loss_weight = 0.9     # Supervised loss weight
 cfg.model.loss.reprojected_loss_weight = 10000.
 cfg.model.loss.mask_ego = False
+cfg.model.loss.mask_out_of_bounds_reprojected = False
 ########################################################################################################################
 ### MODEL.DEPTH_NET
 ########################################################################################################################

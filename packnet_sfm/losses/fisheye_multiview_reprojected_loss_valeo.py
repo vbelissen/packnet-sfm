@@ -192,6 +192,8 @@ class ReprojectedLoss(LossBase):
                 pixels    = torch.stack([   X,    Y]).view(2, -1).transpose(0, 1) # [N, 2]
 
                 reprojected_loss = torch.mean(torch.sqrt(torch.sum((pixels_gt-pixels)**2, axis=1)))#torch.sqrt(torch.mean((pixels_gt - pixels) ** 2))
+                print(torch.mean(torch.sqrt(torch.sum((pixels_gt-pixels)**2, axis=1))))
+                print(torch.sqrt(torch.mean((pixels_gt - pixels) ** 2)))
                 reprojected_losses[i].append(reprojected_loss)
 
         loss = sum([sum([l.mean() for l in reprojected_losses[i]]) / len(reprojected_losses[i]) for i in range(self.n)]) / self.n

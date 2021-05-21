@@ -181,7 +181,7 @@ class ReprojectedLoss(LossBase):
                 X = target_pixels_warped[i][:, 0, :, :].unsqueeze(1)[gt_depths_mask[i]]
                 Y = target_pixels_warped[i][:, 1, :, :].unsqueeze(1)[gt_depths_mask[i]]
 
-                print(X.size()[0])
+                #print(X.size()[0])
 
                 if self.mask_out_of_bounds_reprojected:
                     inside_of_bounds_mask = torch.logical_not(((X_gt > 1) + (X_gt < -1) + (Y_gt > 1) + (Y_gt < -1) + (X > 1) + (X < -1) + (Y > 1) + (Y < -1))).detach()
@@ -190,7 +190,7 @@ class ReprojectedLoss(LossBase):
                     X    = X[inside_of_bounds_mask]
                     Y    = Y[inside_of_bounds_mask]
 
-                    print(X.size()[0])
+                    #print(X.size()[0])
 
                 pixels_gt = torch.stack([X_gt, Y_gt]).view(2, -1).transpose(0, 1) # [N, 2]
                 pixels    = torch.stack([   X,    Y]).view(2, -1).transpose(0, 1) # [N, 2]

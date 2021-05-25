@@ -9,7 +9,7 @@ from packnet_sfm.models.model_utils import merge_outputs
 from packnet_sfm.utils.depth import depth2inv, inv2depth
 
 
-class SemiSupModel_fisheye_valeo_reprojected_loss(SelfSupModel_fisheye_valeo_testPose2):
+class SemiSupModel_fisheye_valeo_reprojected_loss_testPose2(SelfSupModel_fisheye_valeo_testPose2):
     """
     Model that inherits a depth and pose networks, plus the self-supervised loss from
     SelfSupModel and includes a supervised loss for semi-supervision.

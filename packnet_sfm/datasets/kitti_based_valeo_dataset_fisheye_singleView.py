@@ -108,9 +108,13 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
         if self.with_geometric_context:
             camera = self.cameras[0]
-            camera_index = int(camera.split('_')[-1])
-            file_list_left  = file_list.replace(camera, 'cam_' + str((camera_index - 1) % 4))
-            file_list_right = file_list.replace(camera, 'cam_' + str((camera_index + 1) % 4))
+            if camera == 'mixed':
+                file_list_left  = file_list.replace('all_cams_annotated', 'all_cams_annotated_left')
+                file_list_right = file_list.replace('all_cams_annotated', 'all_cams_annotated_right')
+            else:
+                camera_index = int(camera.split('_')[-1])
+                file_list_left  = file_list.replace(camera, 'cam_' + str((camera_index - 1) % 4))
+                file_list_right = file_list.replace(camera, 'cam_' + str((camera_index + 1) % 4))
             with open(file_list_left, "r") as f_left:
                 data_left = f_left.readlines()
             with open(file_list_right, "r") as f_right:
@@ -311,16 +315,14 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
     def _get_depth_file(self, image_file):
         """Get the corresponding depth file from an image file."""
-        cam = self.cameras[0]
-        if cam in image_file:
-            base, ext = os.path.splitext(os.path.basename(image_file))
-            return os.path.join(self._get_base_folder(image_file),
-                                'depth_maps',
-                                'fisheye',
-                                self._get_split_type(image_file),
-                                self._get_sequence_name(image_file),
-                                self._get_camera_name(image_file).replace('cam', 'velodyne'),
-                                base.replace('cam', 'velodyne') + '.npz')
+        base, ext = os.path.splitext(os.path.basename(image_file))
+        return os.path.join(self._get_base_folder(image_file),
+                            'depth_maps',
+                            'fisheye',
+                            self._get_split_type(image_file),
+                            self._get_sequence_name(image_file),
+                            self._get_camera_name(image_file).replace('cam', 'velodyne'),
+                            base.replace('cam', 'velodyne') + '.npz')
 
     def _get_sample_context(self, sample_name,
                             backward_context, forward_context, stride=1):
@@ -528,7 +530,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         if calib_identifier in self.calibration_cache:
             c_data = self.calibration_cache[calib_identifier]
         else:
-            c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, self.cameras)
+            c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
             self.calibration_cache[calib_identifier] = c_data
 
         poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths[idx], c_data)

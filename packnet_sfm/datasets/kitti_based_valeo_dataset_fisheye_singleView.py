@@ -241,8 +241,6 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         z1_rad = np.pi / 180. * float(extr['rot_z1_deg'])
         z2_rad = np.pi / 180. * float(extr['rot_z2_deg'])
         x_rad += np.pi  # gcam
-        z1_rad += np.pi  # gcam
-        z2_rad += np.pi  # gcam
         cosx  = np.cos(x_rad)
         sinx  = np.sin(x_rad)
         cosz1 = np.cos(z1_rad)
@@ -260,7 +258,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                         [sinz2,  cosz2,    0],
                         [    0,      0,    1]])
 
-        R = np.matmul(Rz1, np.matmul(Rx, Rz2))
+        R = np.matmul(Rz2, np.matmul(Rx, Rz1))
 
         T_other_convention = -np.dot(R,t)
 
@@ -661,9 +659,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                         c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
                         self.calibration_cache[calib_identifier] = c_data
                     context_pose = self._get_extrinsics_pose_matrix(f, c_data)
-                    invert_context_pose = invert_pose_numpy(context_pose)
-                    relative_pose = invert_pose_numpy(invert_context_pose @ first_pose)
-                    image_context_pose.append(relative_pose)
+                    image_context_pose.append(context_pose @ invert_pose_numpy(first_pose))
                     #else:
                     #    image_context_pose.append(None)
 

@@ -19,6 +19,11 @@ from packnet_sfm.utils.logging import pcolor
 #from packnet_sfm.datasets.kitti_based_valeo_dataset_fisheye_singleView import KITTIBasedValeoDatasetFisheye_singleView
 from packnet_sfm.datasets.kitti_based_valeo_dataset_fisheye_singleView import *
 from packnet_sfm.geometry.camera_fisheye_valeo import CameraFisheye
+from packnet_sfm.datasets.kitti_based_valeo_dataset_utils import \
+    pose_from_oxts_packet, read_calib_file, read_raw_calib_files_camera_valeo, transform_from_rot_trans
+from packnet_sfm.geometry.pose import Pose
+
+
 
 import open3d as o3d
 
@@ -126,6 +131,53 @@ def get_depth_file(image_file):
                         get_sequence_name(image_file),
                         get_camera_name(image_file).replace('cam', 'velodyne'),
                         base.replace('cam', 'velodyne') + '.npz')
+
+def get_extrinsics_pose_matrix(image_file, calib_data):
+    """Get intrinsics from the calib_data dictionary."""
+    cam = get_camera_name(image_file)
+    extr = calib_data[cam]['extrinsics']
+
+    t = np.array([float(extr['pos_x_m']), float(extr['pos_y_m']), float(extr['pos_z_m'])])
+
+    x_rad  = np.pi / 180. * float(extr['rot_x_deg'])
+    z1_rad = np.pi / 180. * float(extr['rot_z1_deg'])
+    z2_rad = np.pi / 180. * float(extr['rot_z2_deg'])
+    x_rad += np.pi  # gcam
+    z1_rad += np.pi  # gcam
+    z2_rad += np.pi  # gcam
+    cosx  = np.cos(x_rad)
+    sinx  = np.sin(x_rad)
+    cosz1 = np.cos(z1_rad)
+    sinz1 = np.sin(z1_rad)
+    cosz2 = np.cos(z2_rad)
+    sinz2 = np.sin(z2_rad)
+
+    Rx  = np.array([[     1,     0,    0],
+                    [     0,  cosx, sinx],
+                    [     0, -sinx, cosx]])
+    Rz1 = np.array([[ cosz1, sinz1,    0],
+                    [-sinz1, cosz1,    0],
+                    [     0,     0,    1]])
+    Rz2 = np.array([[cosz2, -sinz2,    0],
+                    [sinz2,  cosz2,    0],
+                    [    0,      0,    1]])
+
+    R = np.matmul(Rz1, np.matmul(Rx, Rz2))
+
+    T_other_convention = -np.dot(R,t)
+
+    pose_matrix = transform_from_rot_trans(R, T_other_convention).astype(np.float32)
+    #pose_matrix = invert_pose_numpy(pose_matrix)
+    return pose_matrix
+
+def display_inlier_outlier(cloud, ind):
+    inlier_cloud = cloud.select_by_index(ind)
+    outlier_cloud = cloud.select_by_index(ind, invert=True)
+
+    print("Showing outliers (red) and inliers (gray): ")
+    outlier_cloud.paint_uniform_color([1, 0, 0])
+    inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
+    o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud])
 
 @torch.no_grad()
 def infer_and_save_depth(input_file, output_file, model_wrapper, image_shape, half, save):
@@ -246,6 +298,9 @@ def infer_plot_and_save_3D_pcl(input_file, output_file, model_wrapper, image_sha
     principal_point = torch.from_numpy(principal_point).unsqueeze(0)
     scale_factors = torch.from_numpy(scale_factors).unsqueeze(0)
 
+    pose_matrix = torch.from_numpy(get_extrinsics_pose_matrix(input_file, calib_data)).unsqueeze(0)
+    pose_tensor = Pose(pose_matrix)
+
     ego_mask = np.load(path_to_ego_mask)
     not_masked = ego_mask.astype(bool).reshape(-1)
 
@@ -253,12 +308,12 @@ def infer_plot_and_save_3D_pcl(input_file, output_file, model_wrapper, image_sha
                           path_to_ego_mask=[path_to_ego_mask],
                           poly_coeffs=poly_coeffs.float(),
                           principal_point=principal_point.float(),
-                          scale_factors=scale_factors.float())
+                          scale_factors=scale_factors.float(),
+                          Tcw=pose_tensor)
     if torch.cuda.is_available():
         cam = cam.to('cuda:{}'.format(rank()), dtype=dtype)
 
     world_points = cam.reconstruct(pred_depth, frame='w')
-
     world_points = world_points[0].cpu().numpy()
     world_points = world_points.reshape((3,-1)).transpose()
 
@@ -287,9 +342,26 @@ def infer_plot_and_save_3D_pcl(input_file, output_file, model_wrapper, image_sha
     pcl.colors = o3d.utility.Vector3dVector(img_numpy)
     #pcl.paint_uniform_color([1.0, 0.0, 0])
 
+    #print("Radius oulier removal")
+    #cl, ind = pcl.remove_radius_outlier(nb_points=10, radius=0.5)
+    #display_inlier_outlier(pcl, ind)
+
+    remove_outliers = True
+    if remove_outliers:
+        cl, ind = pcl.remove_statistical_outlier(nb_neighbors=10, std_ratio=1.3)
+        #display_inlier_outlier(pcl, ind)
+        inlier_cloud = pcl.select_by_index(ind)
+        #inlier_cloud.paint_uniform_color([0.0, 1.0, 0])
+        outlier_cloud = pcl.select_by_index(ind, invert=True)
+        outlier_cloud.paint_uniform_color([0.0, 0.0, 1.0])
+
     pcl_gt = o3d.geometry.PointCloud()
     pcl_gt.points = o3d.utility.Vector3dVector(gt_depth_3d)
     pcl_gt.paint_uniform_color([1.0, 0.0, 0])
+
+    if remove_outliers:
+        o3d.visualization.draw_geometries([inlier_cloud, pcl_gt, outlier_cloud])
+        o3d.visualization.draw_geometries([inlier_cloud, pcl_gt])
 
     o3d.visualization.draw_geometries([pcl, pcl_gt])
 

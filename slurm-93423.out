@@ -1,0 +1,2099 @@
+/var/spool/slurm//job93423/slurm_script: line 17: cd: packnet-sfm: No such file or directory
+[I 05:28:39.677 LabApp] JupyterLab extension loaded from /softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/jupyterlab
+[I 05:28:39.677 LabApp] JupyterLab application directory is /softs/anaconda/4.9.3/python3.8/share/jupyter/lab
+[I 05:28:39.709 LabApp] Serving notebooks from local directory: /home/users/vbelissen/packnet-sfm
+[I 05:28:39.710 LabApp] Jupyter Notebook 6.1.4 is running at:
+[I 05:28:39.710 LabApp] http://node17:8888/?token=a535c6f04f4d49c52f11b9820dfb5ccb1df9dbc0b0713631
+[I 05:28:39.710 LabApp]  or http://127.0.0.1:8888/?token=a535c6f04f4d49c52f11b9820dfb5ccb1df9dbc0b0713631
+[I 05:28:39.710 LabApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 05:28:39.727 LabApp] No web browser found: could not locate runnable browser.
+[C 05:28:39.728 LabApp] 
+    
+    To access the notebook, open this file in a browser:
+        file:///home/users/vbelissen/.local/share/jupyter/runtime/nbserver-191460-open.html
+    Or copy and paste one of these URLs:
+        http://node17:8888/?token=a535c6f04f4d49c52f11b9820dfb5ccb1df9dbc0b0713631
+     or http://127.0.0.1:8888/?token=a535c6f04f4d49c52f11b9820dfb5ccb1df9dbc0b0713631
+[W 08:55:27.170 LabApp] Could not determine jupyterlab build status without nodejs
+[W 08:55:31.946 LabApp] 404 GET /terminals/websocket/1 (10.6.0.1) 76.65ms referer=None
+[W 08:55:38.555 LabApp] 404 GET /terminals/websocket/2 (10.6.0.1) 2.61ms referer=None
+[W 08:55:48.412 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 2.83ms referer=None
+[W 08:56:03.190 LabApp] 404 GET /terminals/websocket/1 (10.6.0.1) 2.86ms referer=None
+[W 08:56:15.685 LabApp] Could not determine jupyterlab build status without nodejs
+[W 08:56:25.350 LabApp] 404 GET /terminals/websocket/1 (10.6.0.1) 2.56ms referer=None
+[W 08:56:58.579 LabApp] 404 GET /terminals/websocket/2 (10.6.0.1) 3.02ms referer=None
+[W 08:57:48.414 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 3.11ms referer=None
+[W 08:58:48.430 LabApp] 404 GET /terminals/websocket/1 (10.6.0.1) 2.98ms referer=None
+[W 08:59:48.442 LabApp] 404 GET /terminals/websocket/2 (10.6.0.1) 3.02ms referer=None
+[W 09:00:48.459 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 2.95ms referer=None
+[W 09:01:48.479 LabApp] 404 GET /terminals/websocket/1 (10.6.0.1) 3.01ms referer=None
+[W 09:02:48.501 LabApp] 404 GET /terminals/websocket/2 (10.6.0.1) 3.04ms referer=None
+[W 09:03:48.518 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 3.00ms referer=None
+[W 09:04:48.534 LabApp] 404 GET /terminals/websocket/1 (10.6.0.1) 2.98ms referer=None
+[W 09:05:48.603 LabApp] 404 GET /terminals/websocket/2 (10.6.0.1) 2.93ms referer=None
+[I 09:05:56.759 LabApp] New terminal with automatic name: 1
+[I 09:06:02.089 LabApp] New terminal with automatic name: 2
+TermSocket.open: 1
+TermSocket.open: Opened 1
+TermSocket.open: 1
+TermSocket.open: Opened 1
+TermSocket.open: 2
+TermSocket.open: Opened 2
+Websocket closed
+Websocket closed
+Websocket closed
+[W 06:10:44.623 LabApp] Could not determine jupyterlab build status without nodejs
+TermSocket.open: 1
+TermSocket.open: Opened 1
+TermSocket.open: 2
+TermSocket.open: Opened 2
+[W 06:33:46.992 LabApp] WebSocket ping timeout after 119991 ms.
+[W 06:33:46.996 LabApp] WebSocket ping timeout after 119986 ms.
+Websocket closed
+Websocket closed
+TermSocket.open: 2
+TermSocket.open: Opened 2
+TermSocket.open: 1
+TermSocket.open: Opened 1
+Websocket closed
+Websocket closed
+TermSocket.open: 2
+TermSocket.open: Opened 2
+Websocket closed
+[W 07:59:01.482 LabApp] Could not determine jupyterlab build status without nodejs
+[W 07:59:16.976 LabApp] Could not determine jupyterlab build status without nodejs
+TermSocket.open: 1
+TermSocket.open: Opened 1
+TermSocket.open: 2
+TermSocket.open: Opened 2
+[W 07:59:18.226 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 6.86ms referer=None
+[I 09:42:34.781 LabApp] Copying configs/fisheye_v2_config17.yaml to /configs
+[I 09:42:52.506 LabApp] Saving file at /configs/fisheye_v2_config25.yaml
+[I 10:06:48.812 LabApp] Copying configs/fisheye_v2_config17.yaml to /configs
+[I 10:07:35.368 LabApp] Saving file at /configs/fisheye_v2_config25.yaml
+[I 10:08:49.541 LabApp] Saving file at /configs/fisheye_v2_config50.yaml
+[I 10:09:44.721 LabApp] Saving file at /configs/fisheye_v2_config50.yaml
+[W 18:28:48.107 LabApp] WebSocket ping timeout after 119906 ms.
+[W 18:28:48.184 LabApp] WebSocket ping timeout after 119975 ms.
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Websocket closed
+Websocket closed
+[W 20:58:33.879 LabApp] Could not determine jupyterlab build status without nodejs
+TermSocket.open: 1
+TermSocket.open: Opened 1
+TermSocket.open: 2
+TermSocket.open: Opened 2
+[W 20:58:36.793 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 14.05ms referer=None
+[W 20:58:39.083 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 2.20ms referer=None
+[W 20:58:41.245 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 2.20ms referer=None
+[W 20:58:43.991 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 2.31ms referer=None
+[W 20:58:52.477 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 1.34ms referer=None
+[W 20:59:07.058 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 2.29ms referer=None
+[W 20:59:25.095 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 3.96ms referer=None
+[W 20:59:43.426 LabApp] 404 GET /terminals/websocket/3 (10.6.0.1) 4.32ms referer=None
+[W 22:13:35.365 LabApp] WebSocket ping timeout after 119990 ms.
+[W 22:13:35.961 LabApp] WebSocket ping timeout after 119990 ms.
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(13, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(13, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Websocket closed
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Exception in callback BaseAsyncIOLoop._handle_events(14, 1)
+handle: <Handle BaseAsyncIOLoop._handle_events(14, 1)>
+Traceback (most recent call last):
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/asyncio/events.py", line 81, in _run
+    self._context.run(self._callback, *self._args)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/platform/asyncio.py", line 139, in _handle_events
+    handler_func(fileobj, events)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/management.py", line 212, in pty_read
+    client.on_pty_read(s)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 73, in on_pty_read
+    self.send_json_message(['stdout', text])
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/terminado/websocket.py", line 77, in send_json_message
+    self.write_message(json_msg)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/notebook/terminal/handlers.py", line 43, in write_message
+    super(TermSocket, self).write_message(message, binary=binary)
+  File "/softs/anaconda/4.9.3/python3.8/lib/python3.8/site-packages/tornado/websocket.py", line 339, in write_message
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+Websocket closed
+[W 09:08:13.425 LabApp] Could not determine jupyterlab build status without nodejs
+TermSocket.open: 1
+TermSocket.open: Opened 1
+TermSocket.open: 2
+TermSocket.open: Opened 2

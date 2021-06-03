@@ -39,7 +39,7 @@ def read_png_depth(file):
 #### DATASET
 ########################################################################################################################
 
-class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
+class KITTIBasedValeoDatasetFisheye_singleView2(Dataset):
     """
     KITTI-based Valeo dataset class.
 

@@ -393,28 +393,27 @@ class MultiViewPhotometricLoss(LossBase):
             else:
                 ref_warped_a = ref_warped_context[2]
                 ref_warped_b = ref_warped_context[3]
-                print(torch.max(ref_warped_a[0]))
+                #print(torch.max(ref_warped_a[0]))
 
-                threshold = 1.0
-                ref_warped_a_black = [torch.sum(ref_warped_a[i], axis=1) <= threshold for i in range(self.n)]
-                ref_warped_b_black = [torch.sum(ref_warped_b[i], axis=1) <= threshold for i in range(self.n)]
+                threshold = 0.01
+                ref_warped_a_black =     [torch.sum(ref_warped_a[i], axis=1) <= threshold for i in range(self.n)]
+                ref_warped_b_black =     [torch.sum(ref_warped_b[i], axis=1) <= threshold for i in range(self.n)]
                 ref_warped_a_not_black = [torch.sum(ref_warped_a[i], axis=1) > threshold for i in range(self.n)]
                 ref_warped_b_not_black = [torch.sum(ref_warped_b[i], axis=1) > threshold for i in range(self.n)]
-                print(ref_warped_b_not_black[0].shape)
-                a_black = np.dstack([a_black] * 3)
-                b_black = np.dstack([b_black] * 3)
-                a_not_black = np.dstack([a_not_black] * 3)
-                b_not_black = np.dstack([b_not_black] * 3)
+                ref_warped_a_black =     [ref_warped_a_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+                ref_warped_b_black =     [ref_warped_b_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+                ref_warped_a_not_black = [ref_warped_a_not_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+                ref_warped_b_not_black = [ref_warped_b_not_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
 
-                threshold_2 = 150.0
-                ref_warped_a_black_2 = [torch.sum(ref_warped_a[i], axis=1) <= threshold_2 for i in range(self.n)]
-                ref_warped_b_black_2 = [torch.sum(ref_warped_b[i], axis=1) <= threshold_2 for i in range(self.n)]
+                threshold_2 = 150.0/255.0
+                ref_warped_a_black_2 =     [torch.sum(ref_warped_a[i], axis=1) <= threshold_2 for i in range(self.n)]
+                ref_warped_b_black_2 =     [torch.sum(ref_warped_b[i], axis=1) <= threshold_2 for i in range(self.n)]
                 ref_warped_a_not_black_2 = [torch.sum(ref_warped_a[i], axis=1) > threshold_2 for i in range(self.n)]
                 ref_warped_b_not_black_2 = [torch.sum(ref_warped_b[i], axis=1) > threshold_2 for i in range(self.n)]
-                a_black_2 = np.dstack([a_black_2] * 3)
-                b_black_2 = np.dstack([b_black_2] * 3)
-                a_not_black_2 = np.dstack([a_not_black_2] * 3)
-                b_not_black_2 = np.dstack([b_not_black_2] * 3)
+                ref_warped_a_black_2 =     [ref_warped_a_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+                ref_warped_b_black_2 =     [ref_warped_b_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+                ref_warped_a_not_black_2 = [ref_warped_a_not_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+                ref_warped_b_not_black_2 = [ref_warped_b_not_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
 
                 ref_warped = [ref_warped_a_not_black[i] * ref_warped_b_black[i]     * ref_warped_a[i]
                             + ref_warped_a_black[i]     * ref_warped_b_not_black[i] * ref_warped_b[i]

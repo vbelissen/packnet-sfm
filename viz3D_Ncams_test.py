@@ -287,6 +287,9 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
     cams = []
     not_masked = []
 
+    cams_x = []
+    cams_y = []
+
     # change to half precision for evaluation if requested
     dtype = torch.float16 if half else None
 
@@ -301,6 +304,9 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
 
         calib_data = {}
         calib_data[camera_str] = read_raw_calib_files_camera_valeo(base_folder_str, split_type_str, seq_name_str, camera_str)
+
+        cams_x.append(float(calib_data[camera_str]['extrinsics']['pos_x_m']))
+        cams_y.append(float(calib_data[camera_str]['extrinsics']['pos_y_m']))
 
         path_to_theta_lut = get_path_to_theta_lut(input_files[i_cam][0])
         path_to_ego_mask = get_path_to_ego_mask(input_files[i_cam][0])
@@ -332,8 +338,13 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         os.makedirs(os.path.join(output_folder, seq_name, 'rgb', camera_names[i_cam]), exist_ok=True)
 
 
-
-    for i_file in range(0, N_files, 25):
+    i_file=0
+    values = np.arange(5,15.0,0.5)
+    N_values = values.size
+    nb_points = np.zeros((N_values, 4))
+    n = 0
+    for K in values:
+        print(K)
 
         base_0, ext_0 = os.path.splitext(os.path.basename(input_files[0][i_file]))
         print(base_0)
@@ -364,7 +375,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             images_numpy[i_cam] = images_numpy[i_cam][not_masked[i_cam]]
             pred_inv_depths.append(model_wrappers[i_cam].depth(images[i_cam]))
             pred_depths.append(inv2depth(pred_inv_depths[i_cam]))
-            world_points.append(cams[i_cam].reconstruct(pred_depths[i_cam], frame='w'))
+            world_points.append(cams[i_cam].reconstruct(K*pred_depths[i_cam], frame='w'))
             world_points[i_cam] = world_points[i_cam][0].cpu().numpy()
             world_points[i_cam] = world_points[i_cam].reshape((3, -1)).transpose()
             world_points[i_cam] = world_points[i_cam][not_masked[i_cam]]
@@ -388,6 +399,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             pcl_full[i_cam].points = o3d.utility.Vector3dVector(world_points[i_cam])
             pcl_full[i_cam].colors = o3d.utility.Vector3dVector(images_numpy[i_cam])
 
+
             pcl = pcl_full[i_cam]#.select_by_index(ind)
             points_tmp = np.asarray(pcl.points)
             colors_tmp = np.asarray(pcl.colors)
@@ -399,7 +411,8 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             mask = 1-mask_height*mask_colors_blue
             mask2 = 1-mask_height*mask_colors_green
             mask3 = 1- mask_height*mask_colors_green2
-            mask = mask*mask2*mask3
+            #maskY = points_tmp[:, 1] > 1
+            mask = mask*mask2*mask3#*maskY
             pcl = pcl.select_by_index(np.where(mask)[0])
             cl, ind = pcl.remove_statistical_outlier(nb_neighbors=7, std_ratio=1.4)
             pcl = pcl.select_by_index(ind)
@@ -419,6 +432,46 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             else:
                 pcl_gt.append(0)
         #o3d.visualization.draw_geometries(pcl_full + [e for i, e in enumerate(pcl_gt) if e != 0])
+        color_cam = False
+        if color_cam:
+            for i_cam in range(4):
+                if i_cam == 0:
+                    pcl_only_inliers[i_cam].paint_uniform_color([1.0, 0.0, 0.0])#.colors = o3d.utility.Vector3dVector(images_numpy[i_cam])
+                elif i_cam == 1:
+                    pcl_only_inliers[i_cam].paint_uniform_color([0.0, 1.0, 0.0])
+                elif i_cam == 2:
+                    pcl_only_inliers[i_cam].paint_uniform_color([0.0, 0.0, 1.0])
+                elif i_cam == 3:
+                    pcl_only_inliers[i_cam].paint_uniform_color([0.3, 0.4, 0.3])
+        dist_total = np.zeros(4)
+        for i_cam in range(4):
+            pcl1 = pcl_only_inliers[i_cam % 4].uniform_down_sample(10)
+            pcl2 = pcl_only_inliers[(i_cam+1) % 4].uniform_down_sample(10)
+            points_tmp1 = np.asarray(pcl1.points)
+            points_tmp2 = np.asarray(pcl2.points)
+            if i_cam == 3 or i_cam == 0: # comparaison entre 3 et 0 ou entre 0 et 1
+                maskX1 = points_tmp1[:, 0] > cams_x[0]
+                maskX2 = points_tmp2[:, 0] > cams_x[0]
+            if i_cam == 1 or i_cam == 2: # comparaison entre 3 et 0 ou entre 0 et 1
+                maskX1 = points_tmp1[:, 0] < cams_x[2]
+                maskX2 = points_tmp2[:, 0] < cams_x[2]
+            if i_cam == 2 or i_cam == 3: # comparaison entre 3 et 0 ou entre 0 et 1
+                maskY1 = points_tmp1[:, 1] > cams_y[3]
+                maskY2 = points_tmp2[:, 1] > cams_y[3]
+            if i_cam == 0 or i_cam == 1: # comparaison entre 3 et 0 ou entre 0 et 1
+                maskY1 = points_tmp1[:, 1] < cams_y[1]
+                maskY2 = points_tmp2[:, 1] < cams_y[1]
+            mask_far1 = np.sqrt(np.square(points_tmp1[:, 0] - (cams_x[0] + cams_x[2])/2) + np.square(points_tmp1[:, 1] - (cams_y[1] + cams_y[3])/2)) < 5
+            mask_far2 = np.sqrt(np.square(points_tmp2[:, 0] - (cams_x[0] + cams_x[2]) / 2) + np.square(points_tmp2[:, 1] - (cams_y[1] + cams_y[3]) / 2)) < 5
+            pcl1 = pcl1.select_by_index(np.where(maskX1 * maskY1 * mask_far1)[0])
+            pcl2 = pcl2.select_by_index(np.where(maskX2 * maskY2 * mask_far2)[0])
+            #o3d.visualization.draw_geometries([pcl1, pcl2])
+            dists = pcl1.compute_point_cloud_distance(pcl2)
+            nb_points[n, i_cam] = np.sum(np.asarray(dists)<0.5)
+            print(nb_points[n, i_cam])
+            dists = np.mean(np.asarray(dists))
+            dist_total[i_cam] = dists
+        print(np.mean(dist_total))
 
         # vis_full = o3d.visualization.Visualizer()
         # vis_full.create_window(visible = True, window_name = 'full'+str(i_file))
@@ -434,101 +487,42 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         # ctr.set_zoom(zoom_float)
         # #vis_full.run()
         # vis_full.destroy_window()
-        for i_cam2 in range(4):
-            for suff in ['', 'bis', 'ter']:
-                vis_only_inliers = o3d.visualization.Visualizer()
-                vis_only_inliers.create_window(visible = True, window_name = 'inliers'+str(i_file))
-                for i_cam in range(N_cams):
-                    vis_only_inliers.add_geometry(pcl_only_inliers[i_cam])
-                for i, e in enumerate(pcl_gt):
-                    if e != 0:
-                        vis_only_inliers.add_geometry(e)
-                ctr = vis_only_inliers.get_view_control()
-                ctr.set_lookat(lookat_vector)
-                ctr.set_front(front_vector)
-                ctr.set_up(up_vector)
-                ctr.set_zoom(zoom_float)
-                param = o3d.io.read_pinhole_camera_parameters('/home/vbelissen/Downloads/test/cameras_jsons/test'+str(i_cam2+1)+suff+'.json')
-                ctr.convert_from_pinhole_camera_parameters(param)
-                opt = vis_only_inliers.get_render_option()
-                opt.background_color = np.asarray([0, 0, 0])
-                #vis_only_inliers.update_geometry('inliers0')
-                vis_only_inliers.poll_events()
-                vis_only_inliers.update_renderer()
-                if stop:
-                    vis_only_inliers.run()
-                #param = vis_only_inliers.get_view_control().convert_to_pinhole_camera_parameters()
-                #o3d.io.write_pinhole_camera_parameters('/home/vbelissen/Downloads/test.json', param)
-                image = vis_only_inliers.capture_screen_float_buffer(False)
-                plt.imsave(os.path.join(output_folder, seq_name, 'pcl',  'normal',  str(i_cam2) + suff, base_0 + '_normal_' + str(i_cam2) + suff + '.png'),
-                           np.asarray(image), dpi=1)
-                vis_only_inliers.destroy_window()
-                del ctr
-                del vis_only_inliers
-                del opt
-
-        # vis_inliers_outliers = o3d.visualization.Visualizer()
-        # vis_inliers_outliers.create_window(visible = True, window_name = 'inout'+str(i_file))
-        # for i_cam in range(N_cams):
-        #     vis_inliers_outliers.add_geometry(pcl_only_inliers[i_cam])
-        #     vis_inliers_outliers.add_geometry(pcl_only_outliers[i_cam])
-        # for i, e in enumerate(pcl_gt):
-        #     if e != 0:
-        #         vis_inliers_outliers.add_geometry(e)
-        # ctr = vis_inliers_outliers.get_view_control()
-        # ctr.set_lookat(lookat_vector)
-        # ctr.set_front(front_vector)
-        # ctr.set_up(up_vector)
-        # ctr.set_zoom(zoom_float)
-        # #vis_inliers_outliers.run()
-        # vis_inliers_outliers.destroy_window()
-        for i_cam2 in range(4):
-            for suff in ['', 'bis', 'ter']:
-                vis_inliers_cropped = o3d.visualization.Visualizer()
-                vis_inliers_cropped.create_window(visible = True, window_name = 'incrop'+str(i_file))
-                for i_cam in range(N_cams):
-                    vis_inliers_cropped.add_geometry(pcl_only_inliers[i_cam].crop(bbox))
-                for i, e in enumerate(pcl_gt):
-                    if e != 0:
-                        vis_inliers_cropped.add_geometry(e)
-                ctr = vis_inliers_cropped.get_view_control()
-                ctr.set_lookat(lookat_vector)
-                ctr.set_front(front_vector)
-                ctr.set_up(up_vector)
-                ctr.set_zoom(zoom_float)
-                param = o3d.io.read_pinhole_camera_parameters(
-                    '/home/vbelissen/Downloads/test/cameras_jsons/test' + str(i_cam2 + 1) + suff + '.json')
-                ctr.convert_from_pinhole_camera_parameters(param)
-                opt = vis_inliers_cropped.get_render_option()
-                opt.background_color = np.asarray([0, 0, 0])
-                vis_inliers_cropped.poll_events()
-                vis_inliers_cropped.update_renderer()
-                #vis_inliers_cropped.run()
-                image = vis_inliers_cropped.capture_screen_float_buffer(False)
-                plt.imsave(os.path.join(output_folder, seq_name, 'pcl', 'cropped',  str(i_cam2) + suff, base_0 + '_cropped_' + str(i_cam2) + suff + '.png'),
-                           np.asarray(image), dpi=1)
-                vis_inliers_cropped.destroy_window()
-                del ctr
-                del opt
-                del vis_inliers_cropped
-
-        #del ctr
-        #del vis_full
-        #del vis_only_inliers
-        #del vis_inliers_outliers
-        #del vis_inliers_cropped
-
+        i_cam2=0
+        suff=''
+        vis_only_inliers = o3d.visualization.Visualizer()
+        vis_only_inliers.create_window(visible = True, window_name = 'inliers'+str(i_file))
         for i_cam in range(N_cams):
-            rgb.append(images[i_cam][0].permute(1, 2, 0).detach().cpu().numpy() * 255)
-            viz_pred_inv_depths.append(viz_inv_depth(pred_inv_depths[i_cam][0], normalizer=0.8) * 255)
-            viz_pred_inv_depths[i_cam][not_masked[i_cam].reshape(image_shape) == 0] = 0
-            concat = np.concatenate([rgb[i_cam], viz_pred_inv_depths[i_cam]], 0)
-            # Save visualization
-            output_file1 = os.path.join(output_folder, seq_name, 'depth', camera_names[i_cam], os.path.basename(input_files[i_cam][i_file]))
-            output_file2 = os.path.join(output_folder, seq_name, 'rgb', camera_names[i_cam], os.path.basename(input_files[i_cam][i_file]))
-            imwrite(output_file1, viz_pred_inv_depths[i_cam][:, :, ::-1])
-            imwrite(output_file2, rgb[i_cam][:, :, ::-1])
+            vis_only_inliers.add_geometry(pcl_only_inliers[i_cam])
+        for i, e in enumerate(pcl_gt):
+            if e != 0:
+                vis_only_inliers.add_geometry(e)
+        ctr = vis_only_inliers.get_view_control()
+        ctr.set_lookat(lookat_vector)
+        ctr.set_front(front_vector)
+        ctr.set_up(up_vector)
+        ctr.set_zoom(zoom_float)
+        param = o3d.io.read_pinhole_camera_parameters('/home/vbelissen/Downloads/test/cameras_jsons/test'+str(i_cam2+1)+suff+'.json')
+        ctr.convert_from_pinhole_camera_parameters(param)
+        opt = vis_only_inliers.get_render_option()
+        opt.background_color = np.asarray([0, 0, 0])
+        #vis_only_inliers.update_geometry('inliers0')
+        vis_only_inliers.poll_events()
+        vis_only_inliers.update_renderer()
+        if stop:
+            vis_only_inliers.run()
+        #param = vis_only_inliers.get_view_control().convert_to_pinhole_camera_parameters()
+        #o3d.io.write_pinhole_camera_parameters('/home/vbelissen/Downloads/test.json', param)
+        vis_only_inliers.destroy_window()
+        del ctr
+        del vis_only_inliers
+        del opt
+        n += 1
 
+    plt.plot(values, nb_points)
+    plt.show()
+    plt.close()
+    plt.plot(values, np.sum(nb_points,axis=1))
+    plt.show()
 
 
 def main(args, N):

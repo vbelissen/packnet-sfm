@@ -567,7 +567,7 @@ def setup_dataset(config, mode, requirements, **kwargs):
                 cameras=config.cameras[i],
             )
         elif config.dataset[i] == 'KITTIValeoFisheye2':
-            from packnet_sfm.datasets.kitti_based_valeo_dataset_fisheye_singleView import KITTIBasedValeoDatasetFisheye_singleView2
+            from packnet_sfm.datasets.kitti_based_valeo_dataset_fisheye_singleView2 import KITTIBasedValeoDatasetFisheye_singleView2
             dataset = KITTIBasedValeoDatasetFisheye_singleView2(
                 config.path[i], path_split,
                 **dataset_args, **dataset_args_i,

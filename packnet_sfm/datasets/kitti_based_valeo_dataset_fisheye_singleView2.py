@@ -659,8 +659,8 @@ class KITTIBasedValeoDatasetFisheye_singleView2(Dataset):
                         c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
                         self.calibration_cache[calib_identifier] = c_data
                     context_pose = self._get_extrinsics_pose_matrix(f, c_data)
-                    #image_context_pose.append(invert_pose_numpy(context_pose @ invert_pose_numpy(first_pose)))
-                    image_context_pose.append(invert_pose_numpy(context_pose) @ first_pose)
+                    image_context_pose.append(invert_pose_numpy(context_pose @ invert_pose_numpy(first_pose)))
+                    #image_context_pose.append(invert_pose_numpy(context_pose) @ first_pose)
                     #else:
                     #    image_context_pose.append(None)
 

@@ -1,6 +1,7 @@
 import packnet_sfm.geometry.camera_fisheye_valeo
 from packnet_sfm.geometry.camera_fisheye_valeo import CameraFisheye
 import torch
+import torch.nn as nn
 import numpy as np
 import torch.nn.functional as funct
 from PIL import Image

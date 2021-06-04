@@ -157,7 +157,7 @@ cv2.imwrite('/home/users/vbelissen/test'+ tt +'_right.png',warped_front_right_PI
 
 
 
-threshold = 0.01
+threshold = 1.0
 warped_front_left_black =     torch.sum(warped_front_left, axis=1) <= threshold
 warped_front_right_black =     torch.sum(warped_front_right, axis=1) <= threshold
 warped_front_left_not_black = torch.sum(warped_front_left, axis=1) > threshold
@@ -167,7 +167,7 @@ warped_front_right_black =     warped_front_right_black.unsqueeze(1).repeat(1, 3
 warped_front_left_not_black = warped_front_left_not_black.unsqueeze(1).repeat(1, 3, 1, 1)
 warped_front_right_not_black = warped_front_right_not_black.unsqueeze(1).repeat(1, 3, 1, 1)
 
-threshold_2 = 150.0/255.0
+threshold_2 = 150.0
 warped_front_left_black_2 =     torch.sum(warped_front_left, axis=1) <= threshold_2
 warped_front_right_black_2 =     torch.sum(warped_front_right, axis=1) <= threshold_2
 warped_front_left_not_black_2 = torch.sum(warped_front_left, axis=1) > threshold_2

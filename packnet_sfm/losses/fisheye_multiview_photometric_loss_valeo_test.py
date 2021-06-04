@@ -426,11 +426,11 @@ class MultiViewPhotometricLoss(LossBase):
                                              pose)
             B = len(path_to_ego_mask)
             #ref_not_black_mask_tensor = [(torch.sum(ref_warped[i], axis=1) >= 0.1).unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-            ref_not_black_mask_tensor1 = [torch.zeros(B, 1, 800, 1280) for _ in range(self.n)]
-            ref_not_black_mask_tensor2 = [torch.zeros(B, 1, 800, 1280) for _ in range(self.n)]
+            ref_not_black_mask_tensor1 = [torch.zeros(B, 1, 160, 256) for _ in range(self.n)]#[torch.zeros(B, 1, 800, 1280) for _ in range(self.n)]
+            ref_not_black_mask_tensor2 = [torch.zeros(B, 1, 160, 256) for _ in range(self.n)]#[torch.zeros(B, 1, 800, 1280) for _ in range(self.n)]
             for i in range(self.n):
-                ref_not_black_mask_tensor1[i][:, 0, 128:672, 128:448]  = 1
-                ref_not_black_mask_tensor2[i][:, 0, 128:672, 704:1152] = 1
+                ref_not_black_mask_tensor1[i][:, 0, 25:135, 25:103]  = 1#[:, 0, 128:672, 128:448]  = 1
+                ref_not_black_mask_tensor2[i][:, 0, 25:135, 153:231] = 1#[:, 0, 128:672, 704:1152] = 1
 
             # Calculate and store image loss
             #photometric_loss = self.calc_photometric_loss(ref_warped, images, path_to_ego_mask)

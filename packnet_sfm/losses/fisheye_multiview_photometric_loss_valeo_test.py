@@ -347,6 +347,7 @@ class MultiViewPhotometricLoss(LossBase):
         images = match_scales(image, inv_depths, self.n)
 
         n_context = len(context)
+        print(n_context)
 
         if self.mask_ego:
             device = image.get_device()
@@ -425,7 +426,7 @@ class MultiViewPhotometricLoss(LossBase):
                                              pose_matrix_context[j],
                                              pose)
 
-            ref_not_black_mask_tensor = [(torch.sum(ref_warped[i], axis=1) >= 1.0).unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+            ref_not_black_mask_tensor = [(torch.sum(ref_warped[i], axis=1) >= 0.1).unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
 
             # Calculate and store image loss
             #photometric_loss = self.calc_photometric_loss(ref_warped, images, path_to_ego_mask)
@@ -433,7 +434,10 @@ class MultiViewPhotometricLoss(LossBase):
                 photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ref_not_black_mask_tensor, ref_ego_mask_tensors[j])],
                                                               [a * b * c for a, b, c in zip(images,     ref_not_black_mask_tensor, ego_mask_tensors)])
             else:
-                photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ref_not_black_mask_tensor)],
+                if j==0 or j==1:
+                    photometric_loss = self.calc_photometric_loss(ref_warped, images)
+                else:
+                    photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ref_not_black_mask_tensor)],
                                                               [a * b for a, b in zip(images,     ref_not_black_mask_tensor)])
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i])

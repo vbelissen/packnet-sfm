@@ -427,11 +427,16 @@ class MultiViewPhotometricLoss(LossBase):
             B = len(path_to_ego_mask)
             device = image.get_device()
             #ref_not_black_mask_tensor = [(torch.sum(ref_warped[i], axis=1) >= 0.1).unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-            ref_not_black_mask_tensor1 = [torch.zeros(B, 1, 160, 256).to(device) for _ in range(self.n)]#[torch.zeros(B, 1, 800, 1280) for _ in range(self.n)]
-            ref_not_black_mask_tensor2 = [torch.zeros(B, 1, 160, 256).to(device) for _ in range(self.n)]#[torch.zeros(B, 1, 800, 1280) for _ in range(self.n)]
+            ref_not_black_mask_tensor = [torch.zeros(B, 1, 160, 256).to(device) for _ in range(self.n)]#[torch.zeros(B, 1, 800, 1280) for _ in range(self.n)]
             for i in range(self.n):
-                ref_not_black_mask_tensor1[i][:, 0, 25:135, 25:103]  = 1#[:, 0, 128:672, 128:448]  = 1
-                ref_not_black_mask_tensor2[i][:, 0, 25:135, 153:231] = 1#[:, 0, 128:672, 704:1152] = 1
+                for b in range(B):
+                    if same_timestep_as_origin[b]:
+                        ref_not_black_mask_tensor[i][b, :, :, :] = 1
+                    else:
+                        if 'cam_3' in ref_path_to_ego_mask[j][b]:
+                            ref_not_black_mask_tensor[i][b, 0, 25:135, 25:103]  = 1#[:, 0, 128:672, 128:448]  = 1
+                        else:
+                            ref_not_black_mask_tensor[i][b, 0, 25:135, 153:231] = 1#[:, 0, 128:672, 704:1152] = 1
 
             # Calculate and store image loss
             #photometric_loss = self.calc_photometric_loss(ref_warped, images, path_to_ego_mask)
@@ -439,15 +444,9 @@ class MultiViewPhotometricLoss(LossBase):
                 photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ref_not_black_mask_tensor, ref_ego_mask_tensors[j])],
                                                               [a * b * c for a, b, c in zip(images,     ref_not_black_mask_tensor, ego_mask_tensors)])
             else:
-                if j==0 or j==1:
-                    photometric_loss = self.calc_photometric_loss(ref_warped, images)
-                elif j==2:
-                    photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ref_not_black_mask_tensor1)],
-                                                              [a * b for a, b in zip(images,     ref_not_black_mask_tensor1)])
-                else:
-                    photometric_loss = self.calc_photometric_loss(
-                        [a * b for a, b in zip(ref_warped, ref_not_black_mask_tensor2)],
-                        [a * b for a, b in zip(images, ref_not_black_mask_tensor2)])
+                photometric_loss = self.calc_photometric_loss(
+                        [a * b for a, b in zip(ref_warped, ref_not_black_mask_tensor)],
+                        [a * b for a, b in zip(images,     ref_not_black_mask_tensor)])
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i])
             # If using automask

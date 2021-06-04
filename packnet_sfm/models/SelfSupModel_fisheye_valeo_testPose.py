@@ -94,6 +94,7 @@ class SelfSupModel_fisheye_valeo_testPose(SfmModel):
             return output
         else:
             # Otherwise, calculate self-supervised loss
+            print(batch['pose_matrix_context'])
             self_sup_output = self.self_supervised_loss(
                 batch['rgb_original'], batch['rgb_context_original'],
                 output['inv_depths'], output['poses'],

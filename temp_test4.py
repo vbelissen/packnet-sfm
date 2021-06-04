@@ -96,6 +96,8 @@ pose_matrix_right = transform_from_rot_trans(R_right, T_other_right).astype(np.f
 
 pose_matrix_left  = pose_matrix_left @ invert_pose_numpy(pose_matrix_front)
 pose_matrix_right = pose_matrix_right @ invert_pose_numpy(pose_matrix_front)
+print(pose_matrix_left)
+print(pose_matrix_right)
 
 pose_matrix_front_torch = torch.zeros(1,4,4)
 pose_matrix_left_torch  = torch.zeros(1,4,4)

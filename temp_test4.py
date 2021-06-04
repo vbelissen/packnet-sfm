@@ -19,7 +19,9 @@ simulated_depth = simulated_depth.to(torch.device('cuda'))
 img_front = Image.open('/home/data/vbelissen/valeo_multiview/images_multiview/fisheye/test/20170320_163113/cam_0/20170320_163113_cam_0_00006300.jpg').convert('RGB')
 img_left  = Image.open('/home/data/vbelissen/valeo_multiview/images_multiview/fisheye/test/20170320_163113/cam_3/20170320_163113_cam_3_00006286.jpg').convert('RGB')
 img_right = Image.open('/home/data/vbelissen/valeo_multiview/images_multiview/fisheye/test/20170320_163113/cam_1/20170320_163113_cam_1_00006288.jpg').convert('RGB')
-left_img_torch = torch.transpose(torch.from_numpy(np.array(img_left)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
+
+front_img_torch = torch.transpose(torch.from_numpy(np.array(img_front)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
+left_img_torch  = torch.transpose(torch.from_numpy(np.array(img_left)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
 right_img_torch = torch.transpose(torch.from_numpy(np.array(img_right)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
 
 
@@ -185,3 +187,107 @@ ref_warped = warped_front_left_not_black * warped_front_right_black     * warped
 
 ref_warped_PIL = torch.transpose(ref_warped.unsqueeze(4),1,4).squeeze().cpu().numpy()
 cv2.imwrite('/home/users/vbelissen/test'+ tt +'_ref_warped.png',ref_warped_PIL)
+
+def SSIM(x, y, C1=1e-4, C2=9e-4, kernel_size=3, stride=1):
+    """
+    Structural SIMilarity (SSIM) distance between two images.
+
+    Parameters
+    ----------
+    x,y : torch.Tensor [B,3,H,W]
+        Input images
+    C1,C2 : float
+        SSIM parameters
+    kernel_size,stride : int
+        Convolutional parameters
+
+    Returns
+    -------
+    ssim : torch.Tensor [1]
+        SSIM distance
+    """
+    pool2d = nn.AvgPool2d(kernel_size, stride=stride)
+    refl = nn.ReflectionPad2d(1)
+
+    x, y = refl(x), refl(y)
+    mu_x = pool2d(x)
+    mu_y = pool2d(y)
+
+    mu_x_mu_y = mu_x * mu_y
+    mu_x_sq = mu_x.pow(2)
+    mu_y_sq = mu_y.pow(2)
+
+    sigma_x = pool2d(x.pow(2)) - mu_x_sq
+    sigma_y = pool2d(y.pow(2)) - mu_y_sq
+    sigma_xy = pool2d(x * y) - mu_x_mu_y
+    v1 = 2 * sigma_xy + C2
+    v2 = sigma_x + sigma_y + C2
+
+    ssim_n = (2 * mu_x_mu_y + C1) * v1
+    ssim_d = (mu_x_sq + mu_y_sq + C1) * v2
+    ssim = ssim_n / ssim_d
+
+    return ssim
+
+def SSIM1(x, y, kernel_size=3):
+    """
+    Calculates the SSIM (Structural SIMilarity) loss
+
+    Parameters
+    ----------
+    x,y : torch.Tensor [B,3,H,W]
+        Input images
+    kernel_size : int
+        Convolutional parameter
+
+    Returns
+    -------
+    ssim : torch.Tensor [1]
+        SSIM loss
+    """
+    ssim_value = SSIM(x, y, C1=1e-4 , C2=9e-4 , kernel_size=kernel_size)
+    return torch.clamp((1. - ssim_value) / 2., 0., 1.)
+
+def calc_photometric_loss(t_est, images):
+    """
+    Calculates the photometric loss (L1 + SSIM)
+    Parameters
+    ----------
+    t_est : list of torch.Tensor [B,3,H,W]
+        List of warped reference images in multiple scales
+    images : list of torch.Tensor [B,3,H,W]
+        List of original images in multiple scales
+
+    Returns
+    -------
+    photometric_loss : torch.Tensor [1]
+        Photometric loss
+    """
+    # L1 loss
+    n = len(t_est)
+    clip_loss = 0.0
+    ssim_loss_weight = 0.85
+
+    l1_loss = [torch.abs(t_est[i] - images[i])
+               for i in range(n)]
+    # SSIM loss
+    if ssim_loss_weight > 0.0:
+        ssim_loss = [SSIM1(t_est[i], images[i], kernel_size=3)
+                     for i in range(n)]
+        # Weighted Sum: alpha * ssim + (1 - alpha) * l1
+        photometric_loss = [ssim_loss_weight * ssim_loss[i].mean(1, True) +
+                            (1 - ssim_loss_weight) * l1_loss[i].mean(1, True)
+                            for i in range(n)]
+    else:
+        photometric_loss = l1_loss
+    # Clip loss
+    if clip_loss > 0.0:
+        for i in range(n):
+            mean, std = photometric_loss[i].mean(), photometric_loss[i].std()
+            photometric_loss[i] = torch.clamp(
+                photometric_loss[i], max=float(mean + clip_loss * std))
+    # Return total photometric loss
+    return photometric_loss
+
+loss = calc_photometric_loss([ref_warped], [front_img_torch])
+print(loss)

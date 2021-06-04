@@ -457,6 +457,12 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
                 vis_only_inliers.update_renderer()
                 if stop:
                     vis_only_inliers.run()
+                    pcd1 = pcl_only_inliers[0]+pcl_only_inliers[1]+pcl_only_inliers[2]+pcl_only_inliers[3]
+                    for i_cam3 in range(4):
+                        if has_gt_depth[i_cam3]:
+                            pcd1 += pcl_gt[i_cam3]
+                    if i_cam2==0 and suff=='':
+                        o3d.io.write_point_cloud(os.path.join(output_folder, seq_name, 'open3d', base_0 + '.pcd'), pcd1)
                 #param = vis_only_inliers.get_view_control().convert_to_pinhole_camera_parameters()
                 #o3d.io.write_pinhole_camera_parameters('/home/vbelissen/Downloads/test.json', param)
                 image = vis_only_inliers.capture_screen_float_buffer(False)

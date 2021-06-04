@@ -18,10 +18,13 @@ for i in range(800):
 simulated_depth = simulated_depth.to(torch.device('cuda'))
 
 img_front = Image.open('/home/data/vbelissen/valeo_multiview/images_multiview/fisheye/test/20170320_163113/cam_0/20170320_163113_cam_0_00006300.jpg').convert('RGB')
+img_front_next = Image.open('/home/data/vbelissen/valeo_multiview/images_multiview/fisheye/test/20170320_163113/cam_0/20170320_163113_cam_0_00006301.jpg').convert('RGB')
+
 img_left  = Image.open('/home/data/vbelissen/valeo_multiview/images_multiview/fisheye/test/20170320_163113/cam_3/20170320_163113_cam_3_00006286.jpg').convert('RGB')
 img_right = Image.open('/home/data/vbelissen/valeo_multiview/images_multiview/fisheye/test/20170320_163113/cam_1/20170320_163113_cam_1_00006288.jpg').convert('RGB')
 
 front_img_torch = torch.transpose(torch.from_numpy(np.array(img_front)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
+front_next_img_torch = torch.transpose(torch.from_numpy(np.array(img_front_next)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
 left_img_torch  = torch.transpose(torch.from_numpy(np.array(img_left)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
 right_img_torch = torch.transpose(torch.from_numpy(np.array(img_right)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
 
@@ -290,5 +293,8 @@ def calc_photometric_loss(t_est, images):
     # Return total photometric loss
     return photometric_loss
 
-loss = calc_photometric_loss([ref_warped], [front_img_torch])
-print(loss)
+loss1 = calc_photometric_loss([ref_warped], [front_img_torch])
+loss2 = calc_photometric_loss([front_next_img_torch], [front_img_torch])
+print(loss1)
+print(loss2)
+print(loss1.shape)

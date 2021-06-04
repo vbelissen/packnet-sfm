@@ -376,6 +376,46 @@ class MultiViewPhotometricLoss(LossBase):
                 # ego_mask_tensor = ego_mask_tensor.to(device)
 
         ref_warped_context = []
+
+        #     ref_warped_context.append(ref_warped)
+        #
+        # for j in range(3):
+        #     ref_image = context[j]
+        #     if j == 0 or j == 1:
+        #         ref_warped = ref_warped_context[j]
+        #     else:
+        #         ref_warped_a = ref_warped_context[2]
+        #         ref_warped_b = ref_warped_context[3]
+        #         #print(torch.max(ref_warped_a[0]))
+        #
+        #         threshold = 1.0
+        #         ref_warped_a_black =     [torch.sum(ref_warped_a[i], axis=1) <= threshold for i in range(self.n)]
+        #         ref_warped_b_black =     [torch.sum(ref_warped_b[i], axis=1) <= threshold for i in range(self.n)]
+        #         ref_warped_a_not_black = [torch.sum(ref_warped_a[i], axis=1) > threshold for i in range(self.n)]
+        #         ref_warped_b_not_black = [torch.sum(ref_warped_b[i], axis=1) > threshold for i in range(self.n)]
+        #         ref_warped_a_black =     [ref_warped_a_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+        #         ref_warped_b_black =     [ref_warped_b_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+        #         ref_warped_a_not_black = [ref_warped_a_not_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+        #         ref_warped_b_not_black = [ref_warped_b_not_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+        #
+        #         threshold_2 = 150.0
+        #         ref_warped_a_black_2 =     [torch.sum(ref_warped_a[i], axis=1) <= threshold_2 for i in range(self.n)]
+        #         ref_warped_b_black_2 =     [torch.sum(ref_warped_b[i], axis=1) <= threshold_2 for i in range(self.n)]
+        #         ref_warped_a_not_black_2 = [torch.sum(ref_warped_a[i], axis=1) > threshold_2 for i in range(self.n)]
+        #         ref_warped_b_not_black_2 = [torch.sum(ref_warped_b[i], axis=1) > threshold_2 for i in range(self.n)]
+        #         ref_warped_a_black_2 =     [ref_warped_a_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+        #         ref_warped_b_black_2 =     [ref_warped_b_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+        #         ref_warped_a_not_black_2 = [ref_warped_a_not_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+        #         ref_warped_b_not_black_2 = [ref_warped_b_not_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
+        #
+        #         ref_warped = [ref_warped_a_not_black[i] * ref_warped_b_black[i]     * ref_warped_a[i]
+        #                     + ref_warped_a_black[i]     * ref_warped_b_not_black[i] * ref_warped_b[i]
+        #                     + ref_warped_a_not_black[i] * ref_warped_b_not_black[i] * (ref_warped_a_not_black_2[i] * ref_warped_b_black_2[i]     * ref_warped_a[i]
+        #                                                                              + ref_warped_a_black_2[i]     * ref_warped_b_not_black_2[i] * ref_warped_b[i]
+        #                                                                              + ref_warped_a_not_black_2[i] * ref_warped_b_not_black_2[i] * (ref_warped_a[i] + ref_warped_b[i]) / 2)
+        #              for i in range(self.n)]
+
+
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
             ref_warped = self.warp_ref_image(inv_depths, ref_image,
@@ -384,51 +424,17 @@ class MultiViewPhotometricLoss(LossBase):
                                              same_timestep_as_origin[j],
                                              pose_matrix_context[j],
                                              pose)
-            ref_warped_context.append(ref_warped)
 
-        for j in range(3):
-            ref_image = context[j]
-            if j == 0 or j == 1:
-                ref_warped = ref_warped_context[j]
-            else:
-                ref_warped_a = ref_warped_context[2]
-                ref_warped_b = ref_warped_context[3]
-                #print(torch.max(ref_warped_a[0]))
-
-                threshold = 1.0
-                ref_warped_a_black =     [torch.sum(ref_warped_a[i], axis=1) <= threshold for i in range(self.n)]
-                ref_warped_b_black =     [torch.sum(ref_warped_b[i], axis=1) <= threshold for i in range(self.n)]
-                ref_warped_a_not_black = [torch.sum(ref_warped_a[i], axis=1) > threshold for i in range(self.n)]
-                ref_warped_b_not_black = [torch.sum(ref_warped_b[i], axis=1) > threshold for i in range(self.n)]
-                ref_warped_a_black =     [ref_warped_a_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-                ref_warped_b_black =     [ref_warped_b_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-                ref_warped_a_not_black = [ref_warped_a_not_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-                ref_warped_b_not_black = [ref_warped_b_not_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-
-                threshold_2 = 150.0
-                ref_warped_a_black_2 =     [torch.sum(ref_warped_a[i], axis=1) <= threshold_2 for i in range(self.n)]
-                ref_warped_b_black_2 =     [torch.sum(ref_warped_b[i], axis=1) <= threshold_2 for i in range(self.n)]
-                ref_warped_a_not_black_2 = [torch.sum(ref_warped_a[i], axis=1) > threshold_2 for i in range(self.n)]
-                ref_warped_b_not_black_2 = [torch.sum(ref_warped_b[i], axis=1) > threshold_2 for i in range(self.n)]
-                ref_warped_a_black_2 =     [ref_warped_a_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-                ref_warped_b_black_2 =     [ref_warped_b_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-                ref_warped_a_not_black_2 = [ref_warped_a_not_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-                ref_warped_b_not_black_2 = [ref_warped_b_not_black_2[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-
-                ref_warped = [ref_warped_a_not_black[i] * ref_warped_b_black[i]     * ref_warped_a[i]
-                            + ref_warped_a_black[i]     * ref_warped_b_not_black[i] * ref_warped_b[i]
-                            + ref_warped_a_not_black[i] * ref_warped_b_not_black[i] * (ref_warped_a_not_black_2[i] * ref_warped_b_black_2[i]     * ref_warped_a[i]
-                                                                                     + ref_warped_a_black_2[i]     * ref_warped_b_not_black_2[i] * ref_warped_b[i]
-                                                                                     + ref_warped_a_not_black_2[i] * ref_warped_b_not_black_2[i] * (ref_warped_a[i] + ref_warped_b[i]) / 2)
-                     for i in range(self.n)]
+            ref_not_black_mask_tensor = [(torch.sum(ref_warped[i], axis=1) >= 1.0).unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
 
             # Calculate and store image loss
             #photometric_loss = self.calc_photometric_loss(ref_warped, images, path_to_ego_mask)
             if self.mask_ego:
-                photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ref_ego_mask_tensors[j])],
-                                                              [a * b for a, b in zip(images,     ego_mask_tensors)])
+                photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ref_not_black_mask_tensor, ref_ego_mask_tensors[j])],
+                                                              [a * b * c for a, b, c in zip(images,     ref_not_black_mask_tensor, ego_mask_tensors)])
             else:
-                photometric_loss = self.calc_photometric_loss(ref_warped, images)
+                photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ref_not_black_mask_tensor)],
+                                                              [a * b for a, b in zip(images,     ref_not_black_mask_tensor)])
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i])
             # If using automask

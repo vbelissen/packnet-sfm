@@ -295,6 +295,5 @@ def calc_photometric_loss(t_est, images):
 
 loss1 = calc_photometric_loss([ref_warped], [front_img_torch])
 loss2 = calc_photometric_loss([front_next_img_torch], [front_img_torch])
-print(loss1)
-print(loss2)
-print(loss1[0].shape)
+print(loss1[0][0,0,::100,::100])
+print(loss2[0][0,0,::100,::100])

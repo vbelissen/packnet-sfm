@@ -95,7 +95,7 @@ class CameraFisheye(nn.Module):
         poly_coeffs, principal_point = scale_intrinsics_fisheye(self.poly_coeffs.clone(),
                                                                 self.principal_point.clone(),
                                                                 x_scale)
-        path_to_theta_lut = scale_path_to_theta_lut(self.path_to_theta_lut.clone(), x_scale)
+        path_to_theta_lut = scale_path_to_theta_lut(self.path_to_theta_lut, x_scale)
         return CameraFisheye(path_to_theta_lut,
                              self.path_to_ego_mask,
                              poly_coeffs,

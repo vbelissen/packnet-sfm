@@ -160,7 +160,7 @@ class MultiViewPhotometricLoss(LossBase):
         cams, ref_cams = [], []
         pose_matrix = torch.zeros(B, 4, 4)
         for b in range(B):
-            if same_timestamp_as_origin[b]:
+            if not same_timestamp_as_origin[b]:
                 pose_matrix[b, :, :] = pose.mat[b, :, :]
             else:
                 pose_matrix[b, :, :] = pose_matrix_context[b, :, :]

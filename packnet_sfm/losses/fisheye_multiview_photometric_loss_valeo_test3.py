@@ -346,7 +346,7 @@ class MultiViewPhotometricLoss(LossBase):
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
 
-        context = context[-2:]
+        #context = context[-2:]
         n_context = len(context)
 
         if self.mask_ego:

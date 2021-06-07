@@ -438,8 +438,8 @@ class MultiViewPhotometricLoss(LossBase):
                         else:
                             ref_not_black_mask_tensor[i][b, 0, 25:135, 153:231] = 1#[:, 0, 128:672, 704:1152] = 1
 
-            # for i in range(self.n):
-            #     ref_not_black_mask_tensor[i] = ref_not_black_mask_tensor[i].detach()
+            for i in range(self.n):
+                ref_not_black_mask_tensor[i] = ref_not_black_mask_tensor[i].detach()
 
             # Calculate and store image loss
             #photometric_loss = self.calc_photometric_loss(ref_warped, images, path_to_ego_mask)

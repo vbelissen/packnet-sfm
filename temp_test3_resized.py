@@ -29,7 +29,7 @@ front_next_img_torch = torch.transpose(torch.from_numpy(np.array(img_front_next)
 left_img_torch = torch.transpose(torch.from_numpy(np.array(img_left)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
 right_img_torch = torch.transpose(torch.from_numpy(np.array(img_right)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
 
-new_shape = np.array([160, 256])
+new_shape = [160, 256]
 scale_factor = 160 / float(800)
 
 front_img_torch_small      = interpolate_image(front_img_torch,      new_shape, mode='bilinear', align_corners=True)

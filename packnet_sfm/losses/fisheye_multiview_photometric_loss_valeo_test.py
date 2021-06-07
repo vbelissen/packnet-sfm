@@ -427,16 +427,16 @@ class MultiViewPhotometricLoss(LossBase):
             B = len(path_to_ego_mask)
             device = image.get_device()
             #ref_not_black_mask_tensor = [(torch.sum(ref_warped[i], axis=1) >= 0.1).unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
-            ref_not_black_mask_tensor = [torch.zeros(B, 1, 160, 256).to(device) for _ in range(self.n)]#[torch.zeros(B, 1, 800, 1280) for _ in range(self.n)]
+            ref_not_black_mask_tensor = [torch.zeros(B, 1, 800, 1280).to(device) for _ in range(self.n)]#[torch.zeros(B, 1, 800, 1280) for _ in range(self.n)] 160, 256
             for i in range(self.n):
                 for b in range(B):
                     if not same_timestep_as_origin[j][b]:
                         ref_not_black_mask_tensor[i][b, :, :, :] = 1
                     else:
                         if 'cam_3' in ref_path_to_ego_mask[j][b]:
-                            ref_not_black_mask_tensor[i][b, 0, 25:135, 25:103]  = 1#[:, 0, 128:672, 128:448]  = 1
+                            ref_not_black_mask_tensor[i][b, 0, 128:672, 128:448]  = 1#[:, 0, 128:672, 128:448]  = 1  25:135, 25:103
                         else:
-                            ref_not_black_mask_tensor[i][b, 0, 25:135, 153:231] = 1#[:, 0, 128:672, 704:1152] = 1
+                            ref_not_black_mask_tensor[i][b, 0, 128:672, 704:1152] = 1#[:, 0, 128:672, 704:1152] = 1  25:135, 153:231
 
             # for i in range(self.n):
             #     ref_not_black_mask_tensor[i] = ref_not_black_mask_tensor[i].detach()

@@ -155,6 +155,7 @@ class MultiViewPhotometricLoss(LossBase):
             Warped reference image (reconstructing the original one)
         """
         B, _, H, W = ref_image.shape
+        print(H)
         device = ref_image.get_device()
         # Generate cameras for all scales
         cams, ref_cams = [], []

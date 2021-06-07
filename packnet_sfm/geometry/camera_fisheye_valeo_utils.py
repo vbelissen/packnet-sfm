@@ -35,7 +35,7 @@ def scale_path_to_theta_lut(path_to_theta_lut, x_scale):
     path_to_theta_lut_clone = []
     #path_to_theta_lut_clone = path_to_theta_lut
     for l in range(L):
-        splitted_path = path_to_theta_lut_clone[l].split('_')
+        splitted_path = path_to_theta_lut[l].split('_')
         w_res_str = splitted_path[-2]
         splitted_path[-2] = str(int(x_scale * int(w_res_str)))
         h_res_str_with_ext = splitted_path[-1]

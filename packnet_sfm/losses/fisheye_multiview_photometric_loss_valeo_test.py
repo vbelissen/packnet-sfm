@@ -393,7 +393,9 @@ class MultiViewPhotometricLoss(LossBase):
             ref_image = context[j]
             if j == 0 or j == 1:
                 ref_warped = ref_warped_context[j]
+                weight = 1.0
             else:
+                weight = 0.001
                 ref_warped_a = ref_warped_context[2]
                 ref_warped_b = ref_warped_context[3]
                 # print(torch.max(ref_warped_a[0]))
@@ -464,7 +466,7 @@ class MultiViewPhotometricLoss(LossBase):
             #             [a * b for a, b in zip(images,     ref_not_black_mask_tensors)])
             # photometric_loss = [photometric_loss[i] * weights[i] for i in range(self.n)]
             for i in range(self.n):
-                photometric_losses[i].append(photometric_loss[i])
+                photometric_losses[i].append(weight * photometric_loss[i])
             # If using automask
             if self.automask_loss:
                 # Calculate and store unwarped image loss

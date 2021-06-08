@@ -426,12 +426,12 @@ class MultiViewPhotometricLoss(LossBase):
             device = image.get_device()
             #ref_not_black_mask_tensor = [(torch.sum(ref_warped[i], axis=1) >= 0.1).unsqueeze(1).repeat(1, 3, 1, 1) for i in range(self.n)]
             ref_not_black_mask_tensor = torch.zeros(B, 1, H, W).to(device)#[torch.zeros(B, 1, 800, 1280) for _ in range(self.n)] 160, 256
-            weight = torch.ones(B).to(device)
+            weight = torch.ones(B, 1, H, W).to(device)
             for b in range(B):
                 if not same_timestep_as_origin[j][b]:
                     ref_not_black_mask_tensor[b, :, :, :] = 1
                 else:
-                    weight[b] = 0.1
+                    weight[b, :, :, :] = 0.1
                     if 'cam_3' in ref_path_to_ego_mask[j][b]:
                         ref_not_black_mask_tensor[b, 0, int(128/800*H):int(672/800*H), int(128/800*H):int(448/800*H)]  = 1#[:, 0, 128:672, 128:448]  = 1  25:135, 25:103
                     else:
@@ -450,9 +450,7 @@ class MultiViewPhotometricLoss(LossBase):
                 photometric_loss = self.calc_photometric_loss(
                         [a * b for a, b in zip(ref_warped, ref_not_black_mask_tensors)],
                         [a * b for a, b in zip(images,     ref_not_black_mask_tensors)])
-            print(photometric_loss[0])
             photometric_loss = [photometric_loss[i] * weights[i] for i in range(self.n)]
-            print(photometric_loss[0])
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i])
             # If using automask

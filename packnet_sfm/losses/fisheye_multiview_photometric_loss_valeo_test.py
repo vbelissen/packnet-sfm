@@ -400,7 +400,7 @@ class MultiViewPhotometricLoss(LossBase):
                 ref_warped_b = ref_warped_context[3]
                 # print(torch.max(ref_warped_a[0]))
 
-                threshold = 1.0
+                threshold = 1.0/255.0
                 ref_warped_a_black = [torch.sum(ref_warped_a[i], axis=1) <= threshold for i in range(self.n)]
                 ref_warped_b_black = [torch.sum(ref_warped_b[i], axis=1) <= threshold for i in range(self.n)]
                 ref_warped_a_not_black = [torch.sum(ref_warped_a[i], axis=1) > threshold for i in range(self.n)]
@@ -412,7 +412,7 @@ class MultiViewPhotometricLoss(LossBase):
                 ref_warped_b_not_black = [ref_warped_b_not_black[i].unsqueeze(1).repeat(1, 3, 1, 1) for i in
                                           range(self.n)]
 
-                threshold_2 = 150.0
+                threshold_2 = 150.0/255.0
                 ref_warped_a_black_2 = [torch.sum(ref_warped_a[i], axis=1) <= threshold_2 for i in range(self.n)]
                 ref_warped_b_black_2 = [torch.sum(ref_warped_b[i], axis=1) <= threshold_2 for i in range(self.n)]
                 ref_warped_a_not_black_2 = [torch.sum(ref_warped_a[i], axis=1) > threshold_2 for i in range(self.n)]

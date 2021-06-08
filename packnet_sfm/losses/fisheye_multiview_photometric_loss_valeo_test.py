@@ -411,8 +411,8 @@ class MultiViewPhotometricLoss(LossBase):
         #                                                                              + ref_warped_a_not_black_2[i] * ref_warped_b_not_black_2[i] * (ref_warped_a[i] + ref_warped_b[i]) / 2)
         #              for i in range(self.n)]
 
-        print(ref_path_to_ego_mask)
-        print(ref_path_to_ego_mask[0])
+        #print(ref_path_to_ego_mask)
+        #print(ref_path_to_ego_mask[0])
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             B, C, H, W = ref_image.shape
             # Calculate warped images
@@ -445,6 +445,8 @@ class MultiViewPhotometricLoss(LossBase):
                 photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ref_not_black_mask_tensor, ref_ego_mask_tensors[j])],
                                                               [a * b * c for a, b, c in zip(images,     ref_not_black_mask_tensor, ego_mask_tensors)])
             else:
+                print(ref_warped[0].shape)
+                print(ref_not_black_mask_tensor[0].shape)
                 photometric_loss = self.calc_photometric_loss(
                         [a * b for a, b in zip(ref_warped, ref_not_black_mask_tensor)],
                         [a * b for a, b in zip(images,     ref_not_black_mask_tensor)])

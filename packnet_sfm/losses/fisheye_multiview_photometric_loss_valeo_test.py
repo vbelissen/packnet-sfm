@@ -431,9 +431,9 @@ class MultiViewPhotometricLoss(LossBase):
                     ref_not_black_mask_tensor[b, :, :, :] = 1
                 else:
                     if 'cam_3' in ref_path_to_ego_mask[j][b]:
-                        ref_not_black_mask_tensor[b, 0, int(128/800*H):int(672/800*H), int(128/800*H):int(448/800*H)]  = 1#[:, 0, 128:672, 128:448]  = 1  25:135, 25:103
+                        ref_not_black_mask_tensor[b, 0, int(128/800*H):int(672/800*H), int(128/800*H):int(448/800*H)]  = 0.1#[:, 0, 128:672, 128:448]  = 1  25:135, 25:103
                     else:
-                        ref_not_black_mask_tensor[b, 0, int(128/800*H):int(672/800*H), int(704/800*H):int(1152/800*H)] = 1#[:, 0, 128:672, 704:1152] = 1  25:135, 153:231
+                        ref_not_black_mask_tensor[b, 0, int(128/800*H):int(672/800*H), int(704/800*H):int(1152/800*H)] = 0.1#[:, 0, 128:672, 704:1152] = 1  25:135, 153:231
             ref_not_black_mask_tensors = match_scales(ref_not_black_mask_tensor, inv_depths, self.n)
             # for i in range(self.n):
             #     ref_not_black_mask_tensor[i] = ref_not_black_mask_tensor[i].detach()

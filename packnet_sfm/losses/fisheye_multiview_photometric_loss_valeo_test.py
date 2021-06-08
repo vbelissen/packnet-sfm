@@ -158,13 +158,9 @@ class MultiViewPhotometricLoss(LossBase):
         device = ref_image.get_device()
         # Generate cameras for all scales
         cams, ref_cams = [], []
-        pose_matrix = torch.zeros(B, 4, 4)
         for b in range(B):
-            if not same_timestamp_as_origin[b]:
-                pose_matrix[b, :, :] = pose.mat[b, :, :]
-            else:
-                pose_matrix[b, :, :] = pose_matrix_context[b, :, :]
-        pose_matrix = Pose(pose_matrix)
+            if same_timestamp_as_origin[b]:
+                pose.mat[b, :, :] = pose_matrix_context[b, :, :]
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
@@ -177,7 +173,7 @@ class MultiViewPhotometricLoss(LossBase):
                                           path_to_ego_mask=ref_path_to_ego_mask,
                                           poly_coeffs=ref_poly_coeffs.float(),
                                           principal_point=ref_principal_point.float(),
-                                          scale_factors=ref_scale_factors.float(), Tcw=pose_matrix).scaled(scale_factor).to(device))
+                                          scale_factors=ref_scale_factors.float(), Tcw=pose).scaled(scale_factor).to(device))
         # View synthesis
         depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
         ref_images = match_scales(ref_image, inv_depths, self.n)
@@ -415,8 +411,10 @@ class MultiViewPhotometricLoss(LossBase):
         #                                                                              + ref_warped_a_not_black_2[i] * ref_warped_b_not_black_2[i] * (ref_warped_a[i] + ref_warped_b[i]) / 2)
         #              for i in range(self.n)]
 
-
+        print(same_timestep_as_origin)
+        print(same_timestep_as_origin[0])
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
+            B, C, H, W = ref_image.shape
             # Calculate warped images
             ref_warped = self.warp_ref_image(inv_depths, ref_image,
                                              path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,

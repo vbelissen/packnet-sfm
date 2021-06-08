@@ -444,8 +444,6 @@ class MultiViewPhotometricLoss(LossBase):
                 photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ref_not_black_mask_tensors, ref_ego_mask_tensors[j])],
                                                               [a * b * c for a, b, c in zip(images,     ref_not_black_mask_tensors, ego_mask_tensors)])
             else:
-                print(ref_warped[0].shape)
-                print(ref_not_black_mask_tensor[0].shape)
                 photometric_loss = self.calc_photometric_loss(
                         [a * b for a, b in zip(ref_warped, ref_not_black_mask_tensors)],
                         [a * b for a, b in zip(images,     ref_not_black_mask_tensors)])

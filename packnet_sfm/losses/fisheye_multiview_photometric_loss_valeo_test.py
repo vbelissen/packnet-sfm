@@ -395,7 +395,7 @@ class MultiViewPhotometricLoss(LossBase):
                 ref_warped = ref_warped_context[j]
                 weight = 1.0
             else:
-                weight = 0.1
+                weight = 10.0
                 ref_warped_a = ref_warped_context[2]
                 ref_warped_b = ref_warped_context[3]
                 # print(torch.max(ref_warped_a[0]))

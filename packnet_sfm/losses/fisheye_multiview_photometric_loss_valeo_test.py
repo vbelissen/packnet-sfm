@@ -431,7 +431,7 @@ class MultiViewPhotometricLoss(LossBase):
                 if not same_timestep_as_origin[j][b]:
                     ref_not_black_mask_tensor[b, :, :, :] = 1
                 else:
-                    weight[b, :, :, :] = 0.1
+                    weight[b, :, :, :] = 0.01
                     if 'cam_3' in ref_path_to_ego_mask[j][b]:
                         ref_not_black_mask_tensor[b, 0, int(128/800*H):int(672/800*H), int(128/800*H):int(448/800*H)]  = 1#[:, 0, 128:672, 128:448]  = 1  25:135, 25:103
                     else:

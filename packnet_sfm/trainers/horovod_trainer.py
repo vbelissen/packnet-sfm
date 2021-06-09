@@ -98,27 +98,28 @@ class HorovodTrainer(BaseTrainer):
         return module.training_epoch_end(outputs)
 
     def validate(self, dataloaders, module):
-        # Set module to eval
-        module.eval()
-        # Start validation loop
-        all_outputs = []
-        # For all validation datasets
-        for n, dataloader in enumerate(dataloaders):
-            # Prepare progress bar for that dataset
-            progress_bar = self.val_progress_bar(
-                dataloader, module.config.datasets.validation, n)
-            outputs = []
-            # For all batches
-            for i, batch in progress_bar:
-                # Send batch to GPU and take a validation step
-                batch = sample_to_cuda(batch)
-                output = module.validation_step(batch, i, n)
-                # Append output to list of outputs
-                outputs.append(output)
-            # Append dataset outputs to list of all outputs
-            all_outputs.append(outputs)
-        # Return all outputs for epoch end
-        return module.validation_epoch_end(all_outputs)
+        with torch.no_grad():
+            # Set module to eval
+            module.eval()
+            # Start validation loop
+            all_outputs = []
+            # For all validation datasets
+            for n, dataloader in enumerate(dataloaders):
+                # Prepare progress bar for that dataset
+                progress_bar = self.val_progress_bar(
+                    dataloader, module.config.datasets.validation, n)
+                outputs = []
+                # For all batches
+                for i, batch in progress_bar:
+                    # Send batch to GPU and take a validation step
+                    batch = sample_to_cuda(batch)
+                    output = module.validation_step(batch, i, n)
+                    # Append output to list of outputs
+                    outputs.append(output)
+                # Append dataset outputs to list of all outputs
+                all_outputs.append(outputs)
+            # Return all outputs for epoch end
+            return module.validation_epoch_end(all_outputs)
 
     def test(self, module):
         # Send module to GPU

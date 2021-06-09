@@ -339,7 +339,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
 
 
     i_file=0
-    values = np.arange(5,15.0,0.5)
+    values = np.arange(1.0,15.0,0.5)
     N_values = values.size
     nb_points = np.zeros((N_values, 4))
     n = 0
@@ -432,7 +432,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             else:
                 pcl_gt.append(0)
         #o3d.visualization.draw_geometries(pcl_full + [e for i, e in enumerate(pcl_gt) if e != 0])
-        color_cam = False
+        color_cam = True
         if color_cam:
             for i_cam in range(4):
                 if i_cam == 0:
@@ -465,11 +465,12 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             mask_far2 = np.sqrt(np.square(points_tmp2[:, 0] - (cams_x[0] + cams_x[2]) / 2) + np.square(points_tmp2[:, 1] - (cams_y[1] + cams_y[3]) / 2)) < 5
             pcl1 = pcl1.select_by_index(np.where(maskX1 * maskY1 * mask_far1)[0])
             pcl2 = pcl2.select_by_index(np.where(maskX2 * maskY2 * mask_far2)[0])
-            #o3d.visualization.draw_geometries([pcl1, pcl2])
+            o3d.visualization.draw_geometries([pcl1, pcl2])
             dists = pcl1.compute_point_cloud_distance(pcl2)
             nb_points[n, i_cam] = np.sum(np.asarray(dists)<0.5)
             print(nb_points[n, i_cam])
             dists = np.mean(np.asarray(dists))
+            print(dists)
             dist_total[i_cam] = dists
         print(np.mean(dist_total))
 

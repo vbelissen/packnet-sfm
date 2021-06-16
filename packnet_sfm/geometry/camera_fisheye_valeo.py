@@ -150,10 +150,10 @@ class CameraFisheye(nn.Module):
         zc = depth * torch.cos(theta_tensor)
         #print(zc[0, 0, :, 127])
 
-        mask = (theta_tensor * 180 * 2 / np.pi > 95.0).detach()
-        xc[mask] = 0.
-        yc[mask] = 0.
-        zc[mask] = 0.
+        # mask = (theta_tensor * 180 * 2 / np.pi > 190.0).detach()
+        # xc[mask] = 0.
+        # yc[mask] = 0.
+        # zc[mask] = 0.
 
         Xc = torch.cat([xc, yc, zc], dim=1)
 
@@ -225,9 +225,9 @@ class CameraFisheye(nn.Module):
         # Ymask = ((Ynorm > 1) + (Ynorm < -1)).detach()
         # Ynorm[Ymask] = 2.
 
-        mask = (theta_1 * 180 * 2 / np.pi > 95.0).detach()
-        Xnorm[mask] = 2.
-        Ynorm[mask] = 2.
+        # mask = (theta_1 * 180 * 2 / np.pi > 190.0).detach()
+        # Xnorm[mask] = 2.
+        # Ynorm[mask] = 2.
 
         # Return pixel coordinates
         return torch.stack([Xnorm, Ynorm], dim=-1).view(B, H, W, 2)

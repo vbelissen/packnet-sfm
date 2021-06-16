@@ -1,9 +1,16 @@
 # Copyright 2020 Toyota Research Institute.  All rights reserved.
 
 import argparse
+
+import cv2
 import numpy as np
 import os
 import torch
+import torch.nn as nn
+import torch.nn.functional as funct
+from tqdm import tqdm
+
+
 
 from glob import glob
 from cv2 import imwrite
@@ -25,6 +32,7 @@ from packnet_sfm.geometry.pose import Pose
 
 
 
+
 import open3d as o3d
 import matplotlib.pyplot as plt
 import time
@@ -35,6 +43,51 @@ lookat_vector = np.array([-6.3432556344086555, 0.72397009410040813, 1.6189638309
 front_vector = np.array([-0.99318640673281822, -0.097484566091692121, 0.063855468482092601])
 up_vector = np.array([0.070547183600666891, -0.06681235377561065, 0.9952684081537887])
 zoom_float = 0.02
+
+labels = {"ground_drivable" : 10,
+"curb_rising_edge" : 9,
+"sidewalk" : 8,
+"driveway" : 6,
+"other_parking" : 12,
+"gcam_empty": 0,
+"unknown_1" : 192,
+"unknown_2" : 255,
+"unknown_3_transparent" : 120,
+"lane_continuous" : 1,
+"lane_discontinuous" : 2,
+"crosswalk_zebra" : 4,
+"crosswalk_line" : 11,
+"tactile_paving" : 13,
+"crosswalk_ladder" : 14,
+"parking_space" : 5,
+"cats_eye" : 15,
+"parking_line" : 16,
+"stop_line" : 17,
+"yield_line" : 18,
+"road" : 7,
+"zebra" : 19,
+"speed_bump_asphalt" : 20,
+"speed_bump_rubber" : 21,
+"arrow" : 22,
+"text_pictogram" : 23,
+"object" : 3,
+"other_ground_marking" : 24,
+"zigzag" : 25,
+"empty" : 26,
+"unknown" : 27,
+"ego" : 99,
+}
+N_labels = len(labels)
+label_values = list(labels.values())
+#label_values.sort()
+label_values_indices = np.arange(N_labels).astype(int)
+max_value = np.max(np.array(label_values))
+correspondence = np.zeros(max_value+1)
+for i in range(N_labels):
+    correspondence[label_values[i]] = i
+correspondence = correspondence.astype(int)
+label_colors = plt.cm.gist_stern(np.linspace(0, 1, N_labels))[:,:3]
+
 
 def is_image(file, ext=('.png', '.jpg',)):
     """Check if a file is an image with certain extensions"""
@@ -148,6 +201,17 @@ def get_depth_file(image_file):
                         get_sequence_name(image_file),
                         get_camera_name(image_file).replace('cam', 'velodyne'),
                         base.replace('cam', 'velodyne') + '.npz')
+
+def get_full_mask_file(image_file):
+    """Get the corresponding full mask file from an image file."""
+    base, ext = os.path.splitext(os.path.basename(image_file))
+    return os.path.join(get_base_folder(image_file),
+                        'full_semantic_masks',
+                        'fisheye',
+                        get_split_type(image_file),
+                        get_sequence_name(image_file),
+                        get_camera_name(image_file),
+                        base + '.npy')
 
 def get_extrinsics_pose_matrix(image_file, calib_data):
     """Get intrinsics from the calib_data dictionary."""
@@ -287,6 +351,12 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
     cams = []
     not_masked = []
 
+    cams_x = []
+    cams_y = []
+    cams_z = []
+
+    alpha_mask = 0.5
+
     # change to half precision for evaluation if requested
     dtype = torch.float16 if half else None
 
@@ -301,6 +371,10 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
 
         calib_data = {}
         calib_data[camera_str] = read_raw_calib_files_camera_valeo(base_folder_str, split_type_str, seq_name_str, camera_str)
+
+        cams_x.append(float(calib_data[camera_str]['extrinsics']['pos_x_m']))
+        cams_y.append(float(calib_data[camera_str]['extrinsics']['pos_y_m']))
+        cams_z.append(float(calib_data[camera_str]['extrinsics']['pos_y_m']))
 
         path_to_theta_lut = get_path_to_theta_lut(input_files[i_cam][0])
         path_to_ego_mask = get_path_to_ego_mask(input_files[i_cam][0])
@@ -324,6 +398,10 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         ego_mask = np.load(path_to_ego_mask)
         not_masked.append(ego_mask.astype(bool).reshape(-1))
 
+    cams_middle = np.zeros(3)
+    cams_middle[0] = (cams_x[0] + cams_x[1] + cams_x[2] + cams_x[3]) / 4
+    cams_middle[1] = (cams_y[0] + cams_y[1] + cams_y[2] + cams_y[3]) / 4
+    cams_middle[2] = (cams_z[0] + cams_z[1] + cams_z[2] + cams_z[3]) / 4
 
     # create output dirs for each cam
     seq_name = get_sequence_name(input_files[0][0])
@@ -345,6 +423,8 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         world_points = []
         input_depth_files = []
         has_gt_depth = []
+        input_full_masks = []
+        has_full_mask = []
         gt_depth = []
         gt_depth_3d = []
         pcl_full = []
@@ -353,21 +433,76 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         pcl_gt = []
         rgb = []
         viz_pred_inv_depths = []
+        great_lap = []
         for i_cam in range(N_cams):
             images.append(load_image(input_files[i_cam][i_file]).convert('RGB'))
             images[i_cam] = resize_image(images[i_cam], image_shape)
             images[i_cam] = to_tensor(images[i_cam]).unsqueeze(0)
             if torch.cuda.is_available():
                 images[i_cam] = images[i_cam].to('cuda:{}'.format(rank()), dtype=dtype)
-            images_numpy.append(images[i_cam][0].cpu().numpy())
-            images_numpy[i_cam] = images_numpy[i_cam].reshape((3, -1)).transpose()
-            images_numpy[i_cam] = images_numpy[i_cam][not_masked[i_cam]]
+
             pred_inv_depths.append(model_wrappers[i_cam].depth(images[i_cam]))
             pred_depths.append(inv2depth(pred_inv_depths[i_cam]))
-            world_points.append(cams[i_cam].reconstruct(pred_depths[i_cam], frame='w'))
+            pred_depth_copy = pred_depths[i_cam].squeeze(0).squeeze(0).cpu().numpy()
+            pred_depth_copy = np.uint8(pred_depth_copy)
+            lap = np.uint8(np.absolute(cv2.Laplacian(pred_depth_copy,cv2.CV_64F,ksize=3)))
+            great_lap.append(lap < 4)
+            great_lap[i_cam] = great_lap[i_cam].reshape(-1)
+            images_numpy.append(images[i_cam][0].cpu().numpy())
+            images_numpy[i_cam] = images_numpy[i_cam].reshape((3, -1)).transpose()
+            images_numpy[i_cam] = images_numpy[i_cam][not_masked[i_cam]*great_lap[i_cam]]
+
+        for i_cam in range(N_cams):
+            print(i_cam)
+            mix_depths = True
+            if mix_depths:
+                depths = torch.zeros(1, 3, 800, 1280).cuda()
+                depths[0, 1, :, :] = pred_depths[i_cam][0, 0, :, :]
+                not_masked1s = torch.zeros(3, 800, 1280).to(dtype=bool)
+                not_masked1 = torch.ones(1, 3, 800, 1280).to(dtype=bool)
+                for relative in [-1]:
+                    relative_points_3d = cams[(i_cam + relative) % 4].reconstruct(pred_depths[(i_cam + relative) % 4], frame='w')
+                    a = np.zeros((3, 800, 1280))
+                    a[0, :, :] = cams_x[i_cam]
+                    a[1, :, :] = cams_y[i_cam]
+                    a[2, :, :] = cams_z[i_cam]
+                    dists = np.linalg.norm(relative_points_3d[0, :, :, :].cpu().numpy() - a, axis=0)
+                    distances_3d = torch.from_numpy(dists).unsqueeze(0).cuda().float()
+                    #distances_3d[0,:400,:640] = 0
+                    #distances_3d = torch.sqrt(torch.sum(torch.pow(relative_points_3d - torch.from_numpy(np.array([cams_x[i_cam], cams_y[i_cam], cams_z[i_cam]])).cuda().unsqueeze(0).unsqueeze(-1).unsqueeze(-1), 2), dim =1)).float()
+                    projected_points_2d = cams[i_cam].project(relative_points_3d, frame='w')
+                    projected_points_2d_small = torch.ones(800, 1280).to(dtype=bool).cuda()
+                    print(projected_points_2d)
+
+
+                    projected_points_2d_small = projected_points_2d_small * projected_points_2d[0, :, : ,0] < 1
+                    projected_points_2d_small = projected_points_2d_small * projected_points_2d[0, :, :, 1] < 1
+                    projected_points_2d_small = projected_points_2d_small * projected_points_2d[0, :, :, 0] > -1
+                    projected_points_2d_small = projected_points_2d_small * projected_points_2d[0, :, :, 1] > -1
+
+                    interpolated_distances = funct.grid_sample(distances_3d.unsqueeze(1), projected_points_2d, mode='bilinear', padding_mode='zeros', align_corners=True)
+                    depths[0, 1 + relative, :, :] = interpolated_distances[0, 0, :, :]
+
+                    path_to_ego_mask = get_path_to_ego_mask(input_files[(i_cam + relative) % 4][0])
+                    ego_mask = np.load(path_to_ego_mask)
+                    not_masked1s[1+relative] = torch.from_numpy(ego_mask.astype(bool))
+                    not_masked1[0,:,:,:] = not_masked1[0,:,:,:]  * not_masked1s[1+relative]
+                    #depths[0, 1 + relative, :, :][~not_masked1s[1+relative]] = 500
+                    #depths[0, 1 + relative, :, :][~projected_points_2d_small] = 500
+                print(depths[0, :, 100:110, 100:110])
+                depths[depths == 0] = 500
+                print(depths[0, :, 100:110, 100:110])
+                print(depths.min(dim=1, keepdim=True)[0])
+                reconstructed = cams[i_cam].reconstruct(depths.min(dim=1, keepdim=True)[0], frame='w')
+                #reconstructed[~not_masked1] = 0
+                world_points.append(reconstructed)
+            else:
+                world_points.append(cams[i_cam].reconstruct(pred_depths[i_cam], frame='w'))
+
+        for i_cam in range(N_cams):
             world_points[i_cam] = world_points[i_cam][0].cpu().numpy()
             world_points[i_cam] = world_points[i_cam].reshape((3, -1)).transpose()
-            world_points[i_cam] = world_points[i_cam][not_masked[i_cam]]
+            world_points[i_cam] = world_points[i_cam][not_masked[i_cam]*great_lap[i_cam]]
             cam_name = camera_names[i_cam]
             cam_int = cam_name.split('_')[-1]
             input_depth_files.append(get_depth_file(input_files[i_cam][i_file]))
@@ -384,15 +519,24 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             else:
                 gt_depth.append(0)
                 gt_depth_3d.append(0)
+            input_full_masks.append(get_full_mask_file(input_files[i_cam][i_file]))
+            has_full_mask.append(os.path.exists(input_full_masks[i_cam]))
+
             pcl_full.append(o3d.geometry.PointCloud())
             pcl_full[i_cam].points = o3d.utility.Vector3dVector(world_points[i_cam])
-            pcl_full[i_cam].colors = o3d.utility.Vector3dVector(images_numpy[i_cam])
+            if has_full_mask[i_cam]:
+                full_mask = np.load(input_full_masks[i_cam])
+                mask_colors = label_colors[correspondence[full_mask]].reshape((-1, 3))#.transpose()
+                mask_colors = mask_colors[not_masked[i_cam]*great_lap[i_cam]]
+                pcl_full[i_cam].colors = o3d.utility.Vector3dVector(alpha_mask * mask_colors + (1-alpha_mask) * images_numpy[i_cam])
+            else:
+                pcl_full[i_cam].colors = o3d.utility.Vector3dVector(images_numpy[i_cam])
 
             pcl = pcl_full[i_cam]#.select_by_index(ind)
             points_tmp = np.asarray(pcl.points)
-            colors_tmp = np.asarray(pcl.colors)
+            colors_tmp = images_numpy[i_cam]#np.asarray(pcl.colors)
             # remove points that are above
-            mask_height = points_tmp[:, 2] > 2.5# * (abs(points_tmp[:, 0]) < 10) * (abs(points_tmp[:, 1]) < 3)
+            mask_height = points_tmp[:, 2] > 1.5# * (abs(points_tmp[:, 0]) < 10) * (abs(points_tmp[:, 1]) < 3)
             mask_colors_blue = np.sum(np.abs(colors_tmp - np.array([0.6, 0.8, 1])), axis=1) < 0.6  # bleu ciel
             mask_colors_green = np.sum(np.abs(colors_tmp - np.array([0.2, 1, 0.4])), axis=1) < 0.8
             mask_colors_green2 = np.sum(np.abs(colors_tmp - np.array([0, 0.5, 0.15])), axis=1) < 0.2
@@ -401,39 +545,45 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             mask3 = 1- mask_height*mask_colors_green2
             mask = mask*mask2*mask3
             pcl = pcl.select_by_index(np.where(mask)[0])
-            cl, ind = pcl.remove_statistical_outlier(nb_neighbors=7, std_ratio=1.4)
+            cl, ind = pcl.remove_statistical_outlier(nb_neighbors=7, std_ratio=1.2)
             pcl = pcl.select_by_index(ind)
+            pcl = pcl.voxel_down_sample(voxel_size=0.02)
+            #if has_full_mask[i_cam]:
+            #    pcl.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.2, max_nn=15))
             pcl_only_inliers.append(pcl)#pcl_full[i_cam].select_by_index(ind)[mask])
-            #pcl_only_outliers.append(pcl_full[i_cam].select_by_index(ind, invert=True))
-            #pcl_only_outliers[i_cam].paint_uniform_color([0.0, 0.0, 1.0])
             if has_gt_depth[i_cam]:
                 pcl_gt.append(o3d.geometry.PointCloud())
                 pcl_gt[i_cam].points = o3d.utility.Vector3dVector(gt_depth_3d[i_cam])
-                gt_inv_depth = 1 / (np.linalg.norm(gt_depth_3d[i_cam], axis=1) + 1e-6)
+                gt_inv_depth = 1 / (np.linalg.norm(gt_depth_3d[i_cam] - cams_middle, axis=1) + 1e-6)
                 cm = get_cmap('plasma')
                 normalizer = .35#np.percentile(gt_inv_depth, 95)
                 gt_inv_depth /= (normalizer + 1e-6)
-                #print(cm(np.clip(gt_inv_depth, 0., 1.0)).shape)  # [:, :3]
-
                 pcl_gt[i_cam].colors = o3d.utility.Vector3dVector(cm(np.clip(gt_inv_depth, 0., 1.0))[:, :3])
             else:
                 pcl_gt.append(0)
-        #o3d.visualization.draw_geometries(pcl_full + [e for i, e in enumerate(pcl_gt) if e != 0])
 
-        # vis_full = o3d.visualization.Visualizer()
-        # vis_full.create_window(visible = True, window_name = 'full'+str(i_file))
-        # for i_cam in range(N_cams):
-        #     vis_full.add_geometry(pcl_full[i_cam])
-        # for i, e in enumerate(pcl_gt):
-        #     if e != 0:
-        #         vis_full.add_geometry(e)
-        # ctr = vis_full.get_view_control()
-        # ctr.set_lookat(lookat_vector)
-        # ctr.set_front(front_vector)
-        # ctr.set_up(up_vector)
-        # ctr.set_zoom(zoom_float)
-        # #vis_full.run()
-        # vis_full.destroy_window()
+        remove_close_points_lidar_semantic = False
+        threshold = 0.5
+        threshold2 = 0.1
+        if remove_close_points_lidar_semantic:
+            for i_cam in range(4):
+                if has_full_mask[i_cam]:
+                    for relative in [-1, 1]:
+                        if not has_full_mask[(i_cam + relative) % 4]:
+                            dists = pcl_only_inliers[(i_cam + relative) % 4].compute_point_cloud_distance(pcl_only_inliers[i_cam])
+                            p1 = pcl_only_inliers[(i_cam + relative) % 4].select_by_index(np.where(np.asarray(dists) > threshold)[0])
+                            p2 = pcl_only_inliers[(i_cam + relative) % 4].select_by_index(np.where(np.asarray(dists) > threshold)[0], invert=True).uniform_down_sample(15)#.voxel_down_sample(voxel_size=0.5)
+                            pcl_only_inliers[(i_cam + relative) % 4] = p1 + p2
+                if has_gt_depth[i_cam]:
+                    if has_full_mask[i_cam]:
+                        down = 15
+                    else:
+                        down = 30
+                    dists = pcl_only_inliers[i_cam].compute_point_cloud_distance(pcl_gt[i_cam])
+                    p1 = pcl_only_inliers[i_cam].select_by_index(np.where(np.asarray(dists) > threshold2)[0])
+                    p2 = pcl_only_inliers[i_cam].select_by_index(np.where(np.asarray(dists) > threshold2)[0], invert=True).uniform_down_sample(down)#.voxel_down_sample(voxel_size=0.5)
+                    pcl_only_inliers[i_cam] = p1 + p2
+
         for i_cam2 in range(4):
             for suff in ['', 'bis', 'ter']:
                 vis_only_inliers = o3d.visualization.Visualizer()
@@ -452,6 +602,8 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
                 ctr.convert_from_pinhole_camera_parameters(param)
                 opt = vis_only_inliers.get_render_option()
                 opt.background_color = np.asarray([0, 0, 0])
+                opt.point_size = 4.0
+                #opt.light_on = False
                 #vis_only_inliers.update_geometry('inliers0')
                 vis_only_inliers.poll_events()
                 vis_only_inliers.update_renderer()
@@ -488,35 +640,35 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         # ctr.set_zoom(zoom_float)
         # #vis_inliers_outliers.run()
         # vis_inliers_outliers.destroy_window()
-        for i_cam2 in range(4):
-            for suff in ['', 'bis', 'ter']:
-                vis_inliers_cropped = o3d.visualization.Visualizer()
-                vis_inliers_cropped.create_window(visible = True, window_name = 'incrop'+str(i_file))
-                for i_cam in range(N_cams):
-                    vis_inliers_cropped.add_geometry(pcl_only_inliers[i_cam].crop(bbox))
-                for i, e in enumerate(pcl_gt):
-                    if e != 0:
-                        vis_inliers_cropped.add_geometry(e)
-                ctr = vis_inliers_cropped.get_view_control()
-                ctr.set_lookat(lookat_vector)
-                ctr.set_front(front_vector)
-                ctr.set_up(up_vector)
-                ctr.set_zoom(zoom_float)
-                param = o3d.io.read_pinhole_camera_parameters(
-                    '/home/vbelissen/Downloads/test/cameras_jsons/test' + str(i_cam2 + 1) + suff + '.json')
-                ctr.convert_from_pinhole_camera_parameters(param)
-                opt = vis_inliers_cropped.get_render_option()
-                opt.background_color = np.asarray([0, 0, 0])
-                vis_inliers_cropped.poll_events()
-                vis_inliers_cropped.update_renderer()
-                #vis_inliers_cropped.run()
-                image = vis_inliers_cropped.capture_screen_float_buffer(False)
-                plt.imsave(os.path.join(output_folder, seq_name, 'pcl', 'cropped',  str(i_cam2) + suff, base_0 + '_cropped_' + str(i_cam2) + suff + '.png'),
-                           np.asarray(image), dpi=1)
-                vis_inliers_cropped.destroy_window()
-                del ctr
-                del opt
-                del vis_inliers_cropped
+        # for i_cam2 in range(4):
+        #     for suff in ['', 'bis', 'ter']:
+        #         vis_inliers_cropped = o3d.visualization.Visualizer()
+        #         vis_inliers_cropped.create_window(visible = True, window_name = 'incrop'+str(i_file))
+        #         for i_cam in range(N_cams):
+        #             vis_inliers_cropped.add_geometry(pcl_only_inliers[i_cam].crop(bbox))
+        #         for i, e in enumerate(pcl_gt):
+        #             if e != 0:
+        #                 vis_inliers_cropped.add_geometry(e)
+        #         ctr = vis_inliers_cropped.get_view_control()
+        #         ctr.set_lookat(lookat_vector)
+        #         ctr.set_front(front_vector)
+        #         ctr.set_up(up_vector)
+        #         ctr.set_zoom(zoom_float)
+        #         param = o3d.io.read_pinhole_camera_parameters(
+        #             '/home/vbelissen/Downloads/test/cameras_jsons/test' + str(i_cam2 + 1) + suff + '.json')
+        #         ctr.convert_from_pinhole_camera_parameters(param)
+        #         opt = vis_inliers_cropped.get_render_option()
+        #         opt.background_color = np.asarray([0, 0, 0])
+        #         vis_inliers_cropped.poll_events()
+        #         vis_inliers_cropped.update_renderer()
+        #         #vis_inliers_cropped.run()
+        #         image = vis_inliers_cropped.capture_screen_float_buffer(False)
+        #         plt.imsave(os.path.join(output_folder, seq_name, 'pcl', 'cropped',  str(i_cam2) + suff, base_0 + '_cropped_' + str(i_cam2) + suff + '.png'),
+        #                    np.asarray(image), dpi=1)
+        #         vis_inliers_cropped.destroy_window()
+        #         del ctr
+        #         del opt
+        #         del vis_inliers_cropped
 
         #del ctr
         #del vis_full
@@ -533,7 +685,14 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             output_file1 = os.path.join(output_folder, seq_name, 'depth', camera_names[i_cam], os.path.basename(input_files[i_cam][i_file]))
             output_file2 = os.path.join(output_folder, seq_name, 'rgb', camera_names[i_cam], os.path.basename(input_files[i_cam][i_file]))
             imwrite(output_file1, viz_pred_inv_depths[i_cam][:, :, ::-1])
-            imwrite(output_file2, rgb[i_cam][:, :, ::-1])
+            if has_full_mask[i_cam]:
+                full_mask = np.load(input_full_masks[i_cam])
+                mask_colors = label_colors[correspondence[full_mask]]
+                imwrite(output_file2, (1-alpha_mask) * rgb[i_cam][:, :, ::-1] + alpha_mask * mask_colors[:, :, ::-1]*255)
+            else:
+                imwrite(output_file2, rgb[i_cam][:, :, ::-1])
+
+
 
 
 

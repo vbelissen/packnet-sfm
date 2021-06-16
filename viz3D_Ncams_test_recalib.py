@@ -29,6 +29,7 @@ import open3d as o3d
 import matplotlib.pyplot as plt
 import time
 from matplotlib.cm import get_cmap
+from scipy.optimize import minimize
 
 
 lookat_vector = np.array([-6.3432556344086555, 0.72397009410040813, 1.6189638309453105])
@@ -187,6 +188,44 @@ def get_extrinsics_pose_matrix(image_file, calib_data):
     #pose_matrix = invert_pose_numpy(pose_matrix)
     return pose_matrix
 
+def get_extrinsics_pose_matrix_extra_rot(image_file, calib_data, extra_x_deg, extra_y_deg, extra_z_deg):
+    """Get intrinsics from the calib_data dictionary."""
+    cam = get_camera_name(image_file)
+    extr = calib_data[cam]['extrinsics']
+
+    t = np.array([float(extr['pos_x_m']), float(extr['pos_y_m']), float(extr['pos_z_m'])])
+
+    x_rad  = np.pi / 180. * (float(extr['rot_x_deg'])  + extra_x_deg)
+    z1_rad = np.pi / 180. * (float(extr['rot_z1_deg']) + extra_y_deg)
+    z2_rad = np.pi / 180. * (float(extr['rot_z2_deg']) + extra_z_deg)
+    x_rad += np.pi  # gcam
+    #z1_rad += np.pi  # gcam
+    #z2_rad += np.pi  # gcam
+    cosx  = np.cos(x_rad)
+    sinx  = np.sin(x_rad)
+    cosz1 = np.cos(z1_rad)
+    sinz1 = np.sin(z1_rad)
+    cosz2 = np.cos(z2_rad)
+    sinz2 = np.sin(z2_rad)
+
+    Rx  = np.array([[     1,     0,    0],
+                    [     0,  cosx, sinx],
+                    [     0, -sinx, cosx]])
+    Rz1 = np.array([[ cosz1, sinz1,    0],
+                    [-sinz1, cosz1,    0],
+                    [     0,     0,    1]])
+    Rz2 = np.array([[cosz2, -sinz2,    0],
+                    [sinz2,  cosz2,    0],
+                    [    0,      0,    1]])
+
+    R = np.matmul(Rz2, np.matmul(Rx, Rz1))
+
+    T_other_convention = -np.dot(R,t)
+
+    pose_matrix = transform_from_rot_trans(R, T_other_convention).astype(np.float32)
+    #pose_matrix = invert_pose_numpy(pose_matrix)
+    return pose_matrix
+
 def display_inlier_outlier(cloud, ind):
     inlier_cloud = cloud.select_by_index(ind)
     outlier_cloud = cloud.select_by_index(ind, invert=True)
@@ -295,6 +334,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
     dtype = torch.float16 if half else None
 
     bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=(-1000, -1000, -1), max_bound=(1000, 1000, 5))
+
 
     # let's assume all images are from the same sequence (thus same cameras)
     for i_cam in range(N_cams):
@@ -489,7 +529,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         for i_cam in range(4):
             pcl1 = pcl_full[i_cam].select_by_index(ind_clean_right[i_cam]).uniform_down_sample(10)
             pcl2 = pcl_full[(i_cam+1)%4].select_by_index(ind_clean_left[(i_cam+1)%4]).uniform_down_sample(10)
-            o3d.visualization.draw_geometries([pcl1, pcl2])
+            #o3d.visualization.draw_geometries([pcl1, pcl2])
             dists = pcl1.compute_point_cloud_distance(pcl2)
             nb_points[n, i_cam] = np.sum(np.asarray(dists)<0.5)
             print(nb_points[n, i_cam])
@@ -499,42 +539,172 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
 
         print(np.mean(dist_total))
 
-        R_cam_0 = cams[0].Tcw.mat.cpu().numpy()[0, :3, :3]
-        print(R_cam_0)
-        t_cam_0 = cams[0].Tcw.mat.cpu().numpy()[0, :3, 3]
-        c = np.cos(0.1)
-        s = np.sin(0.1)
-        extr_rot = np.array([[c,  0, s],
-                             [0, 1, 0],
-                             [-s, 0, c]])
-        R_cam_0 = np.matmul(extr_rot, R_cam_0)
-        print(R_cam_0)
-        pose_matrix = torch.from_numpy(transform_from_rot_trans(R_cam_0, t_cam_0).astype(np.float32)).unsqueeze(0)
-        pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()), dtype=dtype)
+        # i_cam = 0
+        #
+        # base_folder_str = get_base_folder(input_files[i_cam][0])
+        # split_type_str = get_split_type(input_files[i_cam][0])
+        # seq_name_str = get_sequence_name(input_files[i_cam][0])
+        # camera_str = get_camera_name(input_files[i_cam][0])
+        #
+        # calib_data = {}
+        # calib_data[camera_str] = read_raw_calib_files_camera_valeo(base_folder_str, split_type_str, seq_name_str, camera_str)
+        # pose_matrix = torch.from_numpy(get_extrinsics_pose_matrix_extra_rot(input_files[i_cam][0], calib_data, 15.0, 0, 0)).unsqueeze(0)
+        #
+        #
+        # # R_cam_0 = cams[0].Tcw.mat.cpu().numpy()[0, :3, :3]
+        # # print(R_cam_0)
+        # # t_cam_0 = cams[0].Tcw.mat.cpu().numpy()[0, :3, 3]
+        # # c = np.cos(0.1)
+        # # s = np.sin(0.1)
+        # # extr_rot = np.array([[c,  0, s],
+        # #                      [0, 1, 0],
+        # #                      [-s, 0, c]])
+        # # R_cam_0 = np.matmul(extr_rot, R_cam_0)
+        # # print(R_cam_0)
+        # # pose_matrix = torch.from_numpy(transform_from_rot_trans(R_cam_0, t_cam_0).astype(np.float32)).unsqueeze(0)
+        # pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()), dtype=dtype)
+        #
+        # CameraFisheye.Twc.fget.cache_clear()
+        # cams[0].Tcw = pose_tensor
+        #
+        #
+        #
+        # world_points[i_cam] = cams[i_cam].reconstruct(pred_depths[i_cam], frame='w')
+        # world_points[i_cam] = world_points[i_cam][0].cpu().numpy()
+        # world_points[i_cam] = world_points[i_cam].reshape((3, -1)).transpose()
+        # world_points[i_cam] = world_points[i_cam][not_masked[i_cam]]
+        # pcl_full[i_cam].points = o3d.utility.Vector3dVector(world_points[i_cam])
+        #
+        # for i_cam in range(4):
+        #     pcl1 = pcl_full[i_cam].select_by_index(ind_clean_right[i_cam]).uniform_down_sample(10)
+        #     pcl2 = pcl_full[(i_cam + 1) % 4].select_by_index(ind_clean_left[(i_cam + 1) % 4]).uniform_down_sample(10)
+        #     #o3d.visualization.draw_geometries([pcl1, pcl2])
+        #     dists = pcl1.compute_point_cloud_distance(pcl2)
+        #     nb_points[n, i_cam] = np.sum(np.asarray(dists) < 0.5)
+        #     print(nb_points[n, i_cam])
+        #     dists = np.mean(np.asarray(dists))
+        #     print(dists)
+        #     dist_total[i_cam] = dists
+        #
+        # print(np.mean(dist_total))
+        #
+        # i_cam1 = 0
+        # i_cam2 = 1
+        # pcl1 = pcl_full[i_cam1].select_by_index(ind_clean_right[i_cam1]).uniform_down_sample(10)
+        # pcl2 = pcl_full[i_cam2].select_by_index(ind_clean_left[i_cam2]).uniform_down_sample(10)
+        # dists1 = pcl1.compute_point_cloud_distance(pcl2)
+        # dists2 = pcl2.compute_point_cloud_distance(pcl1)
+        # close_points1 = np.where(np.asarray(dists1) < 0.5)[0]
+        # close_points2 = np.where(np.asarray(dists2) < 0.5)[0]
+        # pcl1 = pcl1.select_by_index(close_points1)
+        # pcl2 = pcl2.select_by_index(close_points2)
+        #
+        # def pcl_distance(extra_rot_deg):
+        #     i_cam = 0
+        #
+        #     base_folder_str = get_base_folder(input_files[i_cam][0])
+        #     split_type_str = get_split_type(input_files[i_cam][0])
+        #     seq_name_str = get_sequence_name(input_files[i_cam][0])
+        #     camera_str = get_camera_name(input_files[i_cam][0])
+        #
+        #     calib_data = {}
+        #     calib_data[camera_str] = read_raw_calib_files_camera_valeo(base_folder_str, split_type_str, seq_name_str, camera_str)
+        #     pose_matrix = torch.from_numpy( get_extrinsics_pose_matrix_extra_rot(input_files[i_cam][0], calib_data, extra_rot_deg[0], extra_rot_deg[1], extra_rot_deg[2])).unsqueeze(0)
+        #     pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()), dtype=dtype)
+        #     CameraFisheye.Twc.fget.cache_clear()
+        #     cams[i_cam].Tcw = pose_tensor
+        #
+        #     world_points[i_cam] = cams[i_cam].reconstruct(pred_depths[i_cam], frame='w')
+        #
+        #     world_points[i_cam] = world_points[i_cam][0].cpu().numpy()
+        #     world_points[i_cam] = world_points[i_cam].reshape((3, -1)).transpose()
+        #     world_points[i_cam] = world_points[i_cam][not_masked[i_cam]].astype(np.float64)
+        #     pcl_full[i_cam].points = o3d.utility.Vector3dVector(world_points[i_cam])
+        #
+        #     pcl1 = pcl_full[i_cam1].select_by_index(ind_clean_right[i_cam1]).uniform_down_sample(10).select_by_index(close_points1)
+        #     pcl2 = pcl_full[i_cam2].select_by_index(ind_clean_left[i_cam2]).uniform_down_sample(10).select_by_index(close_points2)
+        #
+        #     dists = pcl1.compute_point_cloud_distance(pcl2)
+        #     return np.mean(np.asarray(dists))
+        #
+        # print(pcl_distance([0.0, 0.0, 0.0]))
+        # print(pcl_distance([15.0, 0.0, 0.0]))
+        # print(pcl_distance([-0.01, 0.0, 0.0]))
+        # print(pcl_distance([0.01, 0.0, 0.0]))
+        #
+        # s = time.time()
+        # result = minimize(pcl_distance, x0=np.array([0.,0.0,0.]), method='L-BFGS-B', options={'disp': True})
+        # # Method BFGS not working
+        # # Method Nelder-Mead working - time : 12.842947721481323
+        # # Method Powell maybe working - time : 4.3
+        # # Method CG not working
+        # # Method L-BFGS-B not working
+        #
+        #
+        #
+        # print("time : " + str(time.time() - s))
+        # print(result)
 
-        CameraFisheye.Twc.fget.cache_clear()
-        cams[0].Tcw = pose_tensor
 
-        i_cam = 0
 
-        world_points[i_cam] = cams[i_cam].reconstruct(pred_depths[i_cam], frame='w')
-        world_points[i_cam] = world_points[i_cam][0].cpu().numpy()
-        world_points[i_cam] = world_points[i_cam].reshape((3, -1)).transpose()
-        world_points[i_cam] = world_points[i_cam][not_masked[i_cam]]
-        pcl_full[i_cam].points = o3d.utility.Vector3dVector(world_points[i_cam])
 
+        close_points1 = []
+        close_points2 = []
+        for i_cam in range(4):
+            i_cam1 = i_cam
+            i_cam2 = (i_cam + 1) % 4
+            pcl1 = pcl_full[i_cam1].select_by_index(ind_clean_right[i_cam1]).uniform_down_sample(100)
+            pcl2 = pcl_full[i_cam2].select_by_index(ind_clean_left[i_cam2]).uniform_down_sample(100)
+            dists1 = pcl1.compute_point_cloud_distance(pcl2)
+            dists2 = pcl2.compute_point_cloud_distance(pcl1)
+            close_points1.append(np.where(np.asarray(dists1) < 0.5)[0])
+            close_points2.append(np.where(np.asarray(dists2) < 0.5)[0])
+
+        def pcl_distance(extra_rot_deg):
+            for i_cam in range(4):
+                base_folder_str = get_base_folder(input_files[i_cam][0])
+                split_type_str = get_split_type(input_files[i_cam][0])
+                seq_name_str = get_sequence_name(input_files[i_cam][0])
+                camera_str = get_camera_name(input_files[i_cam][0])
+
+                calib_data = {}
+                calib_data[camera_str] = read_raw_calib_files_camera_valeo(base_folder_str, split_type_str,
+                                                                           seq_name_str, camera_str)
+                pose_matrix = torch.from_numpy(get_extrinsics_pose_matrix_extra_rot(input_files[i_cam][0],
+                                                                                    calib_data,
+                                                                                    extra_rot_deg[3 * i_cam + 0],
+                                                                                    extra_rot_deg[3 * i_cam + 1],
+                                                                                    extra_rot_deg[3 * i_cam + 2])).unsqueeze(0)
+                pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()), dtype=dtype)
+                CameraFisheye.Twc.fget.cache_clear()
+                cams[i_cam].Tcw = pose_tensor
+
+                world_points[i_cam] = cams[i_cam].reconstruct(pred_depths[i_cam], frame='w')
+
+                world_points[i_cam] = world_points[i_cam][0].cpu().numpy()
+                world_points[i_cam] = world_points[i_cam].reshape((3, -1)).transpose()
+                world_points[i_cam] = world_points[i_cam][not_masked[i_cam]].astype(np.float64)
+                pcl_full[i_cam].points = o3d.utility.Vector3dVector(world_points[i_cam])
+
+            dist_total = np.zeros(4)
+            for i_cam in range(4):
+                i_cam1 = i_cam
+                i_cam2 = (i_cam + 1) % 4
+                pcl1 = pcl_full[i_cam1].select_by_index(ind_clean_right[i_cam1]).uniform_down_sample(100).select_by_index(close_points1[i_cam])
+                pcl2 = pcl_full[i_cam2].select_by_index(ind_clean_left[i_cam2]).uniform_down_sample(100).select_by_index( close_points2[i_cam])
+                dists = pcl1.compute_point_cloud_distance(pcl2)
+                dist_total[i_cam] = np.mean(np.asarray(dists))
+
+            return np.mean(dist_total)
+
+        result = minimize(pcl_distance, x0=np.zeros(12), method='Powell', options={'disp': True})
+        print(result)
+
+        o3d.visualization.draw_geometries([pcl_full[0], pcl_full[1], pcl_full[2], pcl_full[3]])
         for i_cam in range(4):
             pcl1 = pcl_full[i_cam].select_by_index(ind_clean_right[i_cam]).uniform_down_sample(10)
             pcl2 = pcl_full[(i_cam + 1) % 4].select_by_index(ind_clean_left[(i_cam + 1) % 4]).uniform_down_sample(10)
             o3d.visualization.draw_geometries([pcl1, pcl2])
-            dists = pcl1.compute_point_cloud_distance(pcl2)
-            nb_points[n, i_cam] = np.sum(np.asarray(dists) < 0.5)
-            print(nb_points[n, i_cam])
-            dists = np.mean(np.asarray(dists))
-            print(dists)
-            dist_total[i_cam] = dists
-
-        print(np.mean(dist_total))
 
 
         # vis_full = o3d.visualization.Visualizer()

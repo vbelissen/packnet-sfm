@@ -17,6 +17,9 @@ for i in range(800):
         simulated_depth[0,0,i,j] = i*(799-i)*j*(1279-j)*i*(799-i)*j*(1279-j)/6.5270e+10/6.5270e+10*50
 simulated_depth = simulated_depth.to(torch.device('cuda'))
 
+simulated_depth = torch.from_numpy(np.load('/home/data/vbelissen/20170320_163113_cam_0_00006300.npz')['depth']).to(torch.device('cuda')).unsqueeze(0).unsqueeze(0)
+
+
 img_front = Image.open('/home/data/vbelissen/valeo_multiview/images_multiview/fisheye/test/20170320_163113/cam_0/20170320_163113_cam_0_00006300.jpg').convert('RGB')
 img_front_next = Image.open('/home/data/vbelissen/valeo_multiview/images_multiview/fisheye/test/20170320_163113/cam_0/20170320_163113_cam_0_00006301.jpg').convert('RGB')
 

@@ -407,13 +407,13 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
 
     # create output dirs for each cam
     seq_name = get_sequence_name(input_files[0][0])
-    for i_cam in range(N_cams):
+    for i_cam in range(1):
         os.makedirs(os.path.join(output_folder, seq_name, 'depth', camera_names[i_cam]), exist_ok=True)
         os.makedirs(os.path.join(output_folder, seq_name, 'rgb', camera_names[i_cam]), exist_ok=True)
 
 
 
-    for i_file in range(0, N_files, 25):
+    for i_file in range(1):
 
         base_0, ext_0 = os.path.splitext(os.path.basename(input_files[0][i_file]))
         print(base_0)
@@ -422,7 +422,9 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         images_numpy = []
         pred_inv_depths = []
         pred_depths = []
+        pred_depths_relative = []
         world_points = []
+        world_points_reconstructed = []
         input_depth_files = []
         has_gt_depth = []
         input_full_masks = []
@@ -431,6 +433,8 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         gt_depth_3d = []
         pcl_full = []
         pcl_only_inliers = []
+        pcl_full_reconstructed = []
+        pcl_only_inliers_reconstructed = []
         pcl_only_outliers = []
         pcl_gt = []
         rgb = []
@@ -445,127 +449,123 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
 
             pred_inv_depths.append(model_wrappers[i_cam].depth(images[i_cam]))
             pred_depths.append(inv2depth(pred_inv_depths[i_cam]))
-
-
-        for i_cam in range(N_cams):
-            print(i_cam)
-            mix_depths = False
-            if mix_depths:
-                depths = (torch.ones(1, 3, 800, 1280)*500).cuda()
-                depths[0, 1, :, :] = pred_depths[i_cam][0, 0, :, :]
-                # not_masked1s = torch.zeros(3, 800, 1280).to(dtype=bool)
-                # not_masked1 = torch.ones(1, 3, 800, 1280).to(dtype=bool)
-                for relative in [-1, 1]:
-                    path_to_ego_mask_relative = get_path_to_ego_mask(input_files[(i_cam + relative) % 4][0])
-                    ego_mask_relative = np.load(path_to_ego_mask_relative)
-                    ego_mask_relative = torch.from_numpy(ego_mask_relative.astype(bool))
-
-                    # reconstructed 3d points from relative depth map
-                    relative_points_3d = cams[(i_cam + relative) % 4].reconstruct(pred_depths[(i_cam + relative) % 4], frame='w')
-
-                    # cop of current cam
-                    cop = np.zeros((3, 800, 1280))
-                    cop[0, :, :] = cams[i_cam].Twc.mat.cpu().numpy()[0, 0, 3]
-                    cop[1, :, :] = cams[i_cam].Twc.mat.cpu().numpy()[0, 1, 3]
-                    cop[2, :, :] = cams[i_cam].Twc.mat.cpu().numpy()[0, 2, 3]
-
-                    # distances of 3d points to cop of current cam
-                    distances_3d = np.linalg.norm(relative_points_3d[0, :, :, :].cpu().numpy() - cop, axis=0)
-                    distances_3d = torch.from_numpy(distances_3d).unsqueeze(0).cuda().float()
-
-                    # projected points on current cam (values should be in (-1,1)), be careful X and Y are switched!!!
-                    projected_points_2d = cams[i_cam].project(relative_points_3d, frame='w')
-                    projected_points_2d[:, :, :, [0, 1]] = projected_points_2d[:, :, :, [1, 0]]
-
-                    # applying ego mask of relative cam
-                    projected_points_2d[:, ~ego_mask_relative, :] = 2
-
-                    # looking for indices of inbounds pixels
-                    x_ok = (projected_points_2d[0, :, :, 0] > -1) * (projected_points_2d[0, :, :, 0] < 1)
-                    y_ok = (projected_points_2d[0, :, :, 1] > -1) * (projected_points_2d[0, :, :, 1] < 1)
-                    xy_ok = x_ok * y_ok
-                    xy_ok_id = xy_ok.nonzero(as_tuple=False)
-
-                    # xy values of these indices (in (-1, 1))
-                    xy_ok_X = xy_ok_id[:, 0]
-                    xy_ok_Y = xy_ok_id[:, 1]
-
-                    # xy values in pixels
-                    projected_points_2d_ints = (projected_points_2d + 1) / 2
-                    projected_points_2d_ints[0, :, :, 0] = torch.round(projected_points_2d_ints[0, :, :, 0] * 799)
-                    projected_points_2d_ints[0, :, :, 1] = torch.round(projected_points_2d_ints[0, :, :, 1] * 1279)
-                    projected_points_2d_ints = projected_points_2d_ints.to(dtype=int)
-
-                    # main equation
-                    depths[0, 1 + relative, projected_points_2d_ints[0, xy_ok_X, xy_ok_Y, 0], projected_points_2d_ints[0, xy_ok_X, xy_ok_Y, 1]] = distances_3d[0, xy_ok_X, xy_ok_Y]
-
-                    interpolation = False
-                    if interpolation:
-                        def fillMissingValues(target_for_interp, copy=True,
-                                              interpolator=scipy.interpolate.LinearNDInterpolator):
-                            import cv2, scipy, numpy as np
-
-                            if copy:
-                                target_for_interp = target_for_interp.copy()
-
-                            def getPixelsForInterp(img):
-                                """
-                                Calculates a mask of pixels neighboring invalid values -
-                                   to use for interpolation.
-                                """
-                                # mask invalid pixels
-                                invalid_mask = np.isnan(img) + (img == 0)
-                                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-
-                                # dilate to mark borders around invalid regions
-                                dilated_mask = cv2.dilate(invalid_mask.astype('uint8'), kernel,
-                                                          borderType=cv2.BORDER_CONSTANT, borderValue=int(0))
-
-                                # pixelwise "and" with valid pixel mask (~invalid_mask)
-                                masked_for_interp = dilated_mask * ~invalid_mask
-                                return masked_for_interp.astype('bool'), invalid_mask
-
-                            # Mask pixels for interpolation
-                            mask_for_interp, invalid_mask = getPixelsForInterp(target_for_interp)
-
-                            # Interpolate only holes, only using these pixels
-                            points = np.argwhere(mask_for_interp)
-                            values = target_for_interp[mask_for_interp]
-                            interp = interpolator(points, values)
-
-                            target_for_interp[invalid_mask] = interp(np.argwhere(invalid_mask))
-                            return target_for_interp
-
-                        dd = depths[0, 1 + relative, :, :].cpu().numpy()
-                        dd[dd == 500] = np.nan
-
-                        dd = fillMissingValues(dd, copy=True, interpolator=scipy.interpolate.LinearNDInterpolator)
-
-                        dd[np.isnan(dd)] = 500
-                        dd[dd == 0] = 500
-
-                        depths[0, 1 + relative, :, :] = torch.from_numpy(dd).unsqueeze(0).unsqueeze(0).cuda()
-
-                depths[depths == 0] = 500
-                #depths[depths == np.nan] = 500
-                pred_depths[i_cam] = depths.min(dim=1, keepdim=True)[0]
-
-            world_points.append(cams[i_cam].reconstruct(pred_depths[i_cam], frame='w'))
-
             pred_depth_copy = pred_depths[i_cam].squeeze(0).squeeze(0).cpu().numpy()
             pred_depth_copy = np.uint8(pred_depth_copy)
-            lap = np.uint8(np.absolute(cv2.Laplacian(pred_depth_copy, cv2.CV_64F, ksize=3)))
+            lap = np.uint8(np.absolute(cv2.Laplacian(pred_depth_copy,cv2.CV_64F,ksize=3)))
             great_lap.append(lap < 4)
             great_lap[i_cam] = great_lap[i_cam].reshape(-1)
             images_numpy.append(images[i_cam][0].cpu().numpy())
             images_numpy[i_cam] = images_numpy[i_cam].reshape((3, -1)).transpose()
-            images_numpy[i_cam] = images_numpy[i_cam][not_masked[i_cam] * great_lap[i_cam]]
+            #images_numpy[i_cam] = images_numpy[i_cam][not_masked[i_cam]*great_lap[i_cam]]
+
+        for i_cam in range(1):
+            print(i_cam)
+            relative = -1
+            path_to_ego_mask_relative = get_path_to_ego_mask(input_files[(i_cam + relative) % 4][0])
+            ego_mask_relative = np.load(path_to_ego_mask_relative)
+            ego_mask_relative = torch.from_numpy(ego_mask_relative.astype(bool))
+
+            depths = torch.ones(1, 1, 800, 1280).cuda()*3
+
+            # reconstructed 3d points from relative depth map
+            relative_points_3d = cams[(i_cam + relative) % 4].reconstruct(pred_depths[(i_cam + relative) % 4], frame='w')
+
+            # cop of current cam
+            cop = np.zeros((3, 800, 1280))
+            cop[0, :, :] = cams[i_cam].Twc.mat.cpu().numpy()[0, 0, 3]
+            cop[1, :, :] = cams[i_cam].Twc.mat.cpu().numpy()[0, 1, 3]
+            cop[2, :, :] = cams[i_cam].Twc.mat.cpu().numpy()[0, 2, 3]
+
+            # distances of 3d points to cop of current cam
+            distances_3d = np.linalg.norm(relative_points_3d[0, :, :, :].cpu().numpy() - cop, axis=0)
+            distances_3d = torch.from_numpy(distances_3d).unsqueeze(0).cuda().float()
+
+            # projected points on current cam (values should be in (-1,1)), be careful X and Y are switched!!!
+            projected_points_2d = cams[i_cam].project(relative_points_3d, frame='w')
+            projected_points_2d[:, :, :, [0, 1]] = projected_points_2d[:, :, :, [1, 0]]
+
+            # applying ego mask of relative cam
+            projected_points_2d[:, ~ego_mask_relative, :] = 2
+
+            # looking for indices of inbounds pixels
+            x_ok = (projected_points_2d[0, :, :, 0] > -1) * (projected_points_2d[0, :, :, 0] < 1)
+            y_ok = (projected_points_2d[0, :, :, 1] > -1) * (projected_points_2d[0, :, :, 1] < 1)
+            xy_ok = x_ok * y_ok
+            xy_ok_id = xy_ok.nonzero(as_tuple=False)
+
+            # xy values of these indices (in (-1, 1))
+            xy_ok_X = xy_ok_id[:, 0]
+            xy_ok_Y = xy_ok_id[:, 1]
+
+            # xy values in pixels
+            projected_points_2d_ints = (projected_points_2d + 1)/2
+            projected_points_2d_ints[0, :, :, 0] = torch.round(projected_points_2d_ints[0, :, :, 0] * 799)
+            projected_points_2d_ints[0, :, :, 1] = torch.round(projected_points_2d_ints[0, :, :, 1] * 1279)
+            projected_points_2d_ints = projected_points_2d_ints.to(dtype=int)
+
+            # main equation
+            depths[0, 0, projected_points_2d_ints[0, xy_ok_X, xy_ok_Y, 0], projected_points_2d_ints[0, xy_ok_X, xy_ok_Y, 1]] = distances_3d[0, xy_ok_X, xy_ok_Y]
+
+            interpolation = False
+            if interpolation:
+                def fillMissingValues(target_for_interp, copy=True,
+                                      interpolator=scipy.interpolate.LinearNDInterpolator):
+                    import cv2, scipy, numpy as np
+
+                    if copy:
+                        target_for_interp = target_for_interp.copy()
+
+                    def getPixelsForInterp(img):
+                        """
+                        Calculates a mask of pixels neighboring invalid values -
+                           to use for interpolation.
+                        """
+                        # mask invalid pixels
+                        invalid_mask = np.isnan(img) + (img == 0)
+                        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+
+                        # dilate to mark borders around invalid regions
+                        dilated_mask = cv2.dilate(invalid_mask.astype('uint8'), kernel,
+                                                  borderType=cv2.BORDER_CONSTANT, borderValue=int(0))
+
+                        # pixelwise "and" with valid pixel mask (~invalid_mask)
+                        masked_for_interp = dilated_mask * ~invalid_mask
+                        return masked_for_interp.astype('bool'), invalid_mask
+
+                    # Mask pixels for interpolation
+                    mask_for_interp, invalid_mask = getPixelsForInterp(target_for_interp)
+
+                    # Interpolate only holes, only using these pixels
+                    points = np.argwhere(mask_for_interp)
+                    values = target_for_interp[mask_for_interp]
+                    interp = interpolator(points, values)
+
+                    target_for_interp[invalid_mask] = interp(np.argwhere(invalid_mask))
+                    return target_for_interp
+
+                dd = depths[0,0,:,:].cpu().numpy()
+                dd[dd == 3] = np.nan
+
+                dd = fillMissingValues(dd, copy=True,
+                                  interpolator=scipy.interpolate.LinearNDInterpolator)
+
+                dd[dd == np.nan] = 3
+                dd[dd == 0] = 3
+
+                depths = torch.from_numpy(dd).unsqueeze(0).unsqueeze(0).cuda()
 
 
-        for i_cam in range(N_cams):
+            reconstructed = cams[i_cam].reconstruct(depths, frame='w')
+
+            world_points_reconstructed.append(reconstructed)
+            world_points.append(cams[i_cam].reconstruct(pred_depths[i_cam], frame='w'))
+
+        for i_cam in range(1):
             world_points[i_cam] = world_points[i_cam][0].cpu().numpy()
             world_points[i_cam] = world_points[i_cam].reshape((3, -1)).transpose()
-            world_points[i_cam] = world_points[i_cam][not_masked[i_cam]*great_lap[i_cam]]
+            world_points_reconstructed[i_cam] = world_points_reconstructed[i_cam][0].cpu().numpy()
+            world_points_reconstructed[i_cam] = world_points_reconstructed[i_cam].reshape((3, -1)).transpose()
+            #world_points[i_cam] = world_points[i_cam][not_masked[i_cam]*great_lap[i_cam]]
             cam_name = camera_names[i_cam]
             cam_int = cam_name.split('_')[-1]
             input_depth_files.append(get_depth_file(input_files[i_cam][i_file]))
@@ -587,13 +587,18 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
 
             pcl_full.append(o3d.geometry.PointCloud())
             pcl_full[i_cam].points = o3d.utility.Vector3dVector(world_points[i_cam])
+            pcl_full_reconstructed.append(o3d.geometry.PointCloud())
+            pcl_full_reconstructed[i_cam].points = o3d.utility.Vector3dVector(world_points_reconstructed[i_cam])
             if has_full_mask[i_cam]:
                 full_mask = np.load(input_full_masks[i_cam])
                 mask_colors = label_colors[correspondence[full_mask]].reshape((-1, 3))#.transpose()
-                mask_colors = mask_colors[not_masked[i_cam]*great_lap[i_cam]]
+                #mask_colors = mask_colors[not_masked[i_cam]*great_lap[i_cam]]
                 pcl_full[i_cam].colors = o3d.utility.Vector3dVector(alpha_mask * mask_colors + (1-alpha_mask) * images_numpy[i_cam])
+                pcl_full_reconstructed[i_cam].colors = o3d.utility.Vector3dVector(
+                    alpha_mask * mask_colors + (1 - alpha_mask) * images_numpy[i_cam])
             else:
                 pcl_full[i_cam].colors = o3d.utility.Vector3dVector(images_numpy[i_cam])
+                pcl_full_reconstructed[i_cam].colors = o3d.utility.Vector3dVector(images_numpy[i_cam])
 
             pcl = pcl_full[i_cam]#.select_by_index(ind)
             points_tmp = np.asarray(pcl.points)
@@ -601,14 +606,12 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             # remove points that are above
             mask_height = points_tmp[:, 2] > 1.5# * (abs(points_tmp[:, 0]) < 10) * (abs(points_tmp[:, 1]) < 3)
             mask_colors_blue = np.sum(np.abs(colors_tmp - np.array([0.6, 0.8, 1])), axis=1) < 0.6  # bleu ciel
-            mask_colors_blue2 = np.sum(np.abs(colors_tmp - np.array([0.8, 1, 1])), axis=1) < 0.6  # bleu ciel
             mask_colors_green = np.sum(np.abs(colors_tmp - np.array([0.2, 1, 0.4])), axis=1) < 0.8
             mask_colors_green2 = np.sum(np.abs(colors_tmp - np.array([0, 0.5, 0.15])), axis=1) < 0.2
             mask = 1-mask_height*mask_colors_blue
-            mask_bis = 1 - mask_height * mask_colors_blue2
             mask2 = 1-mask_height*mask_colors_green
             mask3 = 1- mask_height*mask_colors_green2
-            mask = mask*mask_bis*mask2*mask3
+            mask = mask*mask2*mask3
             pcl = pcl.select_by_index(np.where(mask)[0])
             cl, ind = pcl.remove_statistical_outlier(nb_neighbors=7, std_ratio=1.2)
             pcl = pcl.select_by_index(ind)
@@ -616,6 +619,27 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             #if has_full_mask[i_cam]:
             #    pcl.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.2, max_nn=15))
             pcl_only_inliers.append(pcl)#pcl_full[i_cam].select_by_index(ind)[mask])
+
+            pcl = pcl_full_reconstructed[i_cam]  # .select_by_index(ind)
+            points_tmp = np.asarray(pcl.points)
+            colors_tmp = images_numpy[i_cam]  # np.asarray(pcl.colors)
+            # remove points that are above
+            mask_height = points_tmp[:, 2] > 1.5  # * (abs(points_tmp[:, 0]) < 10) * (abs(points_tmp[:, 1]) < 3)
+            mask_colors_blue = np.sum(np.abs(colors_tmp - np.array([0.6, 0.8, 1])), axis=1) < 0.6  # bleu ciel
+            mask_colors_green = np.sum(np.abs(colors_tmp - np.array([0.2, 1, 0.4])), axis=1) < 0.8
+            mask_colors_green2 = np.sum(np.abs(colors_tmp - np.array([0, 0.5, 0.15])), axis=1) < 0.2
+            mask = 1 - mask_height * mask_colors_blue
+            mask2 = 1 - mask_height * mask_colors_green
+            mask3 = 1 - mask_height * mask_colors_green2
+            mask = mask * mask2 * mask3
+            pcl = pcl.select_by_index(np.where(mask)[0])
+            cl, ind = pcl.remove_statistical_outlier(nb_neighbors=7, std_ratio=1.2)
+            pcl = pcl.select_by_index(ind)
+            pcl = pcl.voxel_down_sample(voxel_size=0.02)
+            # if has_full_mask[i_cam]:
+            #    pcl.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.2, max_nn=15))
+            pcl_only_inliers_reconstructed.append(pcl)  # pcl_full[i_cam].select_by_index(ind)[mask])
+
             if has_gt_depth[i_cam]:
                 pcl_gt.append(o3d.geometry.PointCloud())
                 pcl_gt[i_cam].points = o3d.utility.Vector3dVector(gt_depth_3d[i_cam])
@@ -649,12 +673,13 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
                     p2 = pcl_only_inliers[i_cam].select_by_index(np.where(np.asarray(dists) > threshold2)[0], invert=True).uniform_down_sample(down)#.voxel_down_sample(voxel_size=0.5)
                     pcl_only_inliers[i_cam] = p1 + p2
 
-        for i_cam2 in range(4):
+        for i_cam2 in range(1):
             for suff in ['', 'bis', 'ter']:
                 vis_only_inliers = o3d.visualization.Visualizer()
                 vis_only_inliers.create_window(visible = True, window_name = 'inliers'+str(i_file))
-                for i_cam in range(N_cams):
+                for i_cam in range(1):
                     vis_only_inliers.add_geometry(pcl_only_inliers[i_cam])
+                    vis_only_inliers.add_geometry(pcl_only_inliers_reconstructed[i_cam])
                 for i, e in enumerate(pcl_gt):
                     if e != 0:
                         vis_only_inliers.add_geometry(e)

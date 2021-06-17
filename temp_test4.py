@@ -31,6 +31,11 @@ front_next_img_torch = torch.transpose(torch.from_numpy(np.array(img_front_next)
 left_img_torch  = torch.transpose(torch.from_numpy(np.array(img_left)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
 right_img_torch = torch.transpose(torch.from_numpy(np.array(img_right)).float().unsqueeze(0).to(torch.device('cuda')),0,3).squeeze(3).unsqueeze(0)
 
+path_to_ego_mask_front = '/home/data/vbelissen/valeo_multiview/semantic_masks/fisheye/test/20170320_163113/20170320_163113_cam_0.npy'
+ego_mask_front = np.load(path_to_ego_mask_front)
+not_masked_front = torch.from_numpy(ego_mask_front.astype(bool)).to(torch.device('cuda')).unsqueeze(0).unsqueeze(0)
+
+simulated_depth[~not_masked_front] = 0
 
 t_front = np.array([3.691,     0, 0.474331])
 t_left  = np.array([2.011, 0.928, 0.835443])

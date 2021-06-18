@@ -324,8 +324,10 @@ def calc_photometric_loss(t_est, images):
     return photometric_loss
 
 loss0 = calc_photometric_loss([warped_front_left], [front_img_torch])
+loss0b = calc_photometric_loss([warped_front_right], [front_img_torch])
 loss1 = calc_photometric_loss([ref_warped], [front_img_torch])
 loss2 = calc_photometric_loss([front_next_img_torch], [front_img_torch])
 print(loss0[0][0,0,::100,::100])
+print(loss0b[0][0,0,::100,::100])
 print(loss1[0][0,0,::100,::100])
 print(loss2[0][0,0,::100,::100])

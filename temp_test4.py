@@ -35,6 +35,14 @@ path_to_ego_mask_front = '/home/data/vbelissen/valeo_multiview/semantic_masks/fi
 ego_mask_front = np.load(path_to_ego_mask_front)
 not_masked_front = torch.from_numpy(ego_mask_front.astype(bool)).to(torch.device('cuda')).unsqueeze(0).unsqueeze(0)
 
+path_to_ego_mask_left = '/home/data/vbelissen/valeo_multiview/semantic_masks/fisheye/test/20170320_163113/20170320_163113_cam_3.npy'
+ego_mask_left = np.load(path_to_ego_mask_left)
+not_masked_left = torch.from_numpy(ego_mask_left.astype(bool)).to(torch.device('cuda')).unsqueeze(0).unsqueeze(0)
+
+path_to_ego_mask_right = '/home/data/vbelissen/valeo_multiview/semantic_masks/fisheye/test/20170320_163113/20170320_163113_cam_1.npy'
+ego_mask_right = np.load(path_to_ego_mask_right)
+not_masked_right = torch.from_numpy(ego_mask_front.astype(bool)).to(torch.device('cuda')).unsqueeze(0).unsqueeze(0)
+
 simulated_depth[~not_masked_front] = 0
 
 t_front = np.array([3.691,     0, 0.474331])
@@ -138,6 +146,8 @@ ref_coords_left = cam_left.project(world_points, frame='w')
 
 warped_front_left = funct.grid_sample(left_img_torch, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 
+warped_front_left[~not_masked_left] = 0
+
 warped_front_left_PIL = torch.transpose(warped_front_left.unsqueeze(4),1,4).squeeze().cpu().numpy()
 
 tt = str(int(time.time()%10000))
@@ -167,6 +177,8 @@ world_points = cam_front.reconstruct(simulated_depth,frame='w')
 ref_coords_right = cam_right.project(world_points, frame='w')
 
 warped_front_right = funct.grid_sample(right_img_torch, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
+warped_front_right[~not_masked_right] = 0
+
 
 warped_front_right_PIL = torch.transpose(warped_front_right.unsqueeze(4),1,4).squeeze().cpu().numpy()
 cv2.imwrite('/home/users/vbelissen/test'+ tt +'_right.png',warped_front_right_PIL)

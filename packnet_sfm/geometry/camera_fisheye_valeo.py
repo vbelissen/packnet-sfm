@@ -220,10 +220,10 @@ class CameraFisheye(nn.Module):
         Ynorm = 2 * v / (H - 1)# - 1.
 
         # Clamp out-of-bounds pixels
-        Xmask = ((Xnorm > 1) + (Xnorm < -1)).detach()
-        Xnorm[Xmask] = 2.
-        Ymask = ((Ynorm > 1) + (Ynorm < -1)).detach()
-        Ynorm[Ymask] = 2.
+        # Xmask = ((Xnorm > 1) + (Xnorm < -1)).detach()
+        # Xnorm[Xmask] = 2.
+        # Ymask = ((Ynorm > 1) + (Ynorm < -1)).detach()
+        # Ynorm[Ymask] = 2.
 
         mask = (theta_1 * 180 * 2 / np.pi > 190.0).detach()
         Xnorm[mask] = 2.

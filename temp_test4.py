@@ -146,7 +146,7 @@ ref_coords_left = cam_left.project(world_points, frame='w')
 # ref_coords_left[0,:,:,0][~not_masked_left[0,0,:,:]] = 2
 # ref_coords_left[0,:,:,1][~not_masked_left[0,0,:,:]] = 2
 
-left_img_torch[~not_masked_left] = 0
+left_img_torch[0, :, ~not_masked_left[0,0,:,:]] = 0
 
 warped_front_left = funct.grid_sample(left_img_torch, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 
@@ -182,7 +182,7 @@ ref_coords_right = cam_right.project(world_points, frame='w')
 # ref_coords_right[0,:,:,0][~not_masked_right[0,0,:,:]] = 2
 # ref_coords_right[0,:,:,1][~not_masked_right[0,0,:,:]] = 2
 
-right_img_torch[~not_masked_right] = 0
+right_img_torch[0, :, ~not_masked_right[0,0,:,:]] = 0
 
 warped_front_right = funct.grid_sample(right_img_torch, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
 

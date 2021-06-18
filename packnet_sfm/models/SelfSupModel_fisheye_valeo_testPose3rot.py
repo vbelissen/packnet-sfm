@@ -5,7 +5,7 @@ from packnet_sfm.losses.fisheye_multiview_photometric_loss_valeo_test3rot import
 from packnet_sfm.models.model_utils import merge_outputs
 
 
-class SelfSupModel_fisheye_valeo_testPose3(SfmModel):
+class SelfSupModel_fisheye_valeo_testPose3rot(SfmModel):
     """
     Model that inherits a depth and pose network from SfmModel and
     includes the photometric loss for self-supervised training.

@@ -143,10 +143,11 @@ cam_left  = cam_left.to(torch.device('cuda'))
 world_points = cam_front.reconstruct(simulated_depth,frame='w')
 
 ref_coords_left = cam_left.project(world_points, frame='w')
+ref_coords_left[~not_masked_left] = 0
 
 warped_front_left = funct.grid_sample(left_img_torch, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 
-warped_front_left[~not_masked_left] = 0
+
 
 warped_front_left_PIL = torch.transpose(warped_front_left.unsqueeze(4),1,4).squeeze().cpu().numpy()
 
@@ -175,9 +176,10 @@ cam_right = cam_right.to(torch.device('cuda'))
 world_points = cam_front.reconstruct(simulated_depth,frame='w')
 
 ref_coords_right = cam_right.project(world_points, frame='w')
+ref_coords_right[~not_masked_right] = 2
 
 warped_front_right = funct.grid_sample(right_img_torch, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
-warped_front_right[~not_masked_right] = 0
+
 
 
 warped_front_right_PIL = torch.transpose(warped_front_right.unsqueeze(4),1,4).squeeze().cpu().numpy()

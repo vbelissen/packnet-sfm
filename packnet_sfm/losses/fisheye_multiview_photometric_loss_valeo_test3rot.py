@@ -158,17 +158,20 @@ class MultiViewPhotometricLoss(LossBase):
         device = ref_image.get_device()
         # Generate cameras for all scales
         cams, ref_cams = [], []
+        pose_matrix = torch.zeros(B, 4, 4)
         for b in range(B):
             if same_timestamp_as_origin[b]:
-                pose.mat[b, :, 3] = pose_matrix_context[b, :, 3]
-                pose.mat[b, :3, :3] = pose.mat[b, :3, :3] @ pose_matrix_context[b, :3, :3]
+                pose_matrix[b, :, 3]   = pose_matrix_context[b, :, 3]
+                pose_matrix[b, :3, :3] = pose.mat[b, :3, :3] @ pose_matrix_context[b, :3, :3]
+            else:
+                pose_matrix[b, :, :] = pose.mat[b, :, :]
         # pose_matrix = torch.zeros(B, 4, 4)
         # for b in range(B):
         #     if not same_timestamp_as_origin[b]:
         #         pose_matrix[b, :, :] = pose.mat[b, :, :]
         #     else:
         #         pose_matrix[b, :, :] = pose_matrix_context[b, :, :]
-        #pose_matrix = Pose(pose_matrix)
+        pose_matrix = Pose(pose_matrix)
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
@@ -181,7 +184,7 @@ class MultiViewPhotometricLoss(LossBase):
                                           path_to_ego_mask=ref_path_to_ego_mask,
                                           poly_coeffs=ref_poly_coeffs.float(),
                                           principal_point=ref_principal_point.float(),
-                                          scale_factors=ref_scale_factors.float(), Tcw=pose).scaled(scale_factor).to(device))
+                                          scale_factors=ref_scale_factors.float(), Tcw=pose_matrix).scaled(scale_factor).to(device))
         # View synthesis
         depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
         ref_images = match_scales(ref_image, inv_depths, self.n)

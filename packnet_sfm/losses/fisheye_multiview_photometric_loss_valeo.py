@@ -376,7 +376,8 @@ class MultiViewPhotometricLoss(LossBase):
                                                  path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
                                                  ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
                                                  pose)
-                photometric_loss = self.calc_photometric_loss(ref_warped, [a * b for a, b in zip(images, ego_mask_tensors)])
+                photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ego_mask_tensors)],
+                                                              [a * b for a, b in zip(images,     ego_mask_tensors)])
             else:
                 ref_warped = self.warp_ref_image(inv_depths, ref_image,
                                                  path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,

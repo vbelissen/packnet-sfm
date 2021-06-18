@@ -363,6 +363,12 @@ class MultiViewPhotometricLoss(LossBase):
                         ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context].to(device))
                 # ego_mask_tensor = ego_mask_tensor.to(device)
 
+            for i_context in range(n_context):
+                B, C, H, W = context[i_context].shape
+                if W < 1280:
+                    inv_scale_factor = int(1280 / W)
+                    ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]).to(device)
+
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
             if self.mask_ego:

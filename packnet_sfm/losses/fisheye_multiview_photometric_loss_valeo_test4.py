@@ -480,7 +480,7 @@ class MultiViewPhotometricLoss(LossBase):
             for i in range(self.n):
                 inv_depths_clone[i][~(ego_mask_tensors[i].to(dtype=bool).detach())] = 0
                 images_clone[i][~(ego_mask_tensors[i].to(dtype=bool).detach()).repeat(1,3,1,1)] = 0
-            loss += self.calc_smoothness_loss(inv_depths_clone, images)
+            loss += self.calc_smoothness_loss(inv_depths_clone, images_clone)
         # Return losses and metrics
         return {
             'loss': loss.unsqueeze(0),

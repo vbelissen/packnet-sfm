@@ -473,8 +473,13 @@ class MultiViewPhotometricLoss(LossBase):
         if self.smooth_loss_weight > 0.0:
             #loss += self.calc_smoothness_loss(inv_depths, images)
             ego_mask_tensors = match_scales(ego_mask_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
-            inv_depths_clone = inv_depths.clone()
-            images_clone = images.clone()
+
+            inv_depths_clone = []
+            images_clone = []
+
+            for i in range(self.n):
+                inv_depths_clone.append(inv_depths[i].clone)
+                images_clone.append(images[i].clone)
             for i in range(self.n):
                 inv_depths_clone[i][~(ego_mask_tensors[i].to(dtype=bool).detach())] = 0
                 images_clone[i][~(ego_mask_tensors[i].to(dtype=bool).detach()).repeat(1,3,1,1)] = 0

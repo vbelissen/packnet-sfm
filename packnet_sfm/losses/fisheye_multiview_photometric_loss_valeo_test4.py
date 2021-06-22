@@ -399,8 +399,8 @@ class MultiViewPhotometricLoss(LossBase):
 
             #ref_ego_mask_tensors_warped = match_scales(ref_ego_mask_tensor_warped, inv_depths, self.n, mode='nearest')
             for i in range(self.n):
-                ref_ego_mask_tensors_warped[i] = ref_ego_mask_tensors_warped[i].to(dtype=bool).detach()
-                photometric_loss[i][~ref_ego_mask_tensors_warped[i]] = 0
+                mask = ref_ego_mask_tensors_warped[i].to(dtype=bool).detach()
+                photometric_loss[i][~mask] = 0
 
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i])
@@ -413,8 +413,8 @@ class MultiViewPhotometricLoss(LossBase):
             #loss += self.calc_smoothness_loss(inv_depths, images)
             ego_mask_tensors = match_scales(ego_mask_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
             for i in range(self.n):
-                ego_mask_tensors[i] = ego_mask_tensors[i].to(dtype=bool).detach()
-                inv_depths[i][~ego_mask_tensors[i]] = 0
+                mask = ego_mask_tensors[i].to(dtype=bool).detach()
+                inv_depths[i][~mask] = 0
                 images[i][~ego_mask_tensors[i].repeat(1,3,1,1)] = 0
             loss += self.calc_smoothness_loss(inv_depths, images)
         # Return losses and metrics

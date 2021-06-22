@@ -364,6 +364,7 @@ class MultiViewPhotometricLoss(LossBase):
         device = image.get_device()
 
         B = len(path_to_ego_mask)
+        torch.autograd.set_detect_anomaly(True)
 
         ego_mask_tensor     = torch.zeros(B, 1, 800, 1280)
         ref_ego_mask_tensor = [torch.zeros(B, 1, 800, 1280)] * n_context

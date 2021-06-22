@@ -389,7 +389,7 @@ class MultiViewPhotometricLoss(LossBase):
                                              pose)
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
 
-            ref_ego_mask_tensors_warped = match_scales(ref_ego_mask_tensor_warped, inv_depths, self.n, mode='nearest')
+            #ref_ego_mask_tensors_warped = match_scales(ref_ego_mask_tensor_warped, inv_depths, self.n, mode='nearest')
             for i in range(self.n):
                 ref_ego_mask_tensors_warped[i] = ref_ego_mask_tensors_warped[i].to(dtype=bool).detach()
                 photometric_loss[i][~ref_ego_mask_tensors_warped[i]] = 0

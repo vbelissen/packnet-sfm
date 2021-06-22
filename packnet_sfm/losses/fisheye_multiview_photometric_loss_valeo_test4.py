@@ -184,10 +184,18 @@ class MultiViewPhotometricLoss(LossBase):
                                           scale_factors=ref_scale_factors.float(), Tcw=pose).scaled(scale_factor).to(device))
         # View synthesis
         depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
-        ref_images = match_scales(ref_image, inv_depths, self.n)
-        ref_warped = [view_synthesis(
-            ref_images[i], depths[i], ref_cams[i], cams[i],
-            padding_mode=self.padding_mode, mode=mode) for i in range(self.n)]
+        if mode=='bilinear':
+            ref_images = match_scales(ref_image, inv_depths, self.n)
+            ref_warped = [view_synthesis(
+                ref_images[i], depths[i], ref_cams[i], cams[i],
+                padding_mode=self.padding_mode, mode=mode) for i in range(self.n)]
+        elif mode=='nearest':
+            ref_images = match_scales(ref_image, inv_depths, self.n, mode='nearest', align_corners=False)
+            ref_warped = [view_synthesis(
+                ref_images[i], depths[i], ref_cams[i], cams[i],
+                padding_mode=self.padding_mode, mode='nearest', align_corners=False) for i in range(self.n)]
+        else:
+            print('Issue')
         # Return warped reference image
         return ref_warped
 
@@ -403,7 +411,7 @@ class MultiViewPhotometricLoss(LossBase):
         # Include smoothness loss if requested
         if self.smooth_loss_weight > 0.0:
             #loss += self.calc_smoothness_loss(inv_depths, images)
-            ego_mask_tensors = match_scales(ego_mask_tensor, inv_depths, self.n, mode='nearest').detach()
+            ego_mask_tensors = match_scales(ego_mask_tensor, inv_depths, self.n, mode='nearest', align_corners=False).detach()
             loss += self.calc_smoothness_loss([a * b for a, b in zip(inv_depths, ego_mask_tensors)],
                                               [a * b for a, b in zip(images,     ego_mask_tensors)])
             #loss += self.calc_smoothness_loss(inv_depths, images)

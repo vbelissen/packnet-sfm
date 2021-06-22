@@ -81,7 +81,7 @@ def get_roots_table_tensor(poly_coeffs, principal_point, scale_factors, H, W):
 
 
 def view_synthesis(ref_image, depth, ref_cam, cam,
-                   mode='bilinear', padding_mode='zeros'):
+                   mode='bilinear', padding_mode='zeros', align_corners=True):
     """
     Synthesize an image from another plus a depth map.
 
@@ -112,7 +112,7 @@ def view_synthesis(ref_image, depth, ref_cam, cam,
     ref_coords = ref_cam.project(world_points, frame='w')
     # View-synthesis given the projected reference points
     return funct.grid_sample(ref_image, ref_coords, mode=mode,
-                             padding_mode=padding_mode, align_corners=True)
+                             padding_mode=padding_mode, align_corners=align_corners)
 
 
 ########################################################################################################################

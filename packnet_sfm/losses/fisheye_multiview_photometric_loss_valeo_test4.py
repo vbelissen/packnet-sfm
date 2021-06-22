@@ -478,8 +478,8 @@ class MultiViewPhotometricLoss(LossBase):
             images_clone = []
 
             for i in range(self.n):
-                inv_depths_clone.append(inv_depths[i].clone)
-                images_clone.append(images[i].clone)
+                inv_depths_clone.append(inv_depths[i].clone())
+                images_clone.append(images[i].clone())
             for i in range(self.n):
                 inv_depths_clone[i][~(ego_mask_tensors[i].to(dtype=bool).detach())] = 0
                 images_clone[i][~(ego_mask_tensors[i].to(dtype=bool).detach()).repeat(1,3,1,1)] = 0

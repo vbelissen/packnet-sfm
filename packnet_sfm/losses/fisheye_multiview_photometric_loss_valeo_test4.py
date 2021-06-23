@@ -343,13 +343,7 @@ class MultiViewPhotometricLoss(LossBase):
         # Reduce function
         def reduce_function(losses):
             if self.photometric_reduce_op == 'mean':
-                res = 0
-                for l in losses:
-                    mask = (l != 0).detach()
-                    if torch.sum(mask) > 0:
-                        res += l[mask].mean()
-                return res/len(losses)
-                #return sum([l.mean() for l in losses]) / len(losses)
+                return sum([l.mean() for l in losses]) / len(losses)
             elif self.photometric_reduce_op == 'min':
                 return torch.cat(losses, 1).min(1, True)[0].mean()
             else:

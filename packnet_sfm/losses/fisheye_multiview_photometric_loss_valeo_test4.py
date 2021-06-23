@@ -346,7 +346,7 @@ class MultiViewPhotometricLoss(LossBase):
                 res = 0
                 for l in losses:
                     mask = (l != 0).detach()
-                    if sum(mask) > 0:
+                    if torch.sum(mask) > 0:
                         res += l[mask].mean()
                 return res/len(losses)
                 #return sum([l.mean() for l in losses]) / len(losses)

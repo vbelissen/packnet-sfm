@@ -441,12 +441,7 @@ class MultiViewPhotometricLoss(LossBase):
                 ref_ego_mask_tensor[i_context][b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[i_context][b])).float()
 
         for i_context in range(n_context):
-            B, C, H, W = context[i_context].shape
-            if W < 1280:
-                inv_scale_factor = int(1280 / W)
-                ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]).to(device)
-            else:
-                ref_ego_mask_tensor[i_context] = ref_ego_mask_tensor[i_context].to(device)
+            ref_ego_mask_tensor[i_context] = ref_ego_mask_tensor[i_context].to(device)
             ego_mask_tensor = ego_mask_tensor.to(device)
 
         ego_mask_tensors = match_scales(ego_mask_tensor, inv_depths, self.n, mode='nearest', align_corners=None)

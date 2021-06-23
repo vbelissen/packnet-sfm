@@ -460,8 +460,8 @@ class MultiViewPhotometricLoss(LossBase):
 
 
             for i in range(self.n):
-                photometric_loss[i][~(ref_ego_mask_tensors_warped[i].to(dtype=bool).detach())] = 0
-                photometric_loss[i][~(ego_mask_tensors[i].to(dtype=bool).detach())] = 0
+                photometric_loss[i][~(ref_ego_mask_tensors_warped[i].to(dtype=bool).detach())] = 100
+                photometric_loss[i][~(ego_mask_tensors[i].to(dtype=bool).detach())] = 100
 
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i])

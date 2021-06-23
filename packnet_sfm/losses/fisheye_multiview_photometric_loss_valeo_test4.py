@@ -263,8 +263,8 @@ class MultiViewPhotometricLoss(LossBase):
         ref_tensors_warped = [view_synthesis(
             ref_tensors[i], depths[i], ref_cams[i], cams[i],
             padding_mode=self.padding_mode, mode='nearest', align_corners=None) for i in range(self.n)]
-        print(ref_tensors[0][:, :, ::40, ::40])
-        print(ref_tensors_warped[0][:, :, ::40, ::40])
+        #print(ref_tensors[0][:, :, ::40, ::40])
+        #print(ref_tensors_warped[0][:, :, ::40, ::40])
         # Return warped reference image
         return ref_warped, ref_tensors_warped
 

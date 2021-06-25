@@ -369,18 +369,13 @@ class MultiViewPhotometricLoss(LossBase):
                     ref_ego_mask_tensor[i_context][b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[i_context][b])).float()
 
             ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
-            ref_ego_mask_tensors = [[]] *  n_context  # = torch.zeros(B, 1, 800, 1280)
             for i in range(self.n):
                 B, C, H, W = images[i].shape
                 if W < 1280:
                     inv_scale_factor = int(1280 / W)
                     ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor).to(device))
-                    for i_context in range(n_context):
-                        ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]).to(device))
                 else:
                     ego_mask_tensors.append(ego_mask_tensor.to(device))
-                    for i_context in range(n_context):
-                        ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context].to(device))
                 # ego_mask_tensor = ego_mask_tensor.to(device)
 
             for i_context in range(n_context):
@@ -391,11 +386,11 @@ class MultiViewPhotometricLoss(LossBase):
                 else:
                     ref_ego_mask_tensor[i_context] = ref_ego_mask_tensor[i_context].to(device)
 
-        for j, (ref_image, pose, ref_tensor) in enumerate(zip(context, poses, ref_ego_mask_tensor)):
+        for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
             print(j)
             if self.mask_ego:
-                ref_warped = self.warp_ref_image(inv_depths, ref_image * ref_tensor,
+                ref_warped = self.warp_ref_image(inv_depths, ref_image * ref_ego_mask_tensor[j],
                                                  path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
                                                  ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
                                                  same_timestep_as_origin[j],
@@ -417,7 +412,7 @@ class MultiViewPhotometricLoss(LossBase):
                 print(photometric_loss[i][:,:,::20,::20])
                 for b in range(B):
                     orig_PIL_0   = torch.transpose((ref_image[b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    orig_PIL   = torch.transpose((ref_image[b,:,:,:]*ref_tensor[b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+                    orig_PIL   = torch.transpose((ref_image[b,:,:,:]* ref_ego_mask_tensor[j][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
                     warped_PIL_0 = torch.transpose((ref_warped[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
                     warped_PIL = torch.transpose((ref_warped[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
                     target_PIL_0 = torch.transpose((images[i][b, :, :, :]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()

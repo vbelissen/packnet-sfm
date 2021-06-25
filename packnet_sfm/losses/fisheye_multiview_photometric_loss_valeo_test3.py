@@ -367,29 +367,34 @@ class MultiViewPhotometricLoss(LossBase):
             for b in range(B):
                 ego_mask_tensor[b, 0]     = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
                 for i_context in range(n_context):
-                    print(ref_path_to_ego_mask[i_context][b])
                     ref_ego_mask_tensor[i_context][b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[i_context][b])).float()
 
-            ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
-            ref_ego_mask_tensors = [[]] *  n_context  # = torch.zeros(B, 1, 800, 1280)
-            for i in range(self.n):
-                B, C, H, W = images[i].shape
-                if W < 1280:
-                    inv_scale_factor = int(1280 / W)
-                    ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
-                    for i_context in range(n_context):
-                        ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]))
-                else:
-                    ego_mask_tensors.append(ego_mask_tensor)
-                    for i_context in range(n_context):
-                        ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context])
-                # ego_mask_tensor = ego_mask_tensor.to(device)
-
+            #ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
+            ref_ego_mask_tensors = []#[[]] *  n_context  # = torch.zeros(B, 1, 800, 1280)
             for i_context in range(n_context):
-                B, C, H, W = context[i_context].shape
-                if W < 1280:
-                    inv_scale_factor = int(1280 / W)
-                    ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
+                #ref_ego_mask_tensors.append([])
+                ref_ego_mask_tensors.append(match_scales(ref_ego_mask_tensor, inv_depths, self.n, mode='nearest', align_corners=None))
+
+            # for i in range(self.n):
+            #     B, C, H, W = images[i].shape
+            #     if W < 1280:
+            #         inv_scale_factor = int(1280 / W)
+            #         ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
+            #         for i_context in range(n_context):
+            #             ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]))
+            #     else:
+            #         ego_mask_tensors.append(ego_mask_tensor)
+            #         for i_context in range(n_context):
+            #             ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context])
+            #     # ego_mask_tensor = ego_mask_tensor.to(device)
+            #
+            # for i_context in range(n_context):
+            #     B, C, H, W = context[i_context].shape
+            #     if W < 1280:
+            #         inv_scale_factor = int(1280 / W)
+            #         ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
+
+            ego_mask_tensors = match_scales(ego_mask_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images

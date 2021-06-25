@@ -413,7 +413,7 @@ class MultiViewPhotometricLoss(LossBase):
             for i in range(self.n):
                 print(photometric_loss[i][:,:,::20,::20])
                 for b in range(B):
-                    warped_PIL = torch.transpose(ref_warped[i][b,:,:,:].unsqueeze(0).unsqueeze(4), 1, 4).squeeze().cpu().numpy()
+                    warped_PIL = torch.transpose(ref_warped[i][b,:,:,:].unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
                     tt = str(int(time.time() % 10000))
                     cv2.imwrite('/home/users/vbelissen/test' + tt + '_warped.png', warped_PIL)
 

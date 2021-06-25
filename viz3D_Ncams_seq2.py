@@ -533,7 +533,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         #         p2 = pcl_only_inliers[i_cam].select_by_index(np.where(np.asarray(dists) > threshold2)[0], invert=True).uniform_down_sample(down)#.voxel_down_sample(voxel_size=0.5)
         #         pcl_only_inliers[i_cam] = p1 + p2
 
-        for i_cam_n in range(360):
+        for i_cam_n in range(120):
             vis_only_inliers = o3d.visualization.Visualizer()
             vis_only_inliers.create_window(visible = True, window_name = 'inliers'+str(i_file))
             for i_cam in range(N_cams):
@@ -546,11 +546,11 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             ctr.set_front(front_vector)
             ctr.set_up(up_vector)
             ctr.set_zoom(zoom_float)
-            param = o3d.io.read_pinhole_camera_parameters('/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_'+str(i_cam_n)+'move.json')
+            param = o3d.io.read_pinhole_camera_parameters('/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_'+str(i_cam_n)+'v3.json')
             ctr.convert_from_pinhole_camera_parameters(param)
             opt = vis_only_inliers.get_render_option()
             opt.background_color = np.asarray([0, 0, 0])
-            opt.point_size = 4.0
+            opt.point_size = 3.0
             #opt.light_on = False
             #vis_only_inliers.update_geometry('inliers0')
             vis_only_inliers.poll_events()

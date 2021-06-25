@@ -415,9 +415,9 @@ class MultiViewPhotometricLoss(LossBase):
                 B, C, H, W = images[i].shape
                 print(photometric_loss[i][:,:,::20,::20])
                 for b in range(B):
-                    orig_PIL   = torch.transpose(ref_image[b,:,:,:].unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    warped_PIL = torch.transpose(ref_warped[i][b,:,:,:].unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    target_PIL = torch.transpose(images[i][b, :, :, :].unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+                    orig_PIL   = torch.transpose((ref_image[b,:,:,:]* ref_ego_mask_tensor[j][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+                    warped_PIL = torch.transpose((ref_warped[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+                    target_PIL = torch.transpose((images[i][b, :, :, :] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
 
                     cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_orig_PIL.png', orig_PIL*255)
                     cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL.png', warped_PIL * 255)

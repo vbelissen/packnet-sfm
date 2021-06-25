@@ -388,8 +388,8 @@ class MultiViewPhotometricLoss(LossBase):
                     ref_ego_mask_tensor[i_context] = ref_ego_mask_tensor[i_context].to(device)
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
-            print(progress)
             # Calculate warped images
+            print(j)
             if self.mask_ego:
                 ref_warped = self.warp_ref_image(inv_depths, ref_image * ref_ego_mask_tensor[j],
                                                  path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
@@ -407,8 +407,8 @@ class MultiViewPhotometricLoss(LossBase):
                                                  pose_matrix_context[j],
                                                  pose)
                 photometric_loss = self.calc_photometric_loss(ref_warped, images)
-                print(photometric_loss)
-                print(photometric_loss[0].shape)
+            print(photometric_loss)
+            print(photometric_loss[0].shape)
 
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i])

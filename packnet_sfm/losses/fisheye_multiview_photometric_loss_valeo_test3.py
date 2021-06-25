@@ -373,7 +373,7 @@ class MultiViewPhotometricLoss(LossBase):
             ref_ego_mask_tensors = []#[[]] *  n_context  # = torch.zeros(B, 1, 800, 1280)
             for i_context in range(n_context):
                 #ref_ego_mask_tensors.append([])
-                ref_ego_mask_tensors.append(match_scales(ref_ego_mask_tensor, inv_depths, self.n, mode='nearest', align_corners=None))
+                ref_ego_mask_tensors.append(match_scales(ref_ego_mask_tensor[i_context], inv_depths, self.n, mode='nearest', align_corners=None))
 
             # for i in range(self.n):
             #     B, C, H, W = images[i].shape

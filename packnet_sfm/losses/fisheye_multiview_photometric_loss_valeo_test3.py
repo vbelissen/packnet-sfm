@@ -407,7 +407,7 @@ class MultiViewPhotometricLoss(LossBase):
                                                  pose_matrix_context[j],
                                                  pose)
                 photometric_loss = self.calc_photometric_loss(ref_warped, images)
-            print(photometric_loss)
+            print(photometric_loss[i][:,:,::20,::20] for i in range(self.n))
             print(photometric_loss[0].shape)
 
             for i in range(self.n):

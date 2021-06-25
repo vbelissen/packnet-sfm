@@ -11,6 +11,9 @@ from packnet_sfm.geometry.camera_fisheye_valeo_utils import view_synthesis
 from packnet_sfm.utils.depth import calc_smoothness, inv2depth
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
 
+import cv2
+import time
+
 ########################################################################################################################
 
 def SSIM(x, y, C1=1e-4, C2=9e-4, kernel_size=3, stride=1):
@@ -409,6 +412,11 @@ class MultiViewPhotometricLoss(LossBase):
                 photometric_loss = self.calc_photometric_loss(ref_warped, images)
             for i in range(self.n):
                 print(photometric_loss[i][:,:,::20,::20])
+                for b in range(B):
+                    warped_PIL = torch.transpose(ref_warped[i][b,:,:,:].unsqueeze(0).unsqueeze(4), 1, 4).squeeze().cpu().numpy()
+                    tt = str(int(time.time() % 10000))
+                    cv2.imwrite('/home/users/vbelissen/test' + tt + '_warped.png', warped_PIL)
+
             print(photometric_loss[0].shape)
 
             for i in range(self.n):

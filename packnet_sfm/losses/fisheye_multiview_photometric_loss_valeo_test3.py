@@ -410,12 +410,13 @@ class MultiViewPhotometricLoss(LossBase):
                                                  pose_matrix_context[j],
                                                  pose)
                 photometric_loss = self.calc_photometric_loss(ref_warped, images)
+            tt = str(int(time.time() % 10000))
             for i in range(self.n):
                 print(photometric_loss[i][:,:,::20,::20])
                 for b in range(B):
                     warped_PIL = torch.transpose(ref_warped[i][b,:,:,:].unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    tt = str(int(time.time() % 10000))
-                    cv2.imwrite('/home/users/vbelissen/test' + tt + '_warped.png', warped_PIL)
+
+                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped.png', warped_PIL)
 
             print(photometric_loss[0].shape)
 

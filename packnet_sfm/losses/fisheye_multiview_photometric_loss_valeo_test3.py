@@ -369,32 +369,28 @@ class MultiViewPhotometricLoss(LossBase):
                 for i_context in range(n_context):
                     ref_ego_mask_tensor[i_context][b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[i_context][b])).float()
 
-            #ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
+            ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
             ref_ego_mask_tensors = []#[[]] *  n_context  # = torch.zeros(B, 1, 800, 1280)
             for i_context in range(n_context):
-                #ref_ego_mask_tensors.append([])
-                ref_ego_mask_tensors.append(match_scales(ref_ego_mask_tensor[i_context], inv_depths, self.n, mode='nearest', align_corners=None))
+                ref_ego_mask_tensors.append([])
+            for i in range(self.n):
+                B, C, H, W = images[i].shape
+                if W < 1280:
+                    inv_scale_factor = int(1280 / W)
+                    ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
+                    for i_context in range(n_context):
+                        ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]))
+                else:
+                    ego_mask_tensors.append(ego_mask_tensor)
+                    for i_context in range(n_context):
+                        ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context])
+                # ego_mask_tensor = ego_mask_tensor.to(device)
 
-            # for i in range(self.n):
-            #     B, C, H, W = images[i].shape
-            #     if W < 1280:
-            #         inv_scale_factor = int(1280 / W)
-            #         ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
-            #         for i_context in range(n_context):
-            #             ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]))
-            #     else:
-            #         ego_mask_tensors.append(ego_mask_tensor)
-            #         for i_context in range(n_context):
-            #             ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context])
-            #     # ego_mask_tensor = ego_mask_tensor.to(device)
-            #
-            # for i_context in range(n_context):
-            #     B, C, H, W = context[i_context].shape
-            #     if W < 1280:
-            #         inv_scale_factor = int(1280 / W)
-            #         ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
-
-            ego_mask_tensors = match_scales(ego_mask_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
+            for i_context in range(n_context):
+                B, C, H, W = context[i_context].shape
+                if W < 1280:
+                    inv_scale_factor = int(1280 / W)
+                    ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
@@ -416,26 +412,26 @@ class MultiViewPhotometricLoss(LossBase):
                                                  pose_matrix_context[j],
                                                  pose)
                 photometric_loss = self.calc_photometric_loss(ref_warped, images)
-            tt = str(int(time.time() % 10000))
-            for i in range(self.n):
-                B, C, H, W = images[i].shape
-                print(photometric_loss[i][:,:,::20,::20])
-                for b in range(B):
-                    orig_PIL_0   = torch.transpose((ref_image[b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    orig_PIL   = torch.transpose((ref_image[b,:,:,:]* ref_ego_mask_tensor[j][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    warped_PIL_0 = torch.transpose((ref_warped[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    warped_PIL = torch.transpose((ref_warped[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    target_PIL_0 = torch.transpose((images[i][b, :, :, :]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    target_PIL = torch.transpose((images[i][b, :, :, :] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_orig_PIL_0.png',   orig_PIL_0*255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_orig_PIL.png',   orig_PIL*255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_0.png', warped_PIL_0 * 255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL.png', warped_PIL * 255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_target_PIL_0.png', target_PIL_0 * 255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_target_PIL.png', target_PIL * 255)
-
-            print(photometric_loss[0].shape)
+            # tt = str(int(time.time() % 10000))
+            # for i in range(self.n):
+            #     B, C, H, W = images[i].shape
+            #     print(photometric_loss[i][:,:,::20,::20])
+            #     for b in range(B):
+            #         orig_PIL_0   = torch.transpose((ref_image[b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+            #         orig_PIL   = torch.transpose((ref_image[b,:,:,:]* ref_ego_mask_tensor[j][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+            #         warped_PIL_0 = torch.transpose((ref_warped[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+            #         warped_PIL = torch.transpose((ref_warped[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+            #         target_PIL_0 = torch.transpose((images[i][b, :, :, :]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+            #         target_PIL = torch.transpose((images[i][b, :, :, :] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+            #
+            #         cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_orig_PIL_0.png',   orig_PIL_0*255)
+            #         cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_orig_PIL.png',   orig_PIL*255)
+            #         cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_0.png', warped_PIL_0 * 255)
+            #         cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL.png', warped_PIL * 255)
+            #         cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_target_PIL_0.png', target_PIL_0 * 255)
+            #         cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_target_PIL.png', target_PIL * 255)
+            #
+            # print(photometric_loss[0].shape)
 
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i])

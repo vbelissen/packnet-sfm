@@ -660,9 +660,6 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                         self.calibration_cache[calib_identifier] = c_data
                     context_pose = self._get_extrinsics_pose_matrix(f, c_data)
                     image_context_pose.append(context_pose @ invert_pose_numpy(first_pose))
-                    print(self.paths[idx])
-                    print(f)
-                    print(context_pose @ invert_pose_numpy(first_pose))
                     #image_context_pose.append(invert_pose_numpy(invert_pose_numpy(context_pose) @ first_pose))
                     #else:
                     #    image_context_pose.append(None)

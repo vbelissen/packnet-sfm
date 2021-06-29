@@ -361,5 +361,5 @@ imwrite('/home/users/vbelissen/test'+ tt +'_depth_right_to_front.png', viz_pred_
 
 for threshold in [1.0, 1.1, 1.5, 2.0]:
     mask = threshold * simulated_depth_right_to_front < simulated_depth
-    mask[~not_masked_front] = 0
+    mask[simulated_depth_right == 0] = 0
     imwrite('/home/users/vbelissen/test' + tt + '_mask_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)

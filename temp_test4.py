@@ -352,7 +352,9 @@ cv2.imwrite('/home/users/vbelissen/test'+ tt +'_right_front.png',warped_right_fr
 simulated_depth_right_to_front = funct.grid_sample(simulated_depth_right, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
 
 viz_pred_inv_depth_front = viz_inv_depth(depth2inv(simulated_depth)[0]) * 255
-viz_pred_inv_depth_front_right = viz_inv_depth(depth2inv(simulated_depth_right)[0]) * 255
+viz_pred_inv_depth_right = viz_inv_depth(depth2inv(simulated_depth_right)[0]) * 255
+viz_pred_inv_depth_right_to_front = viz_inv_depth(depth2inv(simulated_depth_right_to_front)[0]) * 255
+
 
 imwrite('/home/users/vbelissen/test'+ tt +'_depth_front.png', viz_pred_inv_depth_front[:, :, ::-1])
-imwrite('/home/users/vbelissen/test'+ tt +'_depth_front_right.png', viz_pred_inv_depth_front_right[:, :, ::-1])
+imwrite('/home/users/vbelissen/test'+ tt +'_depth_right_to_front.png', viz_pred_inv_depth_right_to_front[:, :, ::-1])

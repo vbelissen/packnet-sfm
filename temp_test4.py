@@ -359,6 +359,7 @@ viz_pred_inv_depth_right_to_front = viz_inv_depth(depth2inv(simulated_depth_righ
 imwrite('/home/users/vbelissen/test'+ tt +'_depth_front.png', viz_pred_inv_depth_front[:, :, ::-1])
 imwrite('/home/users/vbelissen/test'+ tt +'_depth_right_to_front.png', viz_pred_inv_depth_right_to_front[:, :, ::-1])
 
-for threshold in [1.0, 1.1, 1.5]:
-    mask = threshold * simulated_depth_right_to_front[0,0,:,:] < simulated_depth[0,0,:,:]
-    imwrite('/home/users/vbelissen/test' + tt + '_mask_' + str(threshold) + '.png', mask.detach().cpu().numpy() * 255)
+for threshold in [1.0, 1.1, 1.5, 2.0]:
+    mask = threshold * simulated_depth_right_to_front < simulated_depth
+    mask[~not_masked_front] = 0
+    imwrite('/home/users/vbelissen/test' + tt + '_mask_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)

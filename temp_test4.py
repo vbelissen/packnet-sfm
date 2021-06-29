@@ -10,6 +10,10 @@ from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.datasets.kitti_based_valeo_dataset_utils import pose_from_oxts_packet, read_calib_file, read_raw_calib_files_camera_valeo, transform_from_rot_trans
 from packnet_sfm.geometry.pose_utils import invert_pose_numpy
 import time
+from packnet_sfm.utils.depth import write_depth, inv2depth, viz_inv_depth, depth2inv
+from cv2 import imwrite
+
+
 
 simulated_depth=torch.zeros(1,1,800,1280)
 for i in range(800):
@@ -343,3 +347,12 @@ warped_right_front = funct.grid_sample(front_img_torch, ref_coords_front, mode='
 
 warped_right_front_PIL = torch.transpose(warped_right_front.unsqueeze(4),1,4).squeeze().cpu().numpy()
 cv2.imwrite('/home/users/vbelissen/test'+ tt +'_right_front.png',warped_right_front_PIL)
+
+
+simulated_depth_right_to_front = funct.grid_sample(simulated_depth_right, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
+
+viz_pred_inv_depth_front = viz_inv_depth(depth2inv(simulated_depth)[0]) * 255
+viz_pred_inv_depth_front_right = viz_inv_depth(depth2inv(simulated_depth_right)[0]) * 255
+
+imwrite('/home/users/vbelissen/test'+ tt +'_depth_front.png', viz_pred_inv_depth_front[:, :, ::-1])
+imwrite('/home/users/vbelissen/test'+ tt +'_depth_front_right.png', viz_pred_inv_depth_front_right[:, :, ::-1])

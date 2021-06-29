@@ -2,13 +2,13 @@ import json
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-with open('/home/vbelissen/Downloads/test/cameras_jsons/test1.json') as json_base_file:
+with open('/home/vbelissen/Downloads/test/cameras_jsons/test3.json') as json_base_file:
     json_base_data = json.load(json_base_file)
 
-with open('/home/vbelissen/Downloads/test/cameras_jsons/test_persp.json') as json_base_file_persp:
+with open('/home/vbelissen/Downloads/test/cameras_jsons/test342.json') as json_base_file_persp:
     json_base_data_persp = json.load(json_base_file_persp)
 
-N = 120
+N = 90
 
 count = 0
 
@@ -28,7 +28,7 @@ for i in range(N):
     new_ext = list(new_ext.transpose().flatten())
 
     json_data['extrinsic'] = new_ext
-    with open('/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_' + str(count)+ 'v3' + '.json', 'w') as outfile:
+    with open('/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_' + str(count)+ 'v342' + '.json', 'w') as outfile:
         json.dump(json_data, outfile)
 
     count += 1

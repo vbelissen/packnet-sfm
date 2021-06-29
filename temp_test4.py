@@ -331,3 +331,15 @@ print(loss0[0][0,0,::100,::100])
 print(loss0b[0][0,0,::100,::100])
 print(loss1[0][0,0,::100,::100])
 print(loss2[0][0,0,::100,::100])
+
+simulated_depth_right = torch.from_numpy(np.load('/home/data/vbelissen/20170320_163113_cam_1_00006288.npz')['depth']).to(torch.device('cuda')).unsqueeze(0).unsqueeze(0)
+simulated_depth_right[~not_masked_right] = 0
+world_points_right = cam_right.reconstruct(simulated_depth_right,frame='w')
+
+ref_coords_front = cam_front.project(world_points_right, frame='w')
+
+front_img_torch[0, :, ~not_masked_front[0,0,:,:]] = 0
+warped_right_front = funct.grid_sample(front_img_torch, ref_coords_front, mode='bilinear', padding_mode='zeros', align_corners=True)
+
+warped_right_front_PIL = torch.transpose(warped_right_front.unsqueeze(4),1,4).squeeze().cpu().numpy()
+cv2.imwrite('/home/users/vbelissen/test'+ tt +'_right_front.png',warped_right_front_PIL)

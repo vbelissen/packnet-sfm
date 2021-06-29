@@ -2,6 +2,7 @@
 
 import argparse
 
+import PIL.Image
 import cv2
 import numpy as np
 import os
@@ -11,7 +12,8 @@ import torch.nn.functional as funct
 from tqdm import tqdm
 import scipy
 from scipy import interpolate
-
+from PIL import Image
+import gc
 
 
 from glob import glob
@@ -95,6 +97,15 @@ def is_image(file, ext=('.png', '.jpg',)):
     """Check if a file is an image with certain extensions"""
     return file.endswith(ext)
 
+margin = 15
+alpha_1 = 1
+alpha_reshape = .25*(2*int(alpha_1*1015)-2*margin)/800
+
+total_w = 2*int(1280*alpha_reshape) + int(alpha_1*1920) + 4 * margin
+total_h = 2*int(alpha_1*1015) + 3* margin
+
+print(total_w)
+print(total_h)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='PackNet-SfM 3D visualization of point clouds maps from images')
@@ -412,11 +423,16 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
         os.makedirs(os.path.join(output_folder, seq_name, 'rgb', camera_names[i_cam]), exist_ok=True)
 
     first_pic = True
-    for i_file in range(0, N_files, 10):
+    for i_file in range(0, N_files):
 
-        load_pred_masks = True
+        if first_pic:
+            load_pred_masks = False
+            print_lidar = False
+        else:
+            load_pred_masks = True
+            print_lidar = False
         remove_close_points_lidar_semantic = False
-        print_lidar = True
+
 
 
 
@@ -462,7 +478,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
 
         for i_cam in range(N_cams):
             print(i_cam)
-            mix_depths = True
+            mix_depths = False
             if mix_depths:
                 depths = (torch.ones(1, 3, 800, 1280)*500).cuda()
                 depths[0, 1, :, :] = pred_depths[i_cam][0, 0, :, :]
@@ -688,20 +704,166 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
                     pcl_only_inliers[i_cam] = p1 + p2
 
         if first_pic:
-            for i_cam_n in range(120):
+            for i_cam in range(N_cams):
+                rgb.append(images[i_cam][0].permute(1, 2, 0).detach().cpu().numpy() * 255)
+                viz_pred_inv_depths.append(viz_inv_depth(pred_inv_depths[i_cam][0], normalizer=0.8) * 255)
+                viz_pred_inv_depths[i_cam][not_masked[i_cam].reshape(image_shape) == 0] = 0
+            for i_cam_n in range(90):
+                new_im = Image.new('RGB', (total_w, total_h))
+                for frontRear in ['', 'rear']:
+                    if frontRear == '':
+                        file = 'front'
+                    else:
+                        file = 'rear'
+                    vis_only_inliers = o3d.visualization.Visualizer()
+                    vis_only_inliers.create_window(visible=True, window_name='inliers' + str(i_file))
+                    for i_cam in range(N_cams):
+                        vis_only_inliers.add_geometry(pcl_only_inliers[i_cam])
+                    for i, e in enumerate(pcl_gt):
+                        if e != 0:
+                            vis_only_inliers.add_geometry(e)
+                    ctr = vis_only_inliers.get_view_control()
+                    ctr.set_lookat(lookat_vector)
+                    ctr.set_front(front_vector)
+                    ctr.set_up(up_vector)
+                    ctr.set_zoom(zoom_float)
+                    param = o3d.io.read_pinhole_camera_parameters(
+                        '/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_' + str(
+                            i_cam_n) + 'v3' + frontRear + '.json')
+                    ctr.convert_from_pinhole_camera_parameters(param)
+                    opt = vis_only_inliers.get_render_option()
+                    opt.background_color = np.asarray([0, 0, 0])
+                    opt.point_size = 3.0
+                    # opt.light_on = False
+                    # vis_only_inliers.update_geometry('inliers0')
+                    vis_only_inliers.poll_events()
+                    vis_only_inliers.update_renderer()
+                    if stop:
+                        vis_only_inliers.run()
+                        pcd1 = pcl_only_inliers[0] + pcl_only_inliers[1] + pcl_only_inliers[2] + pcl_only_inliers[3]
+                        for i_cam3 in range(4):
+                            if has_gt_depth[i_cam3]:
+                                pcd1 += pcl_gt[i_cam3]
+                        # o3d.io.write_point_cloud(os.path.join(output_folder, seq_name, 'open3d', base_0 + '.pcd'), pcd1)
+                    # param = vis_only_inliers.get_view_control().convert_to_pinhole_camera_parameters()
+                    # o3d.io.write_pinhole_camera_parameters('/home/vbelissen/Downloads/test.json', param)
+                    image = vis_only_inliers.capture_screen_float_buffer(False)
+                    # plt.imsave(os.path.join(output_folder, seq_name, 'pcl',  'intro', file, 'intro_' + frontRear + str(i_cam_n) + '.png'), np.asarray(image), dpi=1)
+                    if frontRear == '':
+                        delta_y = margin
+                    else:
+                        delta_y = 2 * margin + int(alpha_1 * 1015)
+
+                    new_im.paste((Image.fromarray(np.uint8(255 * np.asarray(image)))).resize(
+                        (int(alpha_1 * 1920), int(alpha_1 * 1015)), PIL.Image.BILINEAR),
+                                 (3 * margin + 2 * int(1280 * alpha_reshape), delta_y))
+                    vis_only_inliers.destroy_window()
+                    del ctr
+                    del vis_only_inliers
+                    del opt
+
+                for i_cam in range(N_cams):
+                    new_im.paste((Image.fromarray(np.uint8(rgb[i_cam]))).resize((int(1280*alpha_reshape), int(800*alpha_reshape)), PIL.Image.BILINEAR),
+                                 (margin, margin + i_cam * (margin + int(800 * alpha_reshape))))
+                    new_im.paste((Image.fromarray(np.uint8(viz_pred_inv_depths[i_cam]))).resize((int(1280*alpha_reshape), int(800*alpha_reshape)), PIL.Image.BILINEAR),
+                                 (2 * margin + int(1280 * alpha_reshape), margin + i_cam * (margin + int(800 * alpha_reshape))))
+                new_im.save(os.path.join(output_folder, seq_name,'0_' + str(i_cam_n).zfill(5) + '.jpg'), 'JPEG', quality=80, optimize=True, progressive=True)
+                #plt.imsave(os.path.join(output_folder, seq_name,'intro_' + str(i_cam_n) + '.jpg'), new_im, dpi=1)
+
+
+            for i_cam_n in range(90):
+                new_im = Image.new('RGB', (total_w, total_h))
+                for idx, frontRear in enumerate(['', 'rear']):
+                    if frontRear == '':
+                        file = 'front'
+                    else:
+                        file = 'rear'
+                    vis_only_inliers = o3d.visualization.Visualizer()
+                    vis_only_inliers.create_window(visible=True, window_name='inliers' + str(i_file))
+                    for i_cam in range(N_cams):
+                        vis_only_inliers.add_geometry(pcl_only_inliers[i_cam])
+                    for i, e in enumerate(pcl_gt):
+                        if e != 0:
+                            vis_only_inliers.add_geometry(e)
+                    ctr = vis_only_inliers.get_view_control()
+                    ctr.set_lookat(lookat_vector)
+                    ctr.set_front(front_vector)
+                    ctr.set_up(up_vector)
+                    ctr.set_zoom(zoom_float)
+                    param = o3d.io.read_pinhole_camera_parameters(
+                        '/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_' + str(
+                            i_cam_n) + 'v34' + str(idx+1) + '.json')
+                    ctr.convert_from_pinhole_camera_parameters(param)
+                    opt = vis_only_inliers.get_render_option()
+                    opt.background_color = np.asarray([0, 0, 0])
+                    opt.point_size = 3.0
+                    # opt.light_on = False
+                    # vis_only_inliers.update_geometry('inliers0')
+                    vis_only_inliers.poll_events()
+                    vis_only_inliers.update_renderer()
+                    if stop:
+                        vis_only_inliers.run()
+                        pcd1 = pcl_only_inliers[0] + pcl_only_inliers[1] + pcl_only_inliers[2] + pcl_only_inliers[3]
+                        for i_cam3 in range(4):
+                            if has_gt_depth[i_cam3]:
+                                pcd1 += pcl_gt[i_cam3]
+                        # o3d.io.write_point_cloud(os.path.join(output_folder, seq_name, 'open3d', base_0 + '.pcd'), pcd1)
+                    # param = vis_only_inliers.get_view_control().convert_to_pinhole_camera_parameters()
+                    # o3d.io.write_pinhole_camera_parameters('/home/vbelissen/Downloads/test.json', param)
+                    image = vis_only_inliers.capture_screen_float_buffer(False)
+                    # plt.imsave(os.path.join(output_folder, seq_name, 'pcl',  'intro', file, 'intro_' + frontRear + str(i_cam_n) + '.png'), np.asarray(image), dpi=1)
+                    if frontRear == '':
+                        delta_y = margin
+                    else:
+                        delta_y = 2 * margin + int(alpha_1 * 1015)
+
+                    new_im.paste((Image.fromarray(np.uint8(255 * np.asarray(image)))).resize(
+                        (int(alpha_1 * 1920), int(alpha_1 * 1015)), PIL.Image.BILINEAR),
+                                 (3 * margin + 2 * int(1280 * alpha_reshape), delta_y))
+                    vis_only_inliers.destroy_window()
+                    del ctr
+                    del vis_only_inliers
+                    del opt
+
+                for i_cam in range(N_cams):
+                    new_im.paste((Image.fromarray(np.uint8(rgb[i_cam]))).resize((int(1280*alpha_reshape), int(800*alpha_reshape)), PIL.Image.BILINEAR),
+                                 (margin, margin + i_cam * (margin + int(800 * alpha_reshape))))
+                    new_im.paste((Image.fromarray(np.uint8(viz_pred_inv_depths[i_cam]))).resize((int(1280*alpha_reshape), int(800*alpha_reshape)), PIL.Image.BILINEAR),
+                                 (2 * margin + int(1280 * alpha_reshape), margin + i_cam * (margin + int(800 * alpha_reshape))))
+                new_im.save(os.path.join(output_folder, seq_name,'0_34_' + str(i_cam_n).zfill(5) + '.jpg'), 'JPEG', quality=80, optimize=True, progressive=True)
+                #plt.imsave(os.path.join(output_folder, seq_name,'intro_' + str(i_cam_n) + '.jpg'), new_im, dpi=1)
+
+
+            first_pic = False
+        else:
+            new_im = Image.new('RGB', (total_w, total_h))
+            for i_cam in range(N_cams):
+                rgb.append(images[i_cam][0].permute(1, 2, 0).detach().cpu().numpy() * 255)
+                viz_pred_inv_depths.append(viz_inv_depth(pred_inv_depths[i_cam][0], normalizer=0.8) * 255)
+                viz_pred_inv_depths[i_cam][not_masked[i_cam].reshape(image_shape) == 0] = 0
+            for frontRear in ['', 'rear']:
+                if frontRear == '':
+                    file = 'front'
+                else:
+                    file = 'rear'
+                i_cam2 = 0
+                #for i_cam2 in range(4):
+                #for suff in ['', 'bis', 'ter']:
+                suff = ''
                 vis_only_inliers = o3d.visualization.Visualizer()
                 vis_only_inliers.create_window(visible = True, window_name = 'inliers'+str(i_file))
                 for i_cam in range(N_cams):
                     vis_only_inliers.add_geometry(pcl_only_inliers[i_cam])
-                for i, e in enumerate(pcl_gt):
-                    if e != 0:
-                        vis_only_inliers.add_geometry(e)
+                if print_lidar:
+                    for i, e in enumerate(pcl_gt):
+                        if e != 0:
+                            vis_only_inliers.add_geometry(e)
                 ctr = vis_only_inliers.get_view_control()
                 ctr.set_lookat(lookat_vector)
                 ctr.set_front(front_vector)
                 ctr.set_up(up_vector)
                 ctr.set_zoom(zoom_float)
-                param = o3d.io.read_pinhole_camera_parameters('/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_'+str(i_cam_n)+'v3.json')
+                param = o3d.io.read_pinhole_camera_parameters('/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_'+str(90)+'v3' + frontRear + '.json')
                 ctr.convert_from_pinhole_camera_parameters(param)
                 opt = vis_only_inliers.get_render_option()
                 opt.background_color = np.asarray([0, 0, 0])
@@ -716,80 +878,103 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
                     for i_cam3 in range(4):
                         if has_gt_depth[i_cam3]:
                             pcd1 += pcl_gt[i_cam3]
-                    #o3d.io.write_point_cloud(os.path.join(output_folder, seq_name, 'open3d', base_0 + '.pcd'), pcd1)
-                param = vis_only_inliers.get_view_control().convert_to_pinhole_camera_parameters()
-                o3d.io.write_pinhole_camera_parameters('/home/vbelissen/Downloads/test.json', param)
+                    if i_cam2==0 and suff=='':
+                        o3d.io.write_point_cloud(os.path.join(output_folder, seq_name, 'open3d', base_0 + '.pcd'), pcd1)
+                #param = vis_only_inliers.get_view_control().convert_to_pinhole_camera_parameters()
+                #o3d.io.write_pinhole_camera_parameters('/home/vbelissen/Downloads/test.json', param)
                 image = vis_only_inliers.capture_screen_float_buffer(False)
-                plt.imsave(os.path.join(output_folder, seq_name, 'pcl',  base_0,  str(i_cam_n) + '.png'),
-                           np.asarray(image), dpi=1)
+                #plt.imsave(os.path.join(output_folder, seq_name, 'pcl', file, frontRear + str(i_file) + '.png'), np.asarray(image), dpi=1)
+                if frontRear == '':
+                    delta_y = margin
+                else:
+                    delta_y = 2 * margin + int(alpha_1*1015)
+                new_im.paste((Image.fromarray(np.uint8(255 * np.asarray(image)))).resize((int(alpha_1 * 1920), int(alpha_1 * 1015)), PIL.Image.BILINEAR),
+                    (3 * margin + 2 * int(1280 * alpha_reshape), delta_y))
                 vis_only_inliers.destroy_window()
                 del ctr
                 del vis_only_inliers
                 del opt
-            first_pic = False
-
-        i_cam2 = 0
-        #for i_cam2 in range(4):
-        #for suff in ['', 'bis', 'ter']:
-        suff = ''
-        vis_only_inliers = o3d.visualization.Visualizer()
-        vis_only_inliers.create_window(visible = True, window_name = 'inliers'+str(i_file))
-        for i_cam in range(N_cams):
-            vis_only_inliers.add_geometry(pcl_only_inliers[i_cam])
-        if print_lidar:
-            for i, e in enumerate(pcl_gt):
-                if e != 0:
-                    vis_only_inliers.add_geometry(e)
-        ctr = vis_only_inliers.get_view_control()
-        ctr.set_lookat(lookat_vector)
-        ctr.set_front(front_vector)
-        ctr.set_up(up_vector)
-        ctr.set_zoom(zoom_float)
-        param = o3d.io.read_pinhole_camera_parameters('/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_'+str(119)+'v3.json')
-        ctr.convert_from_pinhole_camera_parameters(param)
-        opt = vis_only_inliers.get_render_option()
-        opt.background_color = np.asarray([0, 0, 0])
-        opt.point_size = 3.0
-        #opt.light_on = False
-        #vis_only_inliers.update_geometry('inliers0')
-        vis_only_inliers.poll_events()
-        vis_only_inliers.update_renderer()
-        if stop:
-            vis_only_inliers.run()
-            pcd1 = pcl_only_inliers[0]+pcl_only_inliers[1]+pcl_only_inliers[2]+pcl_only_inliers[3]
-            for i_cam3 in range(4):
-                if has_gt_depth[i_cam3]:
-                    pcd1 += pcl_gt[i_cam3]
-            if i_cam2==0 and suff=='':
-                o3d.io.write_point_cloud(os.path.join(output_folder, seq_name, 'open3d', base_0 + '.pcd'), pcd1)
-        #param = vis_only_inliers.get_view_control().convert_to_pinhole_camera_parameters()
-        #o3d.io.write_pinhole_camera_parameters('/home/vbelissen/Downloads/test.json', param)
-        image = vis_only_inliers.capture_screen_float_buffer(False)
-        plt.imsave(os.path.join(output_folder, seq_name, 'pcl',  'normal',  str(i_cam2) + suff, base_0 + '_normal_' + str(i_cam2) + suff + '.png'),
-                   np.asarray(image), dpi=1)
-        vis_only_inliers.destroy_window()
-        del ctr
-        del vis_only_inliers
-        del opt
 
 
 
-        for i_cam in range(N_cams):
-            rgb.append(images[i_cam][0].permute(1, 2, 0).detach().cpu().numpy() * 255)
-            viz_pred_inv_depths.append(viz_inv_depth(pred_inv_depths[i_cam][0], normalizer=0.8) * 255)
-            viz_pred_inv_depths[i_cam][not_masked[i_cam].reshape(image_shape) == 0] = 0
-            concat = np.concatenate([rgb[i_cam], viz_pred_inv_depths[i_cam]], 0)
-            # Save visualization
-            output_file1 = os.path.join(output_folder, seq_name, 'depth', camera_names[i_cam], os.path.basename(input_files[i_cam][i_file]))
-            output_file2 = os.path.join(output_folder, seq_name, 'rgb', camera_names[i_cam], os.path.basename(input_files[i_cam][i_file]))
-            imwrite(output_file1, viz_pred_inv_depths[i_cam][:, :, ::-1])
-            # if has_full_mask[i_cam]:
-            #     full_mask = np.load(input_full_masks[i_cam])
-            #     mask_colors = label_colors[correspondence[full_mask]]
-            #     imwrite(output_file2, (1-alpha_mask) * rgb[i_cam][:, :, ::-1] + alpha_mask * mask_colors[:, :, ::-1]*255)
-            # else:
-            imwrite(output_file2, rgb[i_cam][:, :, ::-1])
+            for i_cam in range(N_cams):
+                new_im.paste((Image.fromarray(np.uint8(rgb[i_cam]))).resize((int(1280 * alpha_reshape), int(800 * alpha_reshape)), PIL.Image.BILINEAR),
+                    (margin, margin + i_cam * (margin + int(800 * alpha_reshape))))
+                new_im.paste((Image.fromarray(np.uint8(viz_pred_inv_depths[i_cam]))).resize((int(1280 * alpha_reshape), int(800 * alpha_reshape)), PIL.Image.BILINEAR),
+                             (2 * margin + int(1280 * alpha_reshape), margin + i_cam * (margin + int(800 * alpha_reshape))))
+            #new_im.save(os.path.join(output_folder, seq_name, 'sequence_' + str(i_file) + '.jpg'))
+            new_im.save(os.path.join(output_folder, seq_name, '1_' + str(i_file).zfill(5) + '.jpg'), 'JPEG', quality=80,
+                        optimize=True, progressive=True)
 
+            new_im = Image.new('RGB', (total_w, total_h))
+            for idx, frontRear in enumerate(['', 'rear']):
+                if frontRear == '':
+                    file = 'front'
+                else:
+                    file = 'rear'
+                i_cam2 = 0
+                # for i_cam2 in range(4):
+                # for suff in ['', 'bis', 'ter']:
+                suff = ''
+                vis_only_inliers = o3d.visualization.Visualizer()
+                vis_only_inliers.create_window(visible=True, window_name='inliers' + str(i_file))
+                for i_cam in range(N_cams):
+                    vis_only_inliers.add_geometry(pcl_only_inliers[i_cam])
+                if print_lidar:
+                    for i, e in enumerate(pcl_gt):
+                        if e != 0:
+                            vis_only_inliers.add_geometry(e)
+                ctr = vis_only_inliers.get_view_control()
+                ctr.set_lookat(lookat_vector)
+                ctr.set_front(front_vector)
+                ctr.set_up(up_vector)
+                ctr.set_zoom(zoom_float)
+                param = o3d.io.read_pinhole_camera_parameters(
+                    '/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_' + str(
+                        89) + 'v34' + str(idx + 1) + '.json')
+                ctr.convert_from_pinhole_camera_parameters(param)
+                opt = vis_only_inliers.get_render_option()
+                opt.background_color = np.asarray([0, 0, 0])
+                opt.point_size = 3.0
+                # opt.light_on = False
+                # vis_only_inliers.update_geometry('inliers0')
+                vis_only_inliers.poll_events()
+                vis_only_inliers.update_renderer()
+                if stop:
+                    vis_only_inliers.run()
+                    pcd1 = pcl_only_inliers[0] + pcl_only_inliers[1] + pcl_only_inliers[2] + pcl_only_inliers[3]
+                    for i_cam3 in range(4):
+                        if has_gt_depth[i_cam3]:
+                            pcd1 += pcl_gt[i_cam3]
+                    if i_cam2 == 0 and suff == '':
+                        o3d.io.write_point_cloud(os.path.join(output_folder, seq_name, 'open3d', base_0 + '.pcd'), pcd1)
+                # param = vis_only_inliers.get_view_control().convert_to_pinhole_camera_parameters()
+                # o3d.io.write_pinhole_camera_parameters('/home/vbelissen/Downloads/test.json', param)
+                image = vis_only_inliers.capture_screen_float_buffer(False)
+                # plt.imsave(os.path.join(output_folder, seq_name, 'pcl', file, frontRear + str(i_file) + '.png'), np.asarray(image), dpi=1)
+                if frontRear == '':
+                    delta_y = margin
+                else:
+                    delta_y = 2 * margin + int(alpha_1 * 1015)
+                new_im.paste((Image.fromarray(np.uint8(255 * np.asarray(image)))).resize(
+                    (int(alpha_1 * 1920), int(alpha_1 * 1015)), PIL.Image.BILINEAR),
+                             (3 * margin + 2 * int(1280 * alpha_reshape), delta_y))
+                vis_only_inliers.destroy_window()
+                del ctr
+                del vis_only_inliers
+                del opt
+
+            for i_cam in range(N_cams):
+                new_im.paste((Image.fromarray(np.uint8(rgb[i_cam]))).resize(
+                    (int(1280 * alpha_reshape), int(800 * alpha_reshape)), PIL.Image.BILINEAR),
+                             (margin, margin + i_cam * (margin + int(800 * alpha_reshape))))
+                new_im.paste((Image.fromarray(np.uint8(viz_pred_inv_depths[i_cam]))).resize(
+                    (int(1280 * alpha_reshape), int(800 * alpha_reshape)), PIL.Image.BILINEAR),
+                             (2 * margin + int(1280 * alpha_reshape),
+                              margin + i_cam * (margin + int(800 * alpha_reshape))))
+            # new_im.save(os.path.join(output_folder, seq_name, 'sequence_' + str(i_file) + '.jpg'))
+            new_im.save(os.path.join(output_folder, seq_name, '1_34_' + str(i_file).zfill(5) + '.jpg'), 'JPEG', quality=80,
+                        optimize=True, progressive=True)
 
 
 

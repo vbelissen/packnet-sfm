@@ -546,7 +546,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             ctr.set_front(front_vector)
             ctr.set_up(up_vector)
             ctr.set_zoom(zoom_float)
-            param = o3d.io.read_pinhole_camera_parameters('/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_'+str(i_cam_n)+'v3.json')
+            param = o3d.io.read_pinhole_camera_parameters('/home/vbelissen/Downloads/test/cameras_jsons/sequence/test1_'+str(i_cam_n)+'v3rear.json')
             ctr.convert_from_pinhole_camera_parameters(param)
             opt = vis_only_inliers.get_render_option()
             opt.background_color = np.asarray([0, 0, 0])

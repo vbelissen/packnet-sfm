@@ -224,7 +224,7 @@ ref_warped = warped_front_left_not_black * warped_front_right_black     * warped
                                                                      + warped_front_left_not_black_2 * warped_front_right_not_black_2 * (warped_front_left + warped_front_right) / 2)
 
 ref_warped_PIL = torch.transpose(ref_warped.unsqueeze(4),1,4).squeeze().cpu().numpy()
-cv2.imwrite('/home/users/vbelissen/test'+ tt +'_ref_warped.png',ref_warped_PIL)
+cv2.imwrite('/home/users/vbelissen/test'+ tt +'_ref_warped.png',ref_warped_PIL[:, :, ::-1])
 
 def SSIM(x, y, C1=1e-4, C2=9e-4, kernel_size=3, stride=1):
     """
@@ -346,7 +346,7 @@ front_img_torch[0, :, ~not_masked_front[0,0,:,:]] = 0
 warped_right_front = funct.grid_sample(front_img_torch, ref_coords_front, mode='bilinear', padding_mode='zeros', align_corners=True)
 
 warped_right_front_PIL = torch.transpose(warped_right_front.unsqueeze(4),1,4).squeeze().cpu().numpy()
-cv2.imwrite('/home/users/vbelissen/test'+ tt +'_right_front.png',warped_right_front_PIL)
+cv2.imwrite('/home/users/vbelissen/test'+ tt +'_right_front.png',warped_right_front_PIL[:, :, ::-1])
 
 
 simulated_depth_right_to_front = funct.grid_sample(simulated_depth_right, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
@@ -381,7 +381,7 @@ front_img_torch[0, :, ~not_masked_front[0,0,:,:]] = 0
 warped_left_front = funct.grid_sample(front_img_torch, ref_coords_front, mode='bilinear', padding_mode='zeros', align_corners=True)
 
 warped_left_front_PIL = torch.transpose(warped_left_front.unsqueeze(4),1,4).squeeze().cpu().numpy()
-cv2.imwrite('/home/users/vbelissen/test'+ tt +'_left_front.png',warped_left_front_PIL)
+cv2.imwrite('/home/users/vbelissen/test'+ tt +'_left_front.png',warped_left_front_PIL[:, :, ::-1])
 
 simulated_depth_left_to_front = funct.grid_sample(simulated_depth_left, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 

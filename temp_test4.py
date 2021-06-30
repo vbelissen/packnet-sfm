@@ -355,14 +355,19 @@ viz_pred_inv_depth_front = viz_inv_depth(depth2inv(simulated_depth)[0], normaliz
 viz_pred_inv_depth_right = viz_inv_depth(depth2inv(simulated_depth_right)[0], normalizer=1.0) * 255
 viz_pred_inv_depth_right_to_front = viz_inv_depth(depth2inv(simulated_depth_right_to_front)[0], normalizer=1.0) * 255
 
+world_points_right_in_front_coords = cam_front.Tcw @ world_points_right
+simulated_depth_right_in_front_coords = torch.norm(world_points_right_in_front_coords, dim=1, keepdim=True)
+simulated_depth_right_to_front_in_front_coords = funct.grid_sample(simulated_depth_right_in_front_coords, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
+viz_pred_inv_depth_right_to_front_in_front_coords = viz_inv_depth(depth2inv(simulated_depth_right_to_front_in_front_coords)[0], normalizer=1.0) * 255
 
 imwrite('/home/users/vbelissen/test'+ tt +'_depth_front.png', viz_pred_inv_depth_front[:, :, ::-1])
 imwrite('/home/users/vbelissen/test'+ tt +'_depth_right_to_front.png', viz_pred_inv_depth_right_to_front[:, :, ::-1])
+imwrite('/home/users/vbelissen/test'+ tt +'_depth_right_to_front_in_front_coords.png', viz_pred_inv_depth_right_to_front_in_front_coords[:, :, ::-1])
 
 for threshold in [1.0, 1.1, 1.5, 2.0]:
-    mask = threshold * simulated_depth_right_to_front < simulated_depth
-    mask[simulated_depth_right_to_front == 0] = 0
-    imwrite('/home/users/vbelissen/test' + tt + '_mask_right_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
+    mask = threshold * simulated_depth_right_to_front_in_front_coords < simulated_depth
+    mask[simulated_depth_right_to_front_in_front_coords == 0] = 0
+    imwrite('/home/users/vbelissen/test' + tt + '_mask_right_in_front_coords_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
 
 
 simulated_depth_left = torch.from_numpy(np.load('/home/data/vbelissen/20170320_163113_cam_3_00006286.npz')['depth']).to(torch.device('cuda')).unsqueeze(0).unsqueeze(0)
@@ -382,10 +387,18 @@ simulated_depth_left_to_front = funct.grid_sample(simulated_depth_left, ref_coor
 viz_pred_inv_depth_left = viz_inv_depth(depth2inv(simulated_depth_left)[0], normalizer=1.0) * 255
 viz_pred_inv_depth_left_to_front = viz_inv_depth(depth2inv(simulated_depth_left_to_front)[0], normalizer=1.0) * 255
 
+world_points_left_in_front_coords = cam_front.Tcw @ world_points_left
+simulated_depth_left_in_front_coords = torch.norm(world_points_left_in_front_coords, dim=1, keepdim=True)
+simulated_depth_left_to_front_in_front_coords = funct.grid_sample(simulated_depth_left_in_front_coords, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
+viz_pred_inv_depth_left_to_front_in_front_coords = viz_inv_depth(depth2inv(simulated_depth_left_to_front_in_front_coords)[0], normalizer=1.0) * 255
+
+
 
 imwrite('/home/users/vbelissen/test'+ tt +'_depth_left_to_front.png', viz_pred_inv_depth_left_to_front[:, :, ::-1])
+imwrite('/home/users/vbelissen/test'+ tt +'_depth_left_to_front_in_front_coords.png', viz_pred_inv_depth_left_to_front_in_front_coords[:, :, ::-1])
+
 
 for threshold in [1.0, 1.1, 1.5, 2.0]:
-    mask = threshold * simulated_depth_left_to_front < simulated_depth
-    mask[simulated_depth_left_to_front == 0] = 0
-    imwrite('/home/users/vbelissen/test' + tt + '_mask_left_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
+    mask = threshold * simulated_depth_left_to_front_in_front_coords < simulated_depth
+    mask[simulated_depth_left_to_front_in_front_coords == 0] = 0
+    imwrite('/home/users/vbelissen/test' + tt + '_mask_left_in_front_coords_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)

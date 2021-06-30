@@ -160,7 +160,7 @@ warped_front_left_PIL = torch.transpose(warped_front_left.unsqueeze(4),1,4).sque
 
 tt = str(int(time.time()%10000))
 
-cv2.imwrite('/home/users/vbelissen/test'+ tt +'_left.png',warped_front_left_PIL)
+cv2.imwrite('/home/users/vbelissen/test'+ tt +'_left.png',warped_front_left_PIL[:, :, ::-1])
 
 
 
@@ -193,7 +193,7 @@ warped_front_right = funct.grid_sample(right_img_torch, ref_coords_right, mode='
 
 
 warped_front_right_PIL = torch.transpose(warped_front_right.unsqueeze(4),1,4).squeeze().cpu().numpy()
-cv2.imwrite('/home/users/vbelissen/test'+ tt +'_right.png',warped_front_right_PIL)
+cv2.imwrite('/home/users/vbelissen/test'+ tt +'_right.png',warped_front_right_PIL[:, :, ::-1])
 
 
 

@@ -357,6 +357,7 @@ viz_pred_inv_depth_right_to_front = viz_inv_depth(depth2inv(simulated_depth_righ
 
 world_points_right_in_front_coords = cam_front.Tcw @ world_points_right
 simulated_depth_right_in_front_coords = torch.norm(world_points_right_in_front_coords, dim=1, keepdim=True)
+simulated_depth_right_in_front_coords[~not_masked_left] = 0
 simulated_depth_right_to_front_in_front_coords = funct.grid_sample(simulated_depth_right_in_front_coords, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
 viz_pred_inv_depth_right_to_front_in_front_coords = viz_inv_depth(depth2inv(simulated_depth_right_to_front_in_front_coords)[0], normalizer=1.0) * 255
 
@@ -389,6 +390,7 @@ viz_pred_inv_depth_left_to_front = viz_inv_depth(depth2inv(simulated_depth_left_
 
 world_points_left_in_front_coords = cam_front.Tcw @ world_points_left
 simulated_depth_left_in_front_coords = torch.norm(world_points_left_in_front_coords, dim=1, keepdim=True)
+simulated_depth_left_in_front_coords[~not_masked_left] = 0
 simulated_depth_left_to_front_in_front_coords = funct.grid_sample(simulated_depth_left_in_front_coords, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 viz_pred_inv_depth_left_to_front_in_front_coords = viz_inv_depth(depth2inv(simulated_depth_left_to_front_in_front_coords)[0], normalizer=1.0) * 255
 

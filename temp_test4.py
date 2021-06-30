@@ -362,4 +362,30 @@ imwrite('/home/users/vbelissen/test'+ tt +'_depth_right_to_front.png', viz_pred_
 for threshold in [1.0, 1.1, 1.5, 2.0]:
     mask = threshold * simulated_depth_right_to_front < simulated_depth
     mask[simulated_depth_right_to_front == 0] = 0
-    imwrite('/home/users/vbelissen/test' + tt + '_mask_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
+    imwrite('/home/users/vbelissen/test' + tt + '_mask_right_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
+
+
+simulated_depth_left = torch.from_numpy(np.load('/home/data/vbelissen/20170320_163113_cam_3_00006286.npz')['depth']).to(torch.device('cuda')).unsqueeze(0).unsqueeze(0)
+simulated_depth_left[~not_masked_left] = 0
+world_points_left = cam_left.reconstruct(simulated_depth_left,frame='w')
+
+ref_coords_front = cam_front.project(world_points_left, frame='w')
+
+front_img_torch[0, :, ~not_masked_front[0,0,:,:]] = 0
+warped_left_front = funct.grid_sample(front_img_torch, ref_coords_front, mode='bilinear', padding_mode='zeros', align_corners=True)
+
+warped_left_front_PIL = torch.transpose(warped_left_front.unsqueeze(4),1,4).squeeze().cpu().numpy()
+cv2.imwrite('/home/users/vbelissen/test'+ tt +'_left_front.png',warped_left_front_PIL)
+
+simulated_depth_left_to_front = funct.grid_sample(simulated_depth_left, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
+
+viz_pred_inv_depth_left = viz_inv_depth(depth2inv(simulated_depth_left)[0], normalizer=1.0) * 255
+viz_pred_inv_depth_left_to_front = viz_inv_depth(depth2inv(simulated_depth_left_to_front)[0], normalizer=1.0) * 255
+
+
+imwrite('/home/users/vbelissen/test'+ tt +'_depth_left_to_front.png', viz_pred_inv_depth_left_to_front[:, :, ::-1])
+
+for threshold in [1.0, 1.1, 1.5, 2.0]:
+    mask = threshold * simulated_depth_left_to_front < simulated_depth
+    mask[simulated_depth_left_to_front == 0] = 0
+    imwrite('/home/users/vbelissen/test' + tt + '_mask_left_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)

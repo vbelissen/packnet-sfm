@@ -2,13 +2,13 @@
 
 import torch
 
-from packnet_sfm.models.SelfSupModel_fisheye_valeo_testPose import SfmModel, SelfSupModel_fisheye_valeo_testPose
+from packnet_sfm.models.SelfSupModel_fisheye_valeo_testPose3 import SfmModel, SelfSupModel_fisheye_valeo_testPose3
 from packnet_sfm.losses.supervised_loss_valeo import SupervisedLoss
 from packnet_sfm.models.model_utils import merge_outputs
 from packnet_sfm.utils.depth import depth2inv
 
 
-class SemiSupModel_fisheye_valeo_testPose(SelfSupModel_fisheye_valeo_testPose):
+class SemiSupModel_fisheye_valeo_testPose3(SelfSupModel_fisheye_valeo_testPose3):
     """
     Model that inherits a depth and pose networks, plus the self-supervised loss from
     SelfSupModel and includes a supervised loss for semi-supervision.

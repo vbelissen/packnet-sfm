@@ -96,7 +96,7 @@ class MultiViewPhotometricLoss(LossBase):
     def __init__(self, num_scales=4, ssim_loss_weight=0.85, occ_reg_weight=0.1, smooth_loss_weight=0.1,
                  C1=1e-4, C2=9e-4, photometric_reduce_op='mean', disp_norm=True, clip_loss=0.5,
                  progressive_scaling=0.0, padding_mode='zeros',
-                 automask_loss=False, mask_ego=True, **kwargs):
+                 automask_loss=False, mask_ego=True, warp_ego_tensor=False, **kwargs):
         super().__init__()
         self.n = num_scales
         self.progressive_scaling = progressive_scaling
@@ -111,6 +111,7 @@ class MultiViewPhotometricLoss(LossBase):
         self.padding_mode = padding_mode
         self.automask_loss = automask_loss
         self.mask_ego = mask_ego
+        self.warp_ego_tensor = warp_ego_tensor
         self.progressive_scaling = ProgressiveScaling(
             progressive_scaling, self.n)
 
@@ -192,6 +193,75 @@ class MultiViewPhotometricLoss(LossBase):
             padding_mode=self.padding_mode) for i in range(self.n)]
         # Return warped reference image
         return ref_warped
+
+    def warp_ref_image_tensor(self, inv_depths, ref_image, ref_tensor,
+                       path_to_theta_lut,     path_to_ego_mask,     poly_coeffs,      principal_point,      scale_factors,
+                       ref_path_to_theta_lut, ref_path_to_ego_mask, ref_poly_coeffs,  ref_principal_point,  ref_scale_factors,
+                       same_timestamp_as_origin,
+                       pose_matrix_context,
+                       pose):
+        """
+        Warps a reference image to produce a reconstruction of the original one.
+
+        Parameters
+        ----------
+        inv_depths : torch.Tensor [B,1,H,W]
+            Inverse depth map of the original image
+        ref_image : torch.Tensor [B,3,H,W]
+            Reference RGB image
+        K : torch.Tensor [B,3,3]
+            Original camera intrinsics
+        ref_K : torch.Tensor [B,3,3]
+            Reference camera intrinsics
+        pose : Pose
+            Original -> Reference camera transformation
+
+        Returns
+        -------
+        ref_warped : torch.Tensor [B,3,H,W]
+            Warped reference image (reconstructing the original one)
+        """
+        B, _, H, W = ref_image.shape
+        device = ref_image.get_device()
+        # Generate cameras for all scales
+        cams, ref_cams = [], []
+        for b in range(B):
+            if same_timestamp_as_origin[b]:
+                pose.mat[b, :, :] = pose_matrix_context[b, :, :]
+        # pose_matrix = torch.zeros(B, 4, 4)
+        # for b in range(B):
+        #     if not same_timestamp_as_origin[b]:
+        #         pose_matrix[b, :, :] = pose.mat[b, :, :]
+        #     else:
+        #         pose_matrix[b, :, :] = pose_matrix_context[b, :, :]
+        #pose_matrix = Pose(pose_matrix)
+        for i in range(self.n):
+            _, _, DH, DW = inv_depths[i].shape
+            scale_factor = DW / float(W)
+            cams.append(CameraFisheye(path_to_theta_lut=path_to_theta_lut,
+                                      path_to_ego_mask=path_to_ego_mask,
+                                      poly_coeffs=poly_coeffs.float(),
+                                      principal_point=principal_point.float(),
+                                      scale_factors=scale_factors.float()).scaled(scale_factor).to(device))
+            ref_cams.append(CameraFisheye(path_to_theta_lut=ref_path_to_theta_lut,
+                                          path_to_ego_mask=ref_path_to_ego_mask,
+                                          poly_coeffs=ref_poly_coeffs.float(),
+                                          principal_point=ref_principal_point.float(),
+                                          scale_factors=ref_scale_factors.float(), Tcw=pose).scaled(scale_factor).to(device))
+        # View synthesis
+        depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
+        ref_images = match_scales(ref_image, inv_depths, self.n)
+        ref_warped = [view_synthesis(
+            ref_images[i], depths[i], ref_cams[i], cams[i],
+            padding_mode=self.padding_mode, mode='bilinear') for i in range(self.n)]
+        ref_tensors = match_scales(ref_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
+        ref_tensors_warped = [view_synthesis(
+            ref_tensors[i], depths[i], ref_cams[i], cams[i],
+            padding_mode=self.padding_mode, mode='nearest', align_corners=None) for i in range(self.n)]
+        #print(ref_tensors[0][:, :, ::40, ::40])
+        #print(ref_tensors_warped[0][:, :, ::40, ::40])
+        # Return warped reference image
+        return ref_warped, ref_tensors_warped
 
 ########################################################################################################################
 
@@ -352,7 +422,6 @@ class MultiViewPhotometricLoss(LossBase):
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
 
-        #context = context[-2:]
         n_context = len(context)
 
         if self.mask_ego:
@@ -395,14 +464,27 @@ class MultiViewPhotometricLoss(LossBase):
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
             if self.mask_ego:
-                ref_warped = self.warp_ref_image(inv_depths, ref_image * ref_ego_mask_tensor[j],
-                                                 path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
-                                                 ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
-                                                 same_timestep_as_origin[j],
-                                                 pose_matrix_context[j],
-                                                 pose)
-                photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ego_mask_tensors)],
-                                                              [a * b for a, b in zip(images,     ego_mask_tensors)])
+                if self.warp_ego_tensor:
+                    ref_warped, ref_ego_mask_tensors_warped \
+                        = self.warp_ref_image_tensor(inv_depths, ref_image, ref_ego_mask_tensor[j],
+                                                     path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
+                                                     ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
+                                                     same_timestep_as_origin[j],
+                                                     pose_matrix_context[j],
+                                                     pose)
+                    photometric_loss = self.calc_photometric_loss(
+                        [a * b * c for a, b, c in zip(ref_warped, ego_mask_tensors, ref_ego_mask_tensors_warped)],
+                        [a * b     for a, b    in zip(images,     ego_mask_tensors)])
+
+                else:
+                    ref_warped = self.warp_ref_image(inv_depths, ref_image * ref_ego_mask_tensor[j],
+                                                     path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
+                                                     ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
+                                                     same_timestep_as_origin[j],
+                                                     pose_matrix_context[j],
+                                                     pose)
+                    photometric_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_warped, ego_mask_tensors)],
+                                                                  [a * b for a, b in zip(images,     ego_mask_tensors)])
             else:
                 ref_warped = self.warp_ref_image(inv_depths, ref_image,
                                                  path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
@@ -438,7 +520,6 @@ class MultiViewPhotometricLoss(LossBase):
             if self.automask_loss:
                 # Calculate and store unwarped image loss
                 ref_images = match_scales(ref_image, inv_depths, self.n)
-                #unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
                 if self.mask_ego:
                     unwarped_image_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_images, ref_ego_mask_tensors[j])],
                                                                      [a * b for a, b in zip(images,     ego_mask_tensors)])
@@ -450,7 +531,6 @@ class MultiViewPhotometricLoss(LossBase):
         loss = self.reduce_photometric_loss(photometric_losses)
         # Include smoothness loss if requested
         if self.smooth_loss_weight > 0.0:
-            #loss += self.calc_smoothness_loss(inv_depths, images)
             if self.mask_ego:
                 loss += self.calc_smoothness_loss([a * b for a, b in zip(inv_depths, ego_mask_tensors)],
                                                   [a * b for a, b in zip(images,     ego_mask_tensors)])

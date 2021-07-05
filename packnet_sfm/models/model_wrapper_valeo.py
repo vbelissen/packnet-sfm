@@ -508,7 +508,7 @@ def setup_dataset(config, mode, requirements, **kwargs):
         path_split = os.path.join(config.path[i], config.split[i])
 
         # Individual shared dataset arguments
-        if config.dataset[i] == 'KITTIValeoFisheye' or config.dataset[i] == 'KITTIValeoFisheye2':
+        if config.dataset[i] == 'KITTIValeoFisheye':
             dataset_args_i = {
                 'depth_type': config.depth_type[i] if requirements['gt_depth'] else None,
                 'with_pose': requirements['gt_pose'],
@@ -562,13 +562,6 @@ def setup_dataset(config, mode, requirements, **kwargs):
             from packnet_sfm.datasets.kitti_based_valeo_dataset_fisheye_singleView import \
                 KITTIBasedValeoDatasetFisheye_singleView
             dataset = KITTIBasedValeoDatasetFisheye_singleView(
-                config.path[i], path_split,
-                **dataset_args, **dataset_args_i,
-                cameras=config.cameras[i],
-            )
-        elif config.dataset[i] == 'KITTIValeoFisheye2':
-            from packnet_sfm.datasets.kitti_based_valeo_dataset_fisheye_singleView2 import KITTIBasedValeoDatasetFisheye_singleView2
-            dataset = KITTIBasedValeoDatasetFisheye_singleView2(
                 config.path[i], path_split,
                 **dataset_args, **dataset_args_i,
                 cameras=config.cameras[i],

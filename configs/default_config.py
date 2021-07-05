@@ -83,31 +83,32 @@ cfg.model.params.max_depth = 80.0       # Maximum depth value to evaluate
 ########################################################################################################################
 cfg.model.loss = CN()
 #
-cfg.model.loss.num_scales = 4                   # Number of inverse depth scales to use
-cfg.model.loss.progressive_scaling = 0.0        # Training percentage to decay number of scales
-cfg.model.loss.flip_lr_prob = 0.5               # Probablity of horizontal flippping
-cfg.model.loss.rotation_mode = 'euler'          # Rotation mode
-cfg.model.loss.upsample_depth_maps = True       # Resize depth maps to highest resolution
+cfg.model.loss.num_scales = 4                           # Number of inverse depth scales to use
+cfg.model.loss.progressive_scaling = 0.0                # Training percentage to decay number of scales
+cfg.model.loss.flip_lr_prob = 0.5                       # Probablity of horizontal flippping
+cfg.model.loss.rotation_mode = 'euler'                  # Rotation mode
+cfg.model.loss.upsample_depth_maps = True               # Resize depth maps to highest resolution
 #
-cfg.model.loss.ssim_loss_weight = 0.85          # SSIM loss weight
-cfg.model.loss.occ_reg_weight = 0.1             # Occlusion regularizer loss weight
-cfg.model.loss.smooth_loss_weight = 0.001       # Smoothness loss weight
-cfg.model.loss.C1 = 1e-4                        # SSIM parameter
-cfg.model.loss.C2 = 9e-4                        # SSIM parameter
-cfg.model.loss.photometric_reduce_op = 'min'    # Method for photometric loss reducing
-cfg.model.loss.disp_norm = True                 # Inverse depth normalization
-cfg.model.loss.clip_loss = 0.0                  # Clip loss threshold variance
-cfg.model.loss.padding_mode = 'zeros'           # Photometric loss padding mode
-cfg.model.loss.automask_loss = True             # Automasking to remove static pixels
+cfg.model.loss.ssim_loss_weight = 0.85                  # SSIM loss weight
+cfg.model.loss.occ_reg_weight = 0.1                     # Occlusion regularizer loss weight
+cfg.model.loss.smooth_loss_weight = 0.001               # Smoothness loss weight
+cfg.model.loss.C1 = 1e-4                                # SSIM parameter
+cfg.model.loss.C2 = 9e-4                                # SSIM parameter
+cfg.model.loss.photometric_reduce_op = 'min'            # Method for photometric loss reducing
+cfg.model.loss.disp_norm = True                         # Inverse depth normalization
+cfg.model.loss.clip_loss = 0.0                          # Clip loss threshold variance
+cfg.model.loss.padding_mode = 'zeros'                   # Photometric loss padding mode
+cfg.model.loss.automask_loss = True                     # Automasking to remove static pixels
 #
-cfg.model.loss.velocity_loss_weight = 0.1       # Velocity supervision loss weight
+cfg.model.loss.velocity_loss_weight = 0.1               # Velocity supervision loss weight
 #
-cfg.model.loss.supervised_method = 'sparse-l1'  # Method for depth supervision
-cfg.model.loss.supervised_num_scales = 4        # Number of scales for supervised learning
-cfg.model.loss.supervised_loss_weight = 0.9     # Supervised loss weight
-cfg.model.loss.reprojected_loss_weight = 10000.
-cfg.model.loss.mask_ego = False
-cfg.model.loss.mask_out_of_bounds_reprojected = False
+cfg.model.loss.supervised_method = 'sparse-l1'          # Method for depth supervision
+cfg.model.loss.supervised_num_scales = 4                # Number of scales for supervised learning
+cfg.model.loss.supervised_loss_weight = 0.9             # Supervised loss weight
+cfg.model.loss.reprojected_loss_weight = 10000.         # Reprojected loss weight
+cfg.model.loss.mask_ego = False                         # Ego-masking
+cfg.model.loss.warp_ego_tensor = False                  # Whether to warp ego mask (if not, context images are masked beforehand)
+cfg.model.loss.mask_out_of_bounds_reprojected = False   # Masking out-of-bounds reprojected pixels
 ########################################################################################################################
 ### MODEL.DEPTH_NET
 ########################################################################################################################

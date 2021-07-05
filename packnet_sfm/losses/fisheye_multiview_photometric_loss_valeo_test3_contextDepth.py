@@ -191,11 +191,12 @@ class MultiViewPhotometricLoss(LossBase):
         depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
         ref_depths = [inv2depth(ref_inv_depths[i]) for i in range(self.n)]
         ref_images = match_scales(ref_image, inv_depths, self.n)
-        ref_warped, ref_depths_warped = [view_depth_synthesis(ref_images[i],
-                                                              depths[i],
-                                                              ref_depths[i],
-                                                              ref_cams[i],
-                                                              cams[i], padding_mode=self.padding_mode) for i in range(self.n)]
+        ref_warped = []
+        ref_depths_warped = []
+        for i in range(self.n):
+            view_i, depth_i = view_depth_synthesis(ref_images[i], depths[i], ref_depths[i], ref_cams[i], cams[i], padding_mode=self.padding_mode)
+            ref_warped.append(view_i)
+            ref_depths_warped.append(depth_i)
         ref_inv_depths_warped = [depth2inv(ref_depths_warped[i]) for i in range(self.n)]
         # Return warped reference image
         return ref_warped, ref_inv_depths_warped
@@ -483,7 +484,7 @@ class MultiViewPhotometricLoss(LossBase):
                         [a * b     for a, b    in zip(images,     ego_mask_tensors)])
 
                 else:
-                    ref_warped, ref_inv_depths_warped = self.warp_ref_image_depth(inv_depths, ref_image, ref_inv_depths[j],
+                    ref_warped, ref_inv_depths_warped = self.warp_ref_image_depth(inv_depths, ref_image * ref_ego_mask_tensor[j], ref_inv_depths[j] * ref_ego_mask_tensor[j],
                                                                path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
                                                                ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
                                                                same_timestep_as_origin[j],

@@ -431,6 +431,9 @@ class MultiViewPhotometricLoss(LossBase):
 
         n_context = len(context)
 
+        print(inv_depths)
+        print(ref_inv_depths)
+
         if self.mask_ego:
             device = image.get_device()
 

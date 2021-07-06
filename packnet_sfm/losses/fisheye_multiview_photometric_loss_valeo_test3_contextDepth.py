@@ -431,9 +431,6 @@ class MultiViewPhotometricLoss(LossBase):
 
         n_context = len(context)
 
-        print(inv_depths)
-        print(ref_inv_depths)
-
         if self.mask_ego:
             device = image.get_device()
 
@@ -487,12 +484,13 @@ class MultiViewPhotometricLoss(LossBase):
                         [a * b     for a, b    in zip(images,     ego_mask_tensors)])
 
                 else:
-                    ref_warped, ref_inv_depths_warped = self.warp_ref_image_depth(inv_depths, ref_image * ref_ego_mask_tensor[j], ref_inv_depths[j] * ref_ego_mask_tensor[j],
-                                                               path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
-                                                               ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
-                                                               same_timestep_as_origin[j],
-                                                               pose_matrix_context[j],
-                                                               pose)
+                    ref_warped, ref_inv_depths_warped \
+                        = self.warp_ref_image_depth(inv_depths, ref_image * ref_ego_mask_tensor[j],
+                                                    [ref_inv_depths[j][i] * ref_ego_mask_tensor[j][i] for i in range(self.n)],
+                                                    ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
+                                                    same_timestep_as_origin[j],
+                                                    pose_matrix_context[j],
+                                                    pose)
                     coeff_margin_occlusion = 1.5
                     occlusion_masks = [torch.logical_and(inv_depths[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i],
                                                          ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths[i]) for i in range(self.n)]

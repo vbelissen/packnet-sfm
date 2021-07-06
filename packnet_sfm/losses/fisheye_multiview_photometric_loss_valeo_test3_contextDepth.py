@@ -497,7 +497,7 @@ class MultiViewPhotometricLoss(LossBase):
                     # for i in range(self.n):
                     #     occlusion_masks[i][occlusion_masks[i] == 0] = 5.0
                     photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ego_mask_tensors, occlusion_masks)],
-                                                                  [a * b * c for a, b, c in zip(images,     ego_mask_tensors)])
+                                                                  [a * b     for a, b    in zip(images,     ego_mask_tensors)])
             else:
                 ref_warped = self.warp_ref_image(inv_depths, ref_image,
                                                  path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,

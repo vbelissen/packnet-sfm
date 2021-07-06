@@ -90,17 +90,17 @@ class SelfSupModel_fisheye_valeo_testPose3_contextDepth(SfmModel):
         """
         # Calculate predicted depth and pose output
         output = super().forward(batch, return_logs=return_logs)
-        with torch.no_grad():
-            context_inv_depths = []
-            n_context = len(batch['rgb_context_original'])
-            for i_context in range(n_context):
-                context = {'rgb': batch['rgb_context_original'][i_context]}
-                output_context = super().forward(context, return_logs=return_logs)
-                context_inv_depths.append(output_context['inv_depths'])
         if not self.training:
             # If not training, no need for self-supervised loss
             return output
         else:
+            with torch.no_grad():
+                context_inv_depths = []
+                n_context = len(batch['rgb_context_original'])
+                for i_context in range(n_context):
+                    context = {'rgb': batch['rgb_context_original'][i_context]}
+                    output_context = super().forward(context, return_logs=return_logs)
+                    context_inv_depths.append(output_context['inv_depths'])
             # Otherwise, calculate self-supervised loss
             self_sup_output = self.self_supervised_loss(
                 batch['rgb_original'], batch['rgb_context_original'],

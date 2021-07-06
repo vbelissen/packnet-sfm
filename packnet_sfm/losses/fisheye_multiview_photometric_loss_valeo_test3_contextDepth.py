@@ -493,9 +493,9 @@ class MultiViewPhotometricLoss(LossBase):
                                                     pose_matrix_context[j],
                                                     pose)
                     coeff_margin_occlusion = 1.5
-                    occlusion_masks = [((inv_depths[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i]) * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths[i])) for i in range(self.n)]
-                    # for i in range(self.n):
-                    #     occlusion_masks[i][occlusion_masks[i] == 0] = 5.0
+                    occlusion_masks = [((inv_depths[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i]) * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths[i])).float() for i in range(self.n)]
+                    for i in range(self.n):
+                        occlusion_masks[i][occlusion_masks[i] == 0] = 5.0
                     photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ego_mask_tensors, occlusion_masks)],
                                                                   [a * b * c for a, b, c in zip(images,     ego_mask_tensors, occlusion_masks)])
             else:

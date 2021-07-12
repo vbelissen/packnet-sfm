@@ -454,3 +454,22 @@ for threshold in [0.5, 1.0, 2.0, 5.0]:
     mask = (~(mask1*mask2))*not_masked_left_warped
     imwrite('/home/users/vbelissen/test' + tt + '_mask_3d_left_in_front_coords_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
 
+
+
+depth_map_front_wrt_right = torch.norm(cam_right.Tcw @ world_points, dim=1, keepdim=True)
+simulated_depth_right_to_front = funct.grid_sample(simulated_depth_right, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
+for threshold in [1.0, 1.1, 1.5, 2.0]:
+    mask = simulated_depth_right_to_front < threshold * depth_map_front_wrt_right
+    imwrite('/home/users/vbelissen/test' + tt + '_mask_new_right_1_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
+    mask = depth_map_front_wrt_right < threshold * simulated_depth_right_to_front
+    imwrite('/home/users/vbelissen/test' + tt + '_mask_new_right_2_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
+
+
+depth_map_front_wrt_left = torch.norm(cam_left.Tcw @ world_points, dim=1, keepdim=True)
+simulated_depth_left_to_front = funct.grid_sample(simulated_depth_left, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
+for threshold in [1.0, 1.1, 1.5, 2.0]:
+    mask = simulated_depth_left_to_front < threshold * depth_map_front_wrt_left
+    imwrite('/home/users/vbelissen/test' + tt + '_mask_new_left_1_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
+    mask = depth_map_front_wrt_left < threshold * simulated_depth_left_to_front
+    imwrite('/home/users/vbelissen/test' + tt + '_mask_new_left_2_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
+

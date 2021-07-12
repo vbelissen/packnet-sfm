@@ -154,6 +154,42 @@ def view_depth_synthesis(ref_image, depth, ref_depth, ref_cam, cam,
     return funct.grid_sample(ref_image,                            ref_coords, mode=mode, padding_mode=padding_mode, align_corners=align_corners), \
            funct.grid_sample(ref_depth_synthesis_in_target_coords, ref_coords, mode=mode, padding_mode=padding_mode, align_corners=align_corners)
 
+def view_depth_synthesis2(ref_image, depth, ref_depth, ref_cam, cam,
+                   mode='bilinear', padding_mode='zeros', align_corners=True):
+    """
+    Synthesize an image from another plus a depth map.
+
+    Parameters
+    ----------
+    ref_image : torch.Tensor [B,3,H,W]
+        Reference image to be warped
+    depth : torch.Tensor [B,1,H,W]
+        Depth map from the original image
+    ref_cam : Camera
+        Camera class for the reference image
+    cam : Camera
+        Camera class for the original image
+    mode : str
+        Interpolation mode
+    padding_mode : str
+        Padding mode for interpolation
+
+    Returns
+    -------
+    ref_warped : torch.Tensor [B,3,H,W]
+        Warped reference image in the original frame of reference
+    """
+    assert depth.size(1) == 1
+    # Reconstruct world points from target_camera
+    world_points = cam.reconstruct(depth, frame='w')
+    depth_wrt_ref_cam = torch.norm(ref_cam.Tcw @ world_points, dim=1, keepdim=True)
+    # Project world points onto reference camera
+    ref_coords = ref_cam.project(world_points, frame='w')
+    # View-synthesis given the projected reference points
+    return funct.grid_sample(ref_image, ref_coords, mode=mode, padding_mode=padding_mode, align_corners=align_corners), \
+           depth_wrt_ref_cam, \
+           funct.grid_sample(ref_depth, ref_coords, mode=mode, padding_mode=padding_mode, align_corners=align_corners)
+
 
 ########################################################################################################################
 

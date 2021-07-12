@@ -423,11 +423,12 @@ abs_distances2 = torch.norm(world_points_right_to_front_in_front_coords, dim=1, 
 
 not_masked_right_warped = funct.grid_sample(not_masked_right.float(), ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
 
-imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_right_in_front_coords_' + '.png', rel_distances[0, 0, :, :].detach().cpu().numpy() * 255)
+imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_right_in_front_coords_1' + '.png', (rel_distances[0, 0, :, :]/abs_distances1[0, 0, :, :]).detach().cpu().numpy() * 255)
+imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_right_in_front_coords_2' + '.png', (rel_distances[0, 0, :, :]/abs_distances2[0, 0, :, :]).detach().cpu().numpy() * 255)
 
 for threshold in [0.5, 1.0, 2.0, 5.0]:
-    mask1 = (rel_distances < threshold)
-    mask2 = (rel_distances < threshold)
+    mask1 = (rel_distances < abs_distances1 * threshold)
+    mask2 = (rel_distances < abs_distances2 * threshold)
     mask = (~(mask1*mask2))*not_masked_right_warped
     imwrite('/home/users/vbelissen/test' + tt + '_mask_3d_right_in_front_coords_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
 
@@ -444,11 +445,12 @@ abs_distances2 = torch.norm(world_points_left_to_front_in_front_coords, dim=1, k
 
 not_masked_left_warped = funct.grid_sample(not_masked_left.float(), ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 
-imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_left_in_front_coords_' + '.png', rel_distances[0, 0, :, :].detach().cpu().numpy() * 255)
+imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_left_in_front_coords_1' + '.png', (rel_distances[0, 0, :, :]/abs_distances1[0, 0, :, :]).detach().cpu().numpy() * 255)
+imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_left_in_front_coords_2' + '.png', (rel_distances[0, 0, :, :]/abs_distances2[0, 0, :, :]).detach().cpu().numpy() * 255)
 
 for threshold in [0.5, 1.0, 2.0, 5.0]:
-    mask1 = (rel_distances < threshold)
-    mask2 = (rel_distances < threshold)
+    mask1 = (rel_distances < abs_distances1 * threshold)
+    mask2 = (rel_distances < abs_distances2 * threshold)
     mask = (~(mask1*mask2))*not_masked_left_warped
     imwrite('/home/users/vbelissen/test' + tt + '_mask_3d_left_in_front_coords_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
 

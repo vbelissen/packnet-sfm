@@ -493,7 +493,7 @@ class MultiViewPhotometricLoss(LossBase):
                     coeff_margin_occlusion = 1.0
                     ref_warped, without_occlusion_masks \
                         = self.warp_ref_image_depth(inv_depths, ref_image * ref_ego_mask_tensor[j],
-                                                    ref_inv_depths[j],#[ref_inv_depths[j][i] * ref_ego_mask_tensors[j][i] for i in range(self.n)],
+                                                    [ref_inv_depths[j][i] * ref_ego_mask_tensors[j][i] for i in range(self.n)],
                                                     path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
                                                     ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
                                                     same_timestep_as_origin[j],

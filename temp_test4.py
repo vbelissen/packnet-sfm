@@ -425,6 +425,6 @@ abs_distances2 = torch.norm(world_points_right_to_front_in_front_coords, dim=1, 
 for threshold in [0.01, 0.1, 0.25, 0.5]:
     mask1 = (rel_distances < abs_distances1 * threshold)
     mask2 = (rel_distances < abs_distances2 * threshold)
-    mask = 1-mask1*mask2
+    mask = ~(mask1*mask2)
     imwrite('/home/users/vbelissen/test' + tt + '_mask_3d_right_in_front_coords_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
 

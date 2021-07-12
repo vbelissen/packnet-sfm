@@ -423,7 +423,7 @@ abs_distances2 = torch.norm(world_points_right_to_front_in_front_coords, dim=1, 
 
 not_masked_right_warped = funct.grid_sample(not_masked_right.float(), ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
 
-
+imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_right_in_front_coords_' + '.png', rel_distances[0, 0, :, :].detach().cpu().numpy() * 255)
 
 for threshold in [0.25, 0.75, 1.25]:
     mask1 = (rel_distances < abs_distances1 * threshold)
@@ -438,12 +438,13 @@ world_points_left = cam_left.reconstruct(simulated_depth_left,frame='w')
 world_points_left_in_front_coords = cam_front.Tcw @ world_points_left
 world_points_left_to_front_in_front_coords = funct.grid_sample(world_points_left_in_front_coords, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 
-rel_distances = torch.norm(world_points_left_to_front_in_front_coords * not_masked_left - world_points * not_masked_left, dim=1, keepdim=True)
+rel_distances = torch.norm(world_points_left_to_front_in_front_coords - world_points, dim=1, keepdim=True)
 abs_distances1 = torch.norm(world_points, dim=1, keepdim=True)
 abs_distances2 = torch.norm(world_points_left_to_front_in_front_coords, dim=1, keepdim=True)
 
 not_masked_left_warped = funct.grid_sample(not_masked_left.float(), ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 
+imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_left_in_front_coords_' + '.png', rel_distances[0, 0, :, :].detach().cpu().numpy() * 255)
 
 for threshold in [0.25, 0.75, 1.25]:
     mask1 = (rel_distances < abs_distances1 * threshold)

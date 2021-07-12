@@ -418,9 +418,13 @@ world_points_right_in_front_coords = cam_front.Tcw @ world_points_right
 world_points_right_to_front_in_front_coords = funct.grid_sample(world_points_right_in_front_coords, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
 
 rel_distances = torch.norm(world_points_right_to_front_in_front_coords - world_points, dim=1, keepdim=True)
-abs_distances = torch.norm(world_points, dim=1, keepdim=True)
+abs_distances1 = torch.norm(world_points, dim=1, keepdim=True)
+abs_distances2 = torch.norm(world_points_right_to_front_in_front_coords, dim=1, keepdim=True)
+
 
 for threshold in [0.01, 0.1, 0.25, 0.5]:
-    mask = rel_distances > abs_distances * threshold
+    mask1 = (rel_distances < abs_distances1 * threshold)
+    mask2 = (rel_distances < abs_distances2 * threshold)
+    mask = 1-mask1*mask2
     imwrite('/home/users/vbelissen/test' + tt + '_mask_3d_right_in_front_coords_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
 

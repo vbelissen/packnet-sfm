@@ -501,7 +501,7 @@ class MultiViewPhotometricLoss(LossBase):
                                                     pose_matrix_context[j],
                                                     pose)
                     coeff_margin_occlusion = 2.0
-                    max_dist = 1.5
+                    max_dist = 15
                     without_occlusion_masks = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])
                                                 * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])
                                                 + (torch.abs(ref_inv_depths_warped[i] - inv_depths_wrt_ref_cam[i]) <= ref_inv_depths_warped[i]*inv_depths_wrt_ref_cam[i]*max_dist) for i in range(self.n)]

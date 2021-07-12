@@ -503,8 +503,7 @@ class MultiViewPhotometricLoss(LossBase):
                     coeff_margin_occlusion = 1.5
                     max_dist = 2.0
                     without_occlusion_masks = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])
-                                                * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])
-                                                + (torch.abs(ref_inv_depths_warped[i] - inv_depths_wrt_ref_cam[i]) <= ref_inv_depths_warped[i]*inv_depths_wrt_ref_cam[i]*max_dist) for i in range(self.n)]
+                                                * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i]) for i in range(self.n)]
                     # for i in range(self.n):
                     #     occlusion_masks[i][occlusion_masks[i] == 0] = 5.0
                     photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ego_mask_tensors, without_occlusion_masks)],

@@ -421,7 +421,7 @@ rel_distances = torch.norm(world_points_right_to_front_in_front_coords - world_p
 abs_distances1 = torch.norm(world_points, dim=1, keepdim=True)
 abs_distances2 = torch.norm(world_points_right_to_front_in_front_coords, dim=1, keepdim=True)
 
-not_masked_right_warped = funct.grid_sample(not_masked_right, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
+not_masked_right_warped = funct.grid_sample(not_masked_right.float(), ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
 
 
 
@@ -442,7 +442,7 @@ rel_distances = torch.norm(world_points_left_to_front_in_front_coords * not_mask
 abs_distances1 = torch.norm(world_points, dim=1, keepdim=True)
 abs_distances2 = torch.norm(world_points_left_to_front_in_front_coords, dim=1, keepdim=True)
 
-not_masked_left_warped = funct.grid_sample(not_masked_left, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
+not_masked_left_warped = funct.grid_sample(not_masked_left.float(), ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 
 
 for threshold in [0.25, 0.75, 1.25]:

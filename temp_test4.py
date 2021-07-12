@@ -417,7 +417,7 @@ world_points_right = cam_right.reconstruct(simulated_depth_right,frame='w')
 world_points_right_in_front_coords = cam_front.Tcw @ world_points_right
 world_points_right_to_front_in_front_coords = funct.grid_sample(world_points_right_in_front_coords, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
 
-rel_distances = torch.norm(world_points_right_to_front_in_front_coords - world_points, dim=1, keepdim=True)
+rel_distances = torch.norm(world_points_right_to_front_in_front_coords * not_masked_right - world_points * not_masked_right, dim=1, keepdim=True)
 abs_distances1 = torch.norm(world_points, dim=1, keepdim=True)
 abs_distances2 = torch.norm(world_points_right_to_front_in_front_coords, dim=1, keepdim=True)
 
@@ -435,7 +435,7 @@ world_points_left = cam_left.reconstruct(simulated_depth_left,frame='w')
 world_points_left_in_front_coords = cam_front.Tcw @ world_points_left
 world_points_left_to_front_in_front_coords = funct.grid_sample(world_points_left_in_front_coords, ref_coords_left, mode='bilinear', padding_mode='zeros', align_corners=True)
 
-rel_distances = torch.norm(world_points_left_to_front_in_front_coords - world_points, dim=1, keepdim=True)
+rel_distances = torch.norm(world_points_left_to_front_in_front_coords * not_masked_left - world_points * not_masked_left, dim=1, keepdim=True)
 abs_distances1 = torch.norm(world_points, dim=1, keepdim=True)
 abs_distances2 = torch.norm(world_points_left_to_front_in_front_coords, dim=1, keepdim=True)
 

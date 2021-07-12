@@ -414,7 +414,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
     first_pic = True
     for i_file in range(0, N_files, 10):
 
-        load_pred_masks = True
+        load_pred_masks = False
         remove_close_points_lidar_semantic = False
         print_lidar = True
 

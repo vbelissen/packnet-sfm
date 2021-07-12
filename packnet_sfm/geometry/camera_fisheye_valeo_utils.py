@@ -155,7 +155,7 @@ def view_depth_synthesis(ref_image, depth, ref_depth, ref_cam, cam,
            funct.grid_sample(ref_depth_synthesis_in_target_coords, ref_coords, mode=mode, padding_mode=padding_mode, align_corners=align_corners)
 
 def view_depth_synthesis2(ref_image, depth, ref_depth, ref_cam, cam,
-                   mode='bilinear', padding_mode='zeros', align_corners=True):
+                   mode='bilinear', padding_mode='zeros', align_corners=True, coeff_margin_occlusion=1.5):
     """
     Synthesize an image from another plus a depth map.
 
@@ -186,9 +186,20 @@ def view_depth_synthesis2(ref_image, depth, ref_depth, ref_cam, cam,
     # Project world points onto reference camera
     ref_coords = ref_cam.project(world_points, frame='w')
     # View-synthesis given the projected reference points
+
+    world_points_ref = ref_cam.reconstruct(ref_depth, frame='w')
+    world_points_ref_in_target_coords = cam.Tcw @ world_points_ref
+    world_points_ref_in_target_coords_sampled = funct.grid_sample(world_points_ref_in_target_coords, ref_coords, mode='bilinear', padding_mode='zeros', align_corners=True)
+
+    rel_distances = torch.norm(world_points_ref_in_target_coords_sampled - world_points, dim=1, keepdim=True)
+    abs_distances1 = torch.norm(world_points, dim=1, keepdim=True)
+    abs_distances2 = torch.norm(world_points_ref_in_target_coords_sampled, dim=1, keepdim=True)
+
+    mask1 = (rel_distances < abs_distances1 * coeff_margin_occlusion)
+    mask2 = (rel_distances < abs_distances2 * coeff_margin_occlusion)
+
     return funct.grid_sample(ref_image, ref_coords, mode=mode, padding_mode=padding_mode, align_corners=align_corners), \
-           depth_wrt_ref_cam, \
-           funct.grid_sample(ref_depth, ref_coords, mode=mode, padding_mode=padding_mode, align_corners=align_corners)
+           mask1 * mask2
 
 
 ########################################################################################################################

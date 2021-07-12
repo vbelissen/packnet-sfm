@@ -425,9 +425,9 @@ not_masked_right_warped = funct.grid_sample(not_masked_right.float(), ref_coords
 
 imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_right_in_front_coords_' + '.png', rel_distances[0, 0, :, :].detach().cpu().numpy() * 255)
 
-for threshold in [0.25, 0.75, 1.25]:
-    mask1 = (rel_distances < abs_distances1 * threshold)
-    mask2 = (rel_distances < abs_distances2 * threshold)
+for threshold in [0.5, 1.0, 2.0, 5.0]:
+    mask1 = (rel_distances < threshold)
+    mask2 = (rel_distances < threshold)
     mask = (~(mask1*mask2))*not_masked_right_warped
     imwrite('/home/users/vbelissen/test' + tt + '_mask_3d_right_in_front_coords_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
 
@@ -446,9 +446,9 @@ not_masked_left_warped = funct.grid_sample(not_masked_left.float(), ref_coords_l
 
 imwrite('/home/users/vbelissen/test' + tt + '_dist_3d_left_in_front_coords_' + '.png', rel_distances[0, 0, :, :].detach().cpu().numpy() * 255)
 
-for threshold in [0.25, 0.75, 1.25]:
-    mask1 = (rel_distances < abs_distances1 * threshold)
-    mask2 = (rel_distances < abs_distances2 * threshold)
+for threshold in [0.5, 1.0, 2.0, 5.0]:
+    mask1 = (rel_distances < threshold)
+    mask2 = (rel_distances < threshold)
     mask = (~(mask1*mask2))*not_masked_left_warped
     imwrite('/home/users/vbelissen/test' + tt + '_mask_3d_left_in_front_coords_' + str(threshold) + '.png', mask[0,0,:,:].detach().cpu().numpy() * 255)
 

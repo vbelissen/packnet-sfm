@@ -137,8 +137,7 @@ class MultiViewPhotometricLoss(LossBase):
                        ref_scale_factors,
                        same_timestamp_as_origin,
                        pose_matrix_context,
-                       pose,
-                       coeff_margin_occlusion):
+                       pose):
         """
         Warps a reference image to produce a reconstruction of the original one.
 
@@ -193,19 +192,22 @@ class MultiViewPhotometricLoss(LossBase):
         ref_depths = [inv2depth(ref_inv_depths[i]) for i in range(self.n)]
         ref_images = match_scales(ref_image, inv_depths, self.n)
         ref_warped = []
-        without_occlusion_masks = []
+        depths_wrt_ref_cam = []
+        ref_depths_warped = []
         for i in range(self.n):
-            view_i, without_occlusion_mask_i = view_depth_synthesis2(ref_images[i],
-                                                                    depths[i],
-                                                                    ref_depths[i],
-                                                                    ref_cams[i],
-                                                                    cams[i],
-                                                                    padding_mode=self.padding_mode,
-                                                                    coeff_margin_occlusion=coeff_margin_occlusion)
+            view_i, depth_wrt_ref_cam_i, red_depth_warped_i = view_depth_synthesis2(ref_images[i],
+                                                                                    depths[i],
+                                                                                    ref_depths[i],
+                                                                                    ref_cams[i],
+                                                                                    cams[i],
+                                                                                    padding_mode=self.padding_mode)
             ref_warped.append(view_i)
-            without_occlusion_masks.append(without_occlusion_mask_i)
+            depths_wrt_ref_cam.append(depth_wrt_ref_cam_i)
+            ref_depths_warped.append(red_depth_warped_i)
+        inv_depths_wrt_ref_cam = [depth2inv(depths_wrt_ref_cam[i]) for i in range(self.n)]
+        ref_inv_depths_warped = [depth2inv(ref_depths_warped[i]) for i in range(self.n)]
         # Return warped reference image
-        return ref_warped, without_occlusion_masks
+        return ref_warped, inv_depths_wrt_ref_cam, ref_inv_depths_warped
 
     def warp_ref_image_tensor(self, inv_depths, ref_image, ref_tensor,
                        path_to_theta_lut,     path_to_ego_mask,     poly_coeffs,      principal_point,      scale_factors,
@@ -490,17 +492,17 @@ class MultiViewPhotometricLoss(LossBase):
                         [a * b     for a, b    in zip(images,     ego_mask_tensors)])
 
                 else:
-                    coeff_margin_occlusion = 1.0
-                    ref_warped, without_occlusion_masks \
+                    ref_warped, inv_depths_wrt_ref_cam, ref_inv_depths_warped \
                         = self.warp_ref_image_depth(inv_depths, ref_image * ref_ego_mask_tensor[j],
-                                                    [ref_inv_depths[j][i] * ref_ego_mask_tensors[j][i] for i in range(self.n)],
+                                                    ref_inv_depths[j],#[ref_inv_depths[j][i] * ref_ego_mask_tensors[j][i] for i in range(self.n)],
                                                     path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
                                                     ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
                                                     same_timestep_as_origin[j],
                                                     pose_matrix_context[j],
-                                                    pose,
-                                                    coeff_margin_occlusion)
-
+                                                    pose)
+                    coeff_margin_occlusion = 2.0
+                    without_occlusion_masks = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])
+                                                * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
                     # for i in range(self.n):
                     #     occlusion_masks[i][occlusion_masks[i] == 0] = 5.0
                     photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ego_mask_tensors, without_occlusion_masks)],

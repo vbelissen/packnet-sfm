@@ -412,9 +412,9 @@ for threshold in [1.0, 1.1, 1.5, 2.0]:
 
 
 simulated_depth_right = torch.from_numpy(np.load('/home/data/vbelissen/20170320_163113_cam_1_00006288.npz')['depth']).to(torch.device('cuda')).unsqueeze(0).unsqueeze(0)
+simulated_depth_right[~not_masked_right] = 0
 world_points_right = cam_right.reconstruct(simulated_depth_right,frame='w')
 world_points_right_in_front_coords = cam_front.Tcw @ world_points_right
-world_points_right_in_front_coords[~not_masked_right] = 0
 world_points_right_to_front_in_front_coords = funct.grid_sample(world_points_right_in_front_coords, ref_coords_right, mode='bilinear', padding_mode='zeros', align_corners=True)
 
 rel_distances = torch.norm(world_points_right_to_front_in_front_coords - world_points, dim=1, keepdim=True)

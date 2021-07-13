@@ -496,7 +496,7 @@ class MultiViewPhotometricLoss(LossBase):
                                                     same_timestep_as_origin[j],
                                                     pose_matrix_context[j],
                                                     pose)
-                    coeff_margin_occlusion = 2.0
+                    coeff_margin_occlusion = 1.5
                     without_occlusion_masks = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])
                                                 * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
 

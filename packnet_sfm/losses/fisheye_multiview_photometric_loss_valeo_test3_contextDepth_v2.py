@@ -503,7 +503,7 @@ class MultiViewPhotometricLoss(LossBase):
                     without_occlusion_masks1a = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])  for i in range(self.n)]
                     without_occlusion_masks1b = [(ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
 
-                    coeff_delta_occlusion = 1.0
+                    coeff_delta_occlusion = 3.0
                     without_occlusion_masks2a = [(inv2depth(inv_depths_wrt_ref_cam[i]) <= coeff_delta_occlusion + inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
                     without_occlusion_masks2b = [(inv2depth(ref_inv_depths_warped[i]) <= coeff_delta_occlusion + inv2depth(inv_depths_wrt_ref_cam[i])) for i in range(self.n)]
 

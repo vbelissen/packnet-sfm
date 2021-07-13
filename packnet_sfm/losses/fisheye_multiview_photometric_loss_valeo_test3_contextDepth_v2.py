@@ -499,6 +499,14 @@ class MultiViewPhotometricLoss(LossBase):
                     coeff_margin_occlusion = 2.0
                     without_occlusion_masks = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])
                                                 * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
+
+                    without_occlusion_masks1a = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])  for i in range(self.n)]
+                    without_occlusion_masks1b = [(ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
+
+                    coeff_delta_occlusion = 1.0
+                    without_occlusion_masks2a = [(inv2depth(inv_depths_wrt_ref_cam[i]) <= coeff_delta_occlusion + inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
+                    without_occlusion_masks2b = [(inv2depth(ref_inv_depths_warped[i]) <= coeff_delta_occlusion + inv2depth(inv_depths_wrt_ref_cam[i])) for i in range(self.n)]
+
                     # for i in range(self.n):
                     #     occlusion_masks[i][occlusion_masks[i] == 0] = 5.0
                     photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ego_mask_tensors, without_occlusion_masks)],
@@ -510,12 +518,18 @@ class MultiViewPhotometricLoss(LossBase):
                         for b in range(B):
                             orig_PIL_1   = torch.transpose((ref_image[b,:,:,:]* ref_ego_mask_tensor[j][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
                             warped_PIL_1 = torch.transpose((ref_warped[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                            warped_PIL_3 = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+                            warped_PIL_1a = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks1a[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+                            warped_PIL_1b = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks1b[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+                            warped_PIL_2a = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks2a[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+                            warped_PIL_2b = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks2b[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
                             target_PIL_1 = torch.transpose((images[i][b, :, :, :] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
 
                             cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_orig_PIL_1.png',   orig_PIL_1*255)
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_3.png', warped_PIL_3 * 255)
                             cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_1.png', warped_PIL_1 * 255)
+                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_1a.png', warped_PIL_1a * 255)
+                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_1b.png', warped_PIL_1b * 255)
+                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_2a.png', warped_PIL_2a * 255)
+                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_2b.png', warped_PIL_2b * 255)
                             cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_target_PIL_1.png', target_PIL_1 * 255)
 
             else:

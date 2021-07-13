@@ -2,7 +2,7 @@
 import torch
 
 from packnet_sfm.models.SfmModel import SfmModel
-from packnet_sfm.losses.fisheye_multiview_photometric_loss_valeo_test3_contextDepth import MultiViewPhotometricLoss
+from packnet_sfm.losses.fisheye_multiview_photometric_loss_valeo_test3_contextDepth_v2 import MultiViewPhotometricLoss
 from packnet_sfm.models.model_utils import merge_outputs
 
 

@@ -131,7 +131,7 @@ class MultiViewPhotometricLoss(LossBase):
 
 ########################################################################################################################
 
-    def warp_ref_image_depth(self, inv_depths, ref_image, ref_inv_depths,
+    def warp_ref_image_depth(self, inv_depths, ref_image, ref_tensor, ref_inv_depths,
                        path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
                        ref_path_to_theta_lut, ref_path_to_ego_mask, ref_poly_coeffs, ref_principal_point,
                        ref_scale_factors,
@@ -202,8 +202,12 @@ class MultiViewPhotometricLoss(LossBase):
             ref_depths_warped.append(red_depth_warped_i)
         inv_depths_wrt_ref_cam = [depth2inv(depths_wrt_ref_cam[i]) for i in range(self.n)]
         ref_inv_depths_warped = [depth2inv(ref_depths_warped[i]) for i in range(self.n)]
+        ref_tensors = match_scales(ref_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
+        ref_tensors_warped = [view_synthesis(
+            ref_tensors[i], depths[i], ref_cams[i], cams[i],
+            padding_mode=self.padding_mode, mode='nearest', align_corners=None) for i in range(self.n)]
         # Return warped reference image
-        return ref_warped, inv_depths_wrt_ref_cam, ref_inv_depths_warped
+        return ref_warped, ref_tensors_warped, inv_depths_wrt_ref_cam, ref_inv_depths_warped
 
     def warp_ref_image_tensor(self, inv_depths, ref_image, ref_tensor,
                        path_to_theta_lut,     path_to_ego_mask,     poly_coeffs,      principal_point,      scale_factors,
@@ -362,6 +366,74 @@ class MultiViewPhotometricLoss(LossBase):
         self.add_metric('photometric_loss', photometric_loss)
         return photometric_loss
 
+    def nonzero_reduce_photometric_loss(self, photometric_losses):
+        """
+        Combine the photometric loss from all context images
+
+        Parameters
+        ----------
+        photometric_losses : list of torch.Tensor [B,3,H,W]
+            Pixel-wise photometric losses from the entire context
+
+        Returns
+        -------
+        photometric_loss : torch.Tensor [1]
+            Reduced photometric loss
+        """
+        # Reduce function
+        def reduce_function(losses):
+            if self.photometric_reduce_op == 'mean':
+                # each image gets the same weight in the loss,
+                # regardless of the number of masked pixels
+                nonzero_mean = []
+                nonzero_losses = 0
+                for l in losses:
+                    mask = l!=0
+                    s = mask.sum()
+                    if s > 0:
+                        nonzero_mean.append((l*mask).sum()/s)
+                        nonzero_losses += 1
+                if nonzero_losses > 0:
+                    return sum(nonzero_mean) / nonzero_losses
+                else:
+                    return 0
+            if self.photometric_reduce_op == 'weightedMean':
+                # each image gets the a different weight in the loss,
+                # depending on the number of masked pixels
+                nonzero_mean = []
+                nonzero_pixels = 0
+                for l in losses:
+                    mask = l!=0
+                    s = mask.sum()
+                    if s > 0:
+                        nonzero_mean.append((l*mask).sum())
+                        nonzero_pixels += s
+                if nonzero_pixels > 0:
+                    return sum(nonzero_mean) / nonzero_pixels
+                else:
+                    return 0
+            elif self.photometric_reduce_op == 'min':
+                C = torch.cat(losses,1)
+                zero_pixels = (C.max(1,True)[0] == 0)
+                C[C == 0] = 10000
+                min_pixels = C.min(1, True)[0]
+                min_pixels[zero_pixels] = 0
+                mask = min_pixels!=0
+                s = mask.sum()
+                if s > 0:
+                    return (min_pixels*mask).sum()/s
+                else:
+                    return 0
+            else:
+                raise NotImplementedError(
+                    'Unknown photometric_reduce_op: {}'.format(self.photometric_reduce_op))
+        # Reduce photometric loss
+        photometric_loss = sum([reduce_function(photometric_losses[i])
+                                for i in range(self.n)]) / self.n
+        # Store and return reduced photometric loss
+        self.add_metric('photometric_loss', photometric_loss)
+        return photometric_loss
+
 ########################################################################################################################
 
     def calc_smoothness_loss(self, inv_depths, images):
@@ -435,141 +507,125 @@ class MultiViewPhotometricLoss(LossBase):
 
         n_context = len(context)
 
-        if self.mask_ego:
-            device = image.get_device()
+        #if self.mask_ego:
+        device = image.get_device()
 
-            B = len(path_to_ego_mask)
+        B = len(path_to_ego_mask)
 
-            ego_mask_tensor     = torch.zeros(B, 1, 800, 1280).to(device)
-            ref_ego_mask_tensor = []#[torch.zeros(B, 1, 800, 1280).to(device)] * n_context
+        ego_mask_tensor     = torch.zeros(B, 1, 800, 1280).to(device)
+        ref_ego_mask_tensor = []#[torch.zeros(B, 1, 800, 1280).to(device)] * n_context
+        for i_context in range(n_context):
+            ref_ego_mask_tensor.append(torch.zeros(B, 1, 800, 1280).to(device))
+        for b in range(B):
+            ego_mask_tensor[b, 0]     = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
             for i_context in range(n_context):
-                ref_ego_mask_tensor.append(torch.zeros(B, 1, 800, 1280).to(device))
-            for b in range(B):
-                ego_mask_tensor[b, 0]     = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
+                ref_ego_mask_tensor[i_context][b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[i_context][b])).float()
+
+        ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
+        ref_ego_mask_tensors = []#[[]] *  n_context  # = torch.zeros(B, 1, 800, 1280)
+        for i_context in range(n_context):
+            ref_ego_mask_tensors.append([])
+        for i in range(self.n):
+            B, C, H, W = images[i].shape
+            if W < 1280:
+                inv_scale_factor = int(1280 / W)
+                ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
                 for i_context in range(n_context):
-                    ref_ego_mask_tensor[i_context][b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[i_context][b])).float()
+                    ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]))
+            else:
+                ego_mask_tensors.append(ego_mask_tensor)
+                for i_context in range(n_context):
+                    ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context])
+            # ego_mask_tensor = ego_mask_tensor.to(device)
 
-            ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
-            ref_ego_mask_tensors = []#[[]] *  n_context  # = torch.zeros(B, 1, 800, 1280)
-            for i_context in range(n_context):
-                ref_ego_mask_tensors.append([])
-            for i in range(self.n):
-                B, C, H, W = images[i].shape
-                if W < 1280:
-                    inv_scale_factor = int(1280 / W)
-                    ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
-                    for i_context in range(n_context):
-                        ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]))
-                else:
-                    ego_mask_tensors.append(ego_mask_tensor)
-                    for i_context in range(n_context):
-                        ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context])
-                # ego_mask_tensor = ego_mask_tensor.to(device)
-
-            for i_context in range(n_context):
-                B, C, H, W = context[i_context].shape
-                if W < 1280:
-                    inv_scale_factor = int(1280 / W)
-                    ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
+        for i_context in range(n_context):
+            B, C, H, W = context[i_context].shape
+            if W < 1280:
+                inv_scale_factor = int(1280 / W)
+                ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
-            if self.mask_ego:
-                if self.warp_ego_tensor:
-                    ref_warped, ref_ego_mask_tensors_warped \
-                        = self.warp_ref_image_tensor(inv_depths, ref_image, ref_ego_mask_tensor[j],
-                                                     path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
-                                                     ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
-                                                     same_timestep_as_origin[j],
-                                                     pose_matrix_context[j],
-                                                     pose)
-                    photometric_loss = self.calc_photometric_loss(
-                        [a * b * c for a, b, c in zip(ref_warped, ego_mask_tensors, ref_ego_mask_tensors_warped)],
-                        [a * b     for a, b    in zip(images,     ego_mask_tensors)])
+            #if self.mask_ego:
+            # if self.warp_ego_tensor:
+            #     ref_warped, ref_ego_mask_tensors_warped \
+            #         = self.warp_ref_image_tensor(inv_depths, ref_image, ref_ego_mask_tensor[j],
+            #                                      path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
+            #                                      ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
+            #                                      same_timestep_as_origin[j],
+            #                                      pose_matrix_context[j],
+            #                                      pose)
+            #     photometric_loss = self.calc_photometric_loss(
+            #         [a * b * c for a, b, c in zip(ref_warped, ego_mask_tensors, ref_ego_mask_tensors_warped)],
+            #         [a * b     for a, b    in zip(images,     ego_mask_tensors)])
+            #
+            # else:
+            ref_warped, ref_ego_mask_tensors_warped, inv_depths_wrt_ref_cam, ref_inv_depths_warped \
+                = self.warp_ref_image_depth(inv_depths, ref_image, ref_ego_mask_tensor[j],# * ref_ego_mask_tensor[j],
+                                            ref_inv_depths[j],#[ref_inv_depths[j][i] * ref_ego_mask_tensors[j][i] for i in range(self.n)],
+                                            path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
+                                            ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
+                                            same_timestep_as_origin[j],
+                                            pose_matrix_context[j],
+                                            pose)
+            coeff_margin_occlusion = 1.5
+            coeff_delta_occlusion = 1.5
 
-                else:
-                    ref_warped, inv_depths_wrt_ref_cam, ref_inv_depths_warped \
-                        = self.warp_ref_image_depth(inv_depths, ref_image * ref_ego_mask_tensor[j],
-                                                    ref_inv_depths[j],#[ref_inv_depths[j][i] * ref_ego_mask_tensors[j][i] for i in range(self.n)],
-                                                    path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
-                                                    ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
-                                                    same_timestep_as_origin[j],
-                                                    pose_matrix_context[j],
-                                                    pose)
-                    coeff_margin_occlusion = 1.3
-                    without_occlusion_masks = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])
-                                                * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
+            #mask_type = 'both' # or disoclusion or both
 
-                    without_occlusion_masks1a = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])  for i in range(self.n)]
-                    without_occlusion_masks1b = [(ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
+            mask_spatial_context = 'True'
+            mask_temporal_context = 'True'
 
-                    coeff_delta_occlusion = 1.5
-                    without_occlusion_masks2a = [(inv2depth(inv_depths_wrt_ref_cam[i]) <= coeff_delta_occlusion + inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
-                    without_occlusion_masks2b = [(inv2depth(ref_inv_depths_warped[i]) <= coeff_delta_occlusion + inv2depth(inv_depths_wrt_ref_cam[i])) for i in range(self.n)]
 
-                    without_occlusion_masks3x = [without_occlusion_masks1a[i]+without_occlusion_masks2b[i] for i in range(self.n)]
-                    without_occlusion_masks3y = [without_occlusion_masks1b[i]+without_occlusion_masks2a[i] for i in range(self.n)]
+            # without_occlusion_masks = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])
+            #                             * (ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
+            #
+            without_occlusion_masks1a = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])  for i in range(self.n)]
+            without_occlusion_masks1b = [(ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
 
-                    # for i in range(self.n):
-                    #     occlusion_masks[i][occlusion_masks[i] == 0] = 5.0
-                    photometric_loss = self.calc_photometric_loss([a * b * c for a, b, c in zip(ref_warped, ego_mask_tensors, without_occlusion_masks)],
-                                                                  [a * b     for a, b    in zip(images,     ego_mask_tensors)])
 
-                    tt = str(int(time.time() % 10000))
-                    for i in range(self.n):
-                        B, C, H, W = images[i].shape
-                        for b in range(B):
-                            orig_PIL_1   = torch.transpose((ref_image[b,:,:,:]* ref_ego_mask_tensor[j][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                            warped_PIL_1 = torch.transpose((ref_warped[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                            warped_PIL_1a = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks1a[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                            warped_PIL_1b = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks1b[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                            warped_PIL_2a = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks2a[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                            warped_PIL_2b = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks2b[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                            warped_PIL_3x = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks3x[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                            warped_PIL_3y = torch.transpose((ref_warped[i][b,:,:,:] * without_occlusion_masks3y[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                            target_PIL_1 = torch.transpose((images[i][b, :, :, :] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
+            without_occlusion_masks2a = [(inv2depth(inv_depths_wrt_ref_cam[i]) <= coeff_delta_occlusion + inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
+            without_occlusion_masks2b = [(inv2depth(ref_inv_depths_warped[i]) <= coeff_delta_occlusion + inv2depth(inv_depths_wrt_ref_cam[i])) for i in range(self.n)]
 
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_orig_PIL_1.png',   orig_PIL_1*255)
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_1.png', warped_PIL_1 * 255)
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_1a.png', warped_PIL_1a * 255)
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_1b.png', warped_PIL_1b * 255)
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_2a.png', warped_PIL_2a * 255)
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_2b.png', warped_PIL_2b * 255)
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_3x.png', warped_PIL_3x * 255)
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_3y.png', warped_PIL_3y * 255)
-                            cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_target_PIL_1.png', target_PIL_1 * 255)
+            without_occlusion_masks    = [without_occlusion_masks1a[i]+without_occlusion_masks2b[i] for i in range(self.n)]
+            without_disocclusion_masks = [without_occlusion_masks1b[i]+without_occlusion_masks2a[i] for i in range(self.n)]
 
+            if self.mask_type == 'occlusion':
+                valid_pixels_occ = without_occlusion_masks.float()
+            elif self.mask_type == 'disocclusion':
+                valid_pixels_occ = without_disocclusion_masks.float()
+            elif self.mask_type == 'both':
+                valid_pixels_occ = [without_occlusion_masks[i] * without_disocclusion_masks[i] for i in range(self.n)].float()
             else:
-                ref_warped = self.warp_ref_image(inv_depths, ref_image,
-                                                 path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
-                                                 ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
-                                                 same_timestep_as_origin[j],
-                                                 pose_matrix_context[j],
-                                                 pose)
-                photometric_loss = self.calc_photometric_loss(ref_warped, images)
+                print('WRONG mask type')
+
+            # for i in range(self.n):
+            #     occlusion_masks[i][occlusion_masks[i] == 0] = 5.0
+            photometric_loss = self.calc_photometric_loss(ref_warped, images)
 
             for i in range(self.n):
-                photometric_losses[i].append(photometric_loss[i])
+                if (self.mask_spatial_context and not same_timestep_as_origin[j]) or (self.mask_temporal_context and same_timestep_as_origin[j]):
+                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i] * valid_pixels_occ[i])
+                else:
+                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+
             # If using automask
             if self.automask_loss:
                 # Calculate and store unwarped image loss
                 ref_images = match_scales(ref_image, inv_depths, self.n)
-                if self.mask_ego:
-                    unwarped_image_loss = self.calc_photometric_loss([a * b for a, b in zip(ref_images, ref_ego_mask_tensors[j])],
-                                                                     [a * b for a, b in zip(images,     ego_mask_tensors)])
-                else:
-                    unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
+                #if self.mask_ego:
+                unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
                 for i in range(self.n):
-                    photometric_losses[i].append(unwarped_image_loss[i])
+                    photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors[j][i])
         # Calculate reduced photometric loss
-        loss = self.reduce_photometric_loss(photometric_losses)
+        loss = self.nonzero_reduce_photometric_loss(photometric_losses)
         # Include smoothness loss if requested
         if self.smooth_loss_weight > 0.0:
-            if self.mask_ego:
-                loss += self.calc_smoothness_loss([a * b for a, b in zip(inv_depths, ego_mask_tensors)],
-                                                  [a * b for a, b in zip(images,     ego_mask_tensors)])
-            else:
-                loss += self.calc_smoothness_loss(inv_depths, images)
+            #if self.mask_ego:
+            loss += self.calc_smoothness_loss([a * b for a, b in zip(inv_depths, ego_mask_tensors)],
+                                              [a * b for a, b in zip(images,     ego_mask_tensors)])
+            # else:
+            #     loss += self.calc_smoothness_loss(inv_depths, images)
         # Return losses and metrics
         return {
             'loss': loss.unsqueeze(0),

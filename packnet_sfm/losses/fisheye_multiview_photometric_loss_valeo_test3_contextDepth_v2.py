@@ -96,7 +96,7 @@ class MultiViewPhotometricLoss(LossBase):
     def __init__(self, num_scales=4, ssim_loss_weight=0.85, occ_reg_weight=0.1, smooth_loss_weight=0.1,
                  C1=1e-4, C2=9e-4, photometric_reduce_op='mean', disp_norm=True, clip_loss=0.5,
                  progressive_scaling=0.0, padding_mode='zeros',
-                 automask_loss=False, mask_ego=True, warp_ego_tensor=False, **kwargs):
+                 automask_loss=False, mask_occlusion=True, mask_disocclusion=True, mask_spatial_context=True, mask_temporal_context=True, **kwargs):
         super().__init__()
         self.n = num_scales
         self.progressive_scaling = progressive_scaling
@@ -110,8 +110,10 @@ class MultiViewPhotometricLoss(LossBase):
         self.clip_loss = clip_loss
         self.padding_mode = padding_mode
         self.automask_loss = automask_loss
-        self.mask_ego = mask_ego
-        self.warp_ego_tensor = warp_ego_tensor
+        self.mask_occlusion = mask_occlusion
+        self.mask_disocclusion = mask_disocclusion
+        self.mask_spatial_context = mask_spatial_context
+        self.mask_temporal_context = mask_temporal_context
         self.progressive_scaling = ProgressiveScaling(
             progressive_scaling, self.n)
 

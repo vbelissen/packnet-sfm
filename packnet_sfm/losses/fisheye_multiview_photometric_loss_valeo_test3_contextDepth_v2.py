@@ -568,7 +568,7 @@ class MultiViewPhotometricLoss(LossBase):
             without_disocclusion_masks = [without_occlusion_masks1b[i]+without_occlusion_masks2a[i] for i in range(self.n)]
 
             if self.mask_occlusion and self.mask_disocclusion:
-                valid_pixels_occ = [without_occlusion_masks[i] * without_disocclusion_masks[i] for i in range(self.n)].float()
+                valid_pixels_occ = [(without_occlusion_masks[i] * without_disocclusion_masks[i]).float() for i in range(self.n)]
             elif self.mask_occlusion:
                 valid_pixels_occ = without_occlusion_masks.float()
             elif self.mask_disocclusion:

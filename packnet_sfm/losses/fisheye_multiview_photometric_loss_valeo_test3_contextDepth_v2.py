@@ -573,14 +573,17 @@ class MultiViewPhotometricLoss(LossBase):
                 valid_pixels_occ = [without_occlusion_masks[i].float() for i in range(self.n)]
             elif self.mask_disocclusion:
                 valid_pixels_occ = [without_disocclusion_masks[i].float() for i in range(self.n)]
+            else:
+                valid_pixels_occ = [torch.ones_like(inv_depths[i]) for i in range(self.n)]
+
+            B = len(path_to_ego_mask)
+            for b in range(B):
+                if (same_timestep_as_origin[j][b] and not self.mask_spatial_context) or (not same_timestep_as_origin[j][b] and not self.mask_temporal_context):
+                    valid_pixels_occ[i][b, :, :, :] = 1.0
 
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
-
             for i in range(self.n):
-                if ((self.mask_spatial_context and not same_timestep_as_origin[j]) or (self.mask_temporal_context and same_timestep_as_origin[j])) and (self.mask_occlusion or self.mask_disocclusion):
-                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i] * valid_pixels_occ[i])
-                else:
-                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+                photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i] * valid_pixels_occ[i])
 
             # If using automask
             if self.automask_loss:

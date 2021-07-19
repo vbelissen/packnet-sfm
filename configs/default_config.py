@@ -109,10 +109,12 @@ cfg.model.loss.reprojected_loss_weight = 10000.         # Reprojected loss weigh
 cfg.model.loss.mask_ego = False                         # Ego-masking
 cfg.model.loss.warp_ego_tensor = False                  # Whether to warp ego mask (if not, context images are masked beforehand)
 cfg.model.loss.mask_out_of_bounds_reprojected = False   # Masking out-of-bounds reprojected pixels
-cfg.model.loss.mask_occlusion = True
-cfg.model.loss.mask_disocclusion = True
-cfg.model.loss.mask_spatial_context = True
-cfg.model.loss.mask_temporal_context = True
+cfg.model.loss.mask_occlusion = False
+cfg.model.loss.mask_disocclusion = False
+cfg.model.loss.mask_spatial_context = False
+cfg.model.loss.mask_temporal_context = False
+cfg.model.loss.occ_disocc_handling = ''
+cfg.model.loss.depth_consistency_weight = 0.2
 ########################################################################################################################
 ### MODEL.DEPTH_NET
 ########################################################################################################################

@@ -96,7 +96,9 @@ class MultiViewPhotometricLoss(LossBase):
     def __init__(self, num_scales=4, ssim_loss_weight=0.85, occ_reg_weight=0.1, smooth_loss_weight=0.1,
                  C1=1e-4, C2=9e-4, photometric_reduce_op='mean', disp_norm=True, clip_loss=0.5,
                  progressive_scaling=0.0, padding_mode='zeros',
-                 automask_loss=False, mask_occlusion=True, mask_disocclusion=True, mask_spatial_context=True, mask_temporal_context=True, **kwargs):
+                 automask_loss=False, mask_occlusion=False, mask_disocclusion=False, mask_spatial_context=False, mask_temporal_context=False,
+                 occ_disocc_handling='', depth_consistency_weight=0.2,
+                 **kwargs):
         super().__init__()
         self.n = num_scales
         self.progressive_scaling = progressive_scaling
@@ -114,6 +116,8 @@ class MultiViewPhotometricLoss(LossBase):
         self.mask_disocclusion = mask_disocclusion
         self.mask_spatial_context = mask_spatial_context
         self.mask_temporal_context = mask_temporal_context
+        self.occ_disocc_handling = occ_disocc_handling
+        self.depth_consistency_weight = depth_consistency_weight
         self.progressive_scaling = ProgressiveScaling(
             progressive_scaling, self.n)
 
@@ -558,32 +562,48 @@ class MultiViewPhotometricLoss(LossBase):
             coeff_margin_occlusion = 1.5
             coeff_delta_occlusion = 1.5
 
-            without_occlusion_masks1a = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])  for i in range(self.n)]
-            without_occlusion_masks1b = [(ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
-
-            without_occlusion_masks2a = [(inv2depth(inv_depths_wrt_ref_cam[i]) <= coeff_delta_occlusion + inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
-            without_occlusion_masks2b = [(inv2depth(ref_inv_depths_warped[i]) <= coeff_delta_occlusion + inv2depth(inv_depths_wrt_ref_cam[i])) for i in range(self.n)]
-
-            without_occlusion_masks    = [without_occlusion_masks1a[i]+without_occlusion_masks2b[i] for i in range(self.n)]
-            without_disocclusion_masks = [without_occlusion_masks1b[i]+without_occlusion_masks2a[i] for i in range(self.n)]
-
-            if self.mask_occlusion and self.mask_disocclusion:
-                valid_pixels_occ = [(without_occlusion_masks[i] * without_disocclusion_masks[i]).float() for i in range(self.n)]
-            elif self.mask_occlusion:
-                valid_pixels_occ = [without_occlusion_masks[i].float() for i in range(self.n)]
-            elif self.mask_disocclusion:
-                valid_pixels_occ = [without_disocclusion_masks[i].float() for i in range(self.n)]
-            else:
-                valid_pixels_occ = [torch.ones_like(inv_depths[i]) for i in range(self.n)]
-
-            B = len(path_to_ego_mask)
-            for b in range(B):
-                if (same_timestep_as_origin[j][b] and not self.mask_spatial_context) or (not same_timestep_as_origin[j][b] and not self.mask_temporal_context):
-                    valid_pixels_occ[i][b, :, :, :] = 1.0
-
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
-            for i in range(self.n):
-                photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i] * valid_pixels_occ[i])
+
+            if self.occ_disocc_handling == 'masks':
+                without_occlusion_masks1a = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])  for i in range(self.n)]
+                without_occlusion_masks1b = [(ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
+
+                without_occlusion_masks2a = [(inv2depth(inv_depths_wrt_ref_cam[i]) <= coeff_delta_occlusion + inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
+                without_occlusion_masks2b = [(inv2depth(ref_inv_depths_warped[i]) <= coeff_delta_occlusion + inv2depth(inv_depths_wrt_ref_cam[i])) for i in range(self.n)]
+
+                without_occlusion_masks    = [without_occlusion_masks1a[i]+without_occlusion_masks2b[i] for i in range(self.n)]
+                without_disocclusion_masks = [without_occlusion_masks1b[i]+without_occlusion_masks2a[i] for i in range(self.n)]
+
+                if self.mask_occlusion and self.mask_disocclusion:
+                    valid_pixels_occ = [(without_occlusion_masks[i] * without_disocclusion_masks[i]).float() for i in range(self.n)]
+                elif self.mask_occlusion:
+                    valid_pixels_occ = [without_occlusion_masks[i].float() for i in range(self.n)]
+                elif self.mask_disocclusion:
+                    valid_pixels_occ = [without_disocclusion_masks[i].float() for i in range(self.n)]
+                else:
+                    valid_pixels_occ = [torch.ones_like(inv_depths[i]) for i in range(self.n)]
+
+                B = len(path_to_ego_mask)
+                for b in range(B):
+                    if (same_timestep_as_origin[j][b] and not self.mask_spatial_context) or (not same_timestep_as_origin[j][b] and not self.mask_temporal_context):
+                        valid_pixels_occ[i][b, :, :, :] = 1.0
+
+                for i in range(self.n):
+                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i] * valid_pixels_occ[i])
+
+            elif self.occ_disocc_handling == 'consistency_tensor':
+                consistency_tensors = [1 + self.depth_consistency_weight * torch.abs(inv2depth(inv_depths_wrt_ref_cam[i]) - inv2depth(ref_inv_depths_warped[i]))]
+                B = len(path_to_ego_mask)
+                for b in range(B):
+                    if (same_timestep_as_origin[j][b] and not self.mask_spatial_context) or (not same_timestep_as_origin[j][b] and not self.mask_temporal_context):
+                        consistency_tensors[i][b, :, :, :] = 1.0
+
+                for i in range(self.n):
+                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i] * consistency_tensors[i])
+
+            else:
+                for i in range(self.n):
+                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
 
             # If using automask
             if self.automask_loss:

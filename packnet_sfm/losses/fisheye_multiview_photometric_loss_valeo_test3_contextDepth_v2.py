@@ -592,14 +592,14 @@ class MultiViewPhotometricLoss(LossBase):
                     photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i] * valid_pixels_occ[i])
 
             elif self.occ_disocc_handling == 'consistency_tensor':
-                consistency_tensors = [inv_depths_wrt_ref_cam[i] * torch.abs(inv2depth(inv_depths_wrt_ref_cam[i]) - inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
+                consistency_tensors = [self.depth_consistency_weight * inv_depths_wrt_ref_cam[i] * torch.abs(inv2depth(inv_depths_wrt_ref_cam[i]) - inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
                 B = len(path_to_ego_mask)
                 for b in range(B):
                     if (same_timestep_as_origin[j][b] and not self.mask_spatial_context) or (not same_timestep_as_origin[j][b] and not self.mask_temporal_context):
                         consistency_tensors[i][b, :, :, :] = 1.0
 
                 for i in range(self.n):
-                    photometric_losses[i].append((photometric_loss[i] + self.depth_consistency_weight * consistency_tensors[i]) * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+                    photometric_losses[i].append((photometric_loss[i] + consistency_tensors[i]) * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
 
             else:
                 for i in range(self.n):

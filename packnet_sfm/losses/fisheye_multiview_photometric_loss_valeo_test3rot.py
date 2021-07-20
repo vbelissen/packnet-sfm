@@ -445,7 +445,6 @@ class MultiViewPhotometricLoss(LossBase):
             for b in range(B):
                 ego_mask_tensor[b, 0]     = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
                 for i_context in range(n_context):
-                    print(ref_path_to_ego_mask[i_context][b])
                     ref_ego_mask_tensor[i_context][b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[i_context][b])).float()
 
             ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)

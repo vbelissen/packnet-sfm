@@ -162,7 +162,8 @@ class MultiViewPhotometricLoss(LossBase):
         pose_matrix = torch.zeros(B, 4, 4)
         for b in range(B):
             if same_timestamp_as_origin[b]:
-                pose_matrix[b, :, 3]   = pose.mat[b, :3, :3] @ pose_matrix_context[b, :, 3]
+                pose_matrix[b, :3, 3]   = pose.mat[b, :3, :3] @ pose_matrix_context[b, :3, 3]
+                pose_matrix[b,  3, 3]   = 1
                 pose_matrix[b, :3, :3] = pose.mat[b, :3, :3] @ pose_matrix_context[b, :3, :3]
             else:
                 pose_matrix[b, :, :] = pose.mat[b, :, :]

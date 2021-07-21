@@ -137,13 +137,16 @@ class MultiViewPhotometricLoss(LossBase):
 
 ########################################################################################################################
 
-    def warp_ref_image_depth(self, inv_depths, ref_image, ref_tensor, ref_inv_depths,
-                       path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
-                       ref_path_to_theta_lut, ref_path_to_ego_mask, ref_poly_coeffs, ref_principal_point,
-                       ref_scale_factors,
-                       same_timestamp_as_origin,
-                       pose_matrix_context,
-                       pose):
+    def warp_ref(self, inv_depths, ref_image, ref_tensor, ref_inv_depths,
+                 path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
+                 ref_path_to_theta_lut, ref_path_to_ego_mask, ref_poly_coeffs, ref_principal_point,
+                 ref_scale_factors,
+                 same_timestamp_as_origin,
+                 pose_matrix_context,
+                 pose,
+                 warp_ref_depth,
+                 warp_ref_ego_mask,
+                 allow_context_rotation):
         """
         Warps a reference image to produce a reconstruction of the original one.
 
@@ -169,16 +172,19 @@ class MultiViewPhotometricLoss(LossBase):
         device = ref_image.get_device()
         # Generate cameras for all scales
         cams, ref_cams = [], []
-        for b in range(B):
-            if same_timestamp_as_origin[b]:
-                pose.mat[b, :, :] = pose_matrix_context[b, :, :]
-        # pose_matrix = torch.zeros(B, 4, 4)
-        # for b in range(B):
-        #     if not same_timestamp_as_origin[b]:
-        #         pose_matrix[b, :, :] = pose.mat[b, :, :]
-        #     else:
-        #         pose_matrix[b, :, :] = pose_matrix_context[b, :, :]
-        # pose_matrix = Pose(pose_matrix)
+        if allow_context_rotation:
+            pose_matrix = torch.zeros(B, 4, 4)
+            for b in range(B):
+                if same_timestamp_as_origin[b]:
+                    pose_matrix[b, :3, 3] = pose.mat[b, :3, :3] @ pose_matrix_context[b, :3, 3]
+                    pose_matrix[b, 3, 3] = 1
+                    pose_matrix[b, :3, :3] = pose.mat[b, :3, :3] @ pose_matrix_context[b, :3, :3]
+                else:
+                    pose_matrix[b, :, :] = pose.mat[b, :, :]
+        else:
+            for b in range(B):
+                if same_timestamp_as_origin[b]:
+                    pose.mat[b, :, :] = pose_matrix_context[b, :, :]
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
@@ -187,102 +193,50 @@ class MultiViewPhotometricLoss(LossBase):
                                       poly_coeffs=poly_coeffs.float(),
                                       principal_point=principal_point.float(),
                                       scale_factors=scale_factors.float()).scaled(scale_factor).to(device))
-            ref_cams.append(CameraFisheye(path_to_theta_lut=ref_path_to_theta_lut,
-                                          path_to_ego_mask=ref_path_to_ego_mask,
-                                          poly_coeffs=ref_poly_coeffs.float(),
-                                          principal_point=ref_principal_point.float(),
-                                          scale_factors=ref_scale_factors.float(), Tcw=pose).scaled(scale_factor).to(
-                device))
+            if allow_context_rotation:
+                ref_cams.append(CameraFisheye(path_to_theta_lut=ref_path_to_theta_lut,
+                                              path_to_ego_mask=ref_path_to_ego_mask,
+                                              poly_coeffs=ref_poly_coeffs.float(),
+                                              principal_point=ref_principal_point.float(),
+                                              scale_factors=ref_scale_factors.float(), Tcw=pose_matrix).scaled(scale_factor).to(device))
+            else:
+                ref_cams.append(CameraFisheye(path_to_theta_lut=ref_path_to_theta_lut,
+                                              path_to_ego_mask=ref_path_to_ego_mask,
+                                              poly_coeffs=ref_poly_coeffs.float(),
+                                              principal_point=ref_principal_point.float(),
+                                              scale_factors=ref_scale_factors.float(), Tcw=pose).scaled(scale_factor).to(device))
         # View synthesis
         depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
-        ref_depths = [inv2depth(ref_inv_depths[i]) for i in range(self.n)]
         ref_images = match_scales(ref_image, inv_depths, self.n)
-        ref_warped = []
-        depths_wrt_ref_cam = []
-        ref_depths_warped = []
-        for i in range(self.n):
-            view_i, depth_wrt_ref_cam_i, red_depth_warped_i \
-                = view_depth_synthesis2(ref_images[i], depths[i], ref_depths[i], ref_cams[i], cams[i], padding_mode=self.padding_mode)
-            ref_warped.append(view_i)
-            depths_wrt_ref_cam.append(depth_wrt_ref_cam_i)
-            ref_depths_warped.append(red_depth_warped_i)
-        inv_depths_wrt_ref_cam = [depth2inv(depths_wrt_ref_cam[i]) for i in range(self.n)]
-        ref_inv_depths_warped = [depth2inv(ref_depths_warped[i]) for i in range(self.n)]
-        ref_tensors = match_scales(ref_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
-        ref_tensors_warped = [view_synthesis(
-            ref_tensors[i], depths[i], ref_cams[i], cams[i],
-            padding_mode=self.padding_mode, mode='nearest', align_corners=None) for i in range(self.n)]
+
+        if warp_ref_depth:
+            ref_depths = [inv2depth(ref_inv_depths[i]) for i in range(self.n)]
+            ref_warped = []
+            depths_wrt_ref_cam = []
+            ref_depths_warped = []
+            for i in range(self.n):
+                view_i, depth_wrt_ref_cam_i, ref_depth_warped_i \
+                    = view_depth_synthesis2(ref_images[i], depths[i], ref_depths[i], ref_cams[i], cams[i], padding_mode=self.padding_mode)
+                ref_warped.append(view_i)
+                depths_wrt_ref_cam.append(depth_wrt_ref_cam_i)
+                ref_depths_warped.append(ref_depth_warped_i)
+            inv_depths_wrt_ref_cam = [depth2inv(depths_wrt_ref_cam[i]) for i in range(self.n)]
+            ref_inv_depths_warped = [depth2inv(ref_depths_warped[i]) for i in range(self.n)]
+        else:
+            ref_warped = [view_synthesis(ref_images[i], depths[i], ref_cams[i], cams[i], padding_mode=self.padding_mode) for i in range(self.n)]
+            inv_depths_wrt_ref_cam = None
+            ref_inv_depths_warped = None
+
+        if warp_ref_ego_mask:
+            ref_tensors = match_scales(ref_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
+            ref_tensors_warped = [view_synthesis(
+                ref_tensors[i], depths[i], ref_cams[i], cams[i],
+                padding_mode=self.padding_mode, mode='nearest', align_corners=None) for i in range(self.n)]
+        else:
+            ref_tensors_warped = None
+
         # Return warped reference image
         return ref_warped, ref_tensors_warped, inv_depths_wrt_ref_cam, ref_inv_depths_warped
-
-    def warp_ref_image_tensor(self, inv_depths, ref_image, ref_tensor,
-                       path_to_theta_lut,     path_to_ego_mask,     poly_coeffs,      principal_point,      scale_factors,
-                       ref_path_to_theta_lut, ref_path_to_ego_mask, ref_poly_coeffs,  ref_principal_point,  ref_scale_factors,
-                       same_timestamp_as_origin,
-                       pose_matrix_context,
-                       pose):
-        """
-        Warps a reference image to produce a reconstruction of the original one.
-
-        Parameters
-        ----------
-        inv_depths : torch.Tensor [B,1,H,W]
-            Inverse depth map of the original image
-        ref_image : torch.Tensor [B,3,H,W]
-            Reference RGB image
-        K : torch.Tensor [B,3,3]
-            Original camera intrinsics
-        ref_K : torch.Tensor [B,3,3]
-            Reference camera intrinsics
-        pose : Pose
-            Original -> Reference camera transformation
-
-        Returns
-        -------
-        ref_warped : torch.Tensor [B,3,H,W]
-            Warped reference image (reconstructing the original one)
-        """
-        B, _, H, W = ref_image.shape
-        device = ref_image.get_device()
-        # Generate cameras for all scales
-        cams, ref_cams = [], []
-        for b in range(B):
-            if same_timestamp_as_origin[b]:
-                pose.mat[b, :, :] = pose_matrix_context[b, :, :]
-        # pose_matrix = torch.zeros(B, 4, 4)
-        # for b in range(B):
-        #     if not same_timestamp_as_origin[b]:
-        #         pose_matrix[b, :, :] = pose.mat[b, :, :]
-        #     else:
-        #         pose_matrix[b, :, :] = pose_matrix_context[b, :, :]
-        #pose_matrix = Pose(pose_matrix)
-        for i in range(self.n):
-            _, _, DH, DW = inv_depths[i].shape
-            scale_factor = DW / float(W)
-            cams.append(CameraFisheye(path_to_theta_lut=path_to_theta_lut,
-                                      path_to_ego_mask=path_to_ego_mask,
-                                      poly_coeffs=poly_coeffs.float(),
-                                      principal_point=principal_point.float(),
-                                      scale_factors=scale_factors.float()).scaled(scale_factor).to(device))
-            ref_cams.append(CameraFisheye(path_to_theta_lut=ref_path_to_theta_lut,
-                                          path_to_ego_mask=ref_path_to_ego_mask,
-                                          poly_coeffs=ref_poly_coeffs.float(),
-                                          principal_point=ref_principal_point.float(),
-                                          scale_factors=ref_scale_factors.float(), Tcw=pose).scaled(scale_factor).to(device))
-        # View synthesis
-        depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
-        ref_images = match_scales(ref_image, inv_depths, self.n)
-        ref_warped = [view_synthesis(
-            ref_images[i], depths[i], ref_cams[i], cams[i],
-            padding_mode=self.padding_mode, mode='bilinear') for i in range(self.n)]
-        ref_tensors = match_scales(ref_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
-        ref_tensors_warped = [view_synthesis(
-            ref_tensors[i], depths[i], ref_cams[i], cams[i],
-            padding_mode=self.padding_mode, mode='nearest', align_corners=None) for i in range(self.n)]
-        #print(ref_tensors[0][:, :, ::40, ::40])
-        #print(ref_tensors_warped[0][:, :, ::40, ::40])
-        # Return warped reference image
-        return ref_warped, ref_tensors_warped
 
 ########################################################################################################################
 
@@ -512,29 +466,29 @@ class MultiViewPhotometricLoss(LossBase):
         images = match_scales(image, inv_depths, self.n)
 
         n_context = len(context)
-
-        #if self.mask_ego:
         device = image.get_device()
-
         B = len(path_to_ego_mask)
+        H_full, W_full = np.load(path_to_ego_mask[0]).shape
 
-        ego_mask_tensor     = torch.zeros(B, 1, 800, 1280).to(device)
-        ref_ego_mask_tensor = []#[torch.zeros(B, 1, 800, 1280).to(device)] * n_context
+        # getting ego masks for target and source cameras
+        # fullsize mask
+        ego_mask_tensor = torch.zeros(B, 1, H_full, W_full).to(device)
+        ref_ego_mask_tensor = []
         for i_context in range(n_context):
-            ref_ego_mask_tensor.append(torch.zeros(B, 1, 800, 1280).to(device))
+            ref_ego_mask_tensor.append(torch.zeros(B, 1, H_full, W_full).to(device))
         for b in range(B):
-            ego_mask_tensor[b, 0]     = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
+            ego_mask_tensor[b, 0] = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
             for i_context in range(n_context):
                 ref_ego_mask_tensor[i_context][b, 0] = torch.from_numpy(np.load(ref_path_to_ego_mask[i_context][b])).float()
-
-        ego_mask_tensors     = []  # = torch.zeros(B, 1, 800, 1280)
-        ref_ego_mask_tensors = []#[[]] *  n_context  # = torch.zeros(B, 1, 800, 1280)
+        # resized masks
+        ego_mask_tensors = []
+        ref_ego_mask_tensors = []
         for i_context in range(n_context):
             ref_ego_mask_tensors.append([])
         for i in range(self.n):
             B, C, H, W = images[i].shape
-            if W < 1280:
-                inv_scale_factor = int(1280 / W)
+            if W < W_full:
+                inv_scale_factor = int(W_full / W)
                 ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
                 for i_context in range(n_context):
                     ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]))
@@ -542,37 +496,37 @@ class MultiViewPhotometricLoss(LossBase):
                 ego_mask_tensors.append(ego_mask_tensor)
                 for i_context in range(n_context):
                     ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context])
-            # ego_mask_tensor = ego_mask_tensor.to(device)
-
         for i_context in range(n_context):
             B, C, H, W = context[i_context].shape
-            if W < 1280:
-                inv_scale_factor = int(1280 / W)
+            if W < W_full:
+                inv_scale_factor = int(W_full / W)
                 ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             ref_warped, ref_ego_mask_tensors_warped, inv_depths_wrt_ref_cam, ref_inv_depths_warped \
-                = self.warp_ref_image_depth(inv_depths, ref_image, ref_ego_mask_tensor[j],# * ref_ego_mask_tensor[j],
-                                            ref_inv_depths[j],#[ref_inv_depths[j][i] * ref_ego_mask_tensors[j][i] for i in range(self.n)],
-                                            path_to_theta_lut,        path_to_ego_mask,        poly_coeffs,        principal_point,        scale_factors,
-                                            ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j], ref_principal_point[j], ref_scale_factors[j],
-                                            same_timestep_as_origin[j],
-                                            pose_matrix_context[j],
-                                            pose)
+                = self.warp_ref(inv_depths, ref_image, ref_ego_mask_tensor[j], ref_inv_depths[j],
+                                path_to_theta_lut, path_to_ego_mask, poly_coeffs, principal_point, scale_factors,
+                                ref_path_to_theta_lut[j], ref_path_to_ego_mask[j], ref_poly_coeffs[j],
+                                ref_principal_point[j], ref_scale_factors[j],
+                                same_timestep_as_origin[j], pose_matrix_context[j],
+                                pose,
+                                warp_ref_depth=warp_ref_depth,
+                                warp_ref_ego_mask=warp_ref_ego_mask)
+
             coeff_margin_occlusion = 1.5
-            coeff_delta_occlusion = 1.5
+            coeff_delta_occlusion  = 1.5
 
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
 
             if self.occ_disocc_handling == 'masks':
-                without_occlusion_masks1a = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])  for i in range(self.n)]
-                without_occlusion_masks1b = [(ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
+                without_occlusion_mult_a = [(inv_depths_wrt_ref_cam[i] <= coeff_margin_occlusion * ref_inv_depths_warped[i])  for i in range(self.n)]
+                without_occlusion_mult_b = [(ref_inv_depths_warped[i] <= coeff_margin_occlusion * inv_depths_wrt_ref_cam[i])  for i in range(self.n)]
 
-                without_occlusion_masks2a = [(inv2depth(inv_depths_wrt_ref_cam[i]) <= coeff_delta_occlusion + inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
-                without_occlusion_masks2b = [(inv2depth(ref_inv_depths_warped[i]) <= coeff_delta_occlusion + inv2depth(inv_depths_wrt_ref_cam[i])) for i in range(self.n)]
+                without_occlusion_add_a = [(inv2depth(inv_depths_wrt_ref_cam[i]) <= coeff_delta_occlusion + inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
+                without_occlusion_add_b = [(inv2depth(ref_inv_depths_warped[i]) <= coeff_delta_occlusion + inv2depth(inv_depths_wrt_ref_cam[i])) for i in range(self.n)]
 
-                without_occlusion_masks    = [without_occlusion_masks1a[i]+without_occlusion_masks2b[i] for i in range(self.n)]
-                without_disocclusion_masks = [without_occlusion_masks1b[i]+without_occlusion_masks2a[i] for i in range(self.n)]
+                without_occlusion_masks    = [without_occlusion_mult_a[i]+without_occlusion_add_b[i] for i in range(self.n)]
+                without_disocclusion_masks = [without_occlusion_mult_b[i]+without_occlusion_add_a[i] for i in range(self.n)]
 
                 if self.mask_occlusion and self.mask_disocclusion:
                     valid_pixels_occ = [(without_occlusion_masks[i] * without_disocclusion_masks[i]).float() for i in range(self.n)]

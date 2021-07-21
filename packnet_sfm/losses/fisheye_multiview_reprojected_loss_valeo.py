@@ -164,7 +164,7 @@ class ReprojectedLoss(LossBase):
 
             gt_depths = [a * b for a, b in zip(gt_depths, ego_mask_tensors)]
 
-        gt_depths_mask = [(gt_depths[i] > 0.).detach() > 0 for i in range(self.n)]
+        gt_depths_mask = [(gt_depths[i] > 0.).detach() for i in range(self.n)]
 
         for j, pose in enumerate(poses):
             # Calculate warped images

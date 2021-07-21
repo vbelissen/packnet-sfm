@@ -106,15 +106,17 @@ cfg.model.loss.supervised_method = 'sparse-l1'          # Method for depth super
 cfg.model.loss.supervised_num_scales = 4                # Number of scales for supervised learning
 cfg.model.loss.supervised_loss_weight = 0.9             # Supervised loss weight
 cfg.model.loss.reprojected_loss_weight = 10000.         # Reprojected loss weight
-cfg.model.loss.mask_ego = False                         # Ego-masking
-cfg.model.loss.warp_ego_tensor = False                  # Whether to warp ego mask (if not, context images are masked beforehand)
 cfg.model.loss.mask_out_of_bounds_reprojected = False   # Masking out-of-bounds reprojected pixels
-cfg.model.loss.mask_occlusion = False
-cfg.model.loss.mask_disocclusion = False
-cfg.model.loss.mask_spatial_context = False
-cfg.model.loss.mask_temporal_context = False
-cfg.model.loss.occ_disocc_handling = ''
-cfg.model.loss.depth_consistency_weight = 0.2
+#
+cfg.model.loss.mask_ego = True                          # Ego-masking (permanently occluded pixels)
+cfg.model.loss.mask_occlusion = False                   # Masking occluded pixels using the context depth maps
+cfg.model.loss.mask_disocclusion = False                # Masking disoccluded pixels using the context depth maps
+cfg.model.loss.mask_spatial_context = False             # Masking occluded/disocc pixels on spatially adjacent frames
+cfg.model.loss.mask_temporal_context = False            # Masking occluded/disocc pixels on temporally adjacent frames
+cfg.model.loss.mult_margin_occlusion = 1.5              # Multiplicative margin (no unit)
+cfg.model.loss.add_margin_occlusion = 1.5                # Additive margin (in meters)
+cfg.model.loss.depth_consistency_weight = 0.0           # Weight for a depth consistency loss
+cfg.model.loss.allow_context_rotation = False           # Allow some rotation even in spatial context
 ########################################################################################################################
 ### MODEL.DEPTH_NET
 ########################################################################################################################

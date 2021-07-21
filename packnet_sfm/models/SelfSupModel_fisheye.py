@@ -16,10 +16,18 @@ class SelfSupModel_fisheye(SfmModel):
     kwargs : dict
         Extra parameters
     """
-    def __init__(self, **kwargs):
+    def __init__(self, mask_occlusion=False, mask_disocclusion=False, mask_spatial_context=False, mask_temporal_context=False,
+                 depth_consistency_weight=0.2, **kwargs):
+        self.mask_occlusion = mask_occlusion
+        self.mask_disocclusion = mask_disocclusion
+        self.mask_spatial_context = mask_spatial_context
+        self.mask_temporal_context = mask_temporal_context
+        self.depth_consistency_weight = depth_consistency_weight
+        self.use_ref_depth = ((self.mask_occlusion or self.mask_disocclusion) and (self.mask_spatial_context or self.mask_temporal_context)) or (self.depth_consistency_weight > 0)
         # Initializes SfmModel
         super().__init__(**kwargs)
         # Initializes the photometric loss
+
         self._photometric_loss = MultiViewPhotometricLoss(**kwargs)
 
     @property
@@ -69,7 +77,7 @@ class SelfSupModel_fisheye(SfmModel):
             pose_matrix_context,
             poses, return_logs=return_logs, progress=progress)
 
-    def forward(self, batch, mask_ego=True, return_logs=False, progress=0.0):
+    def forward(self, batch, return_logs=False, progress=0.0):
         """
         Processes a batch.
 
@@ -96,7 +104,7 @@ class SelfSupModel_fisheye(SfmModel):
         else:
             with torch.no_grad():
                 context_inv_depths = []
-                if warp_ref_depth:
+                if self.use_ref_depth:
                     n_context = len(batch['rgb_context_original'])
                     for i_context in range(n_context):
                         context = {'rgb': batch['rgb_context_original'][i_context]}

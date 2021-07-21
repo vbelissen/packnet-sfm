@@ -94,7 +94,7 @@ class MultiViewPhotometricLoss(LossBase):
         Extra parameters
     """
     def __init__(self, num_scales=4, ssim_loss_weight=0.85, occ_reg_weight=0.1, smooth_loss_weight=0.1,
-                 C1=1e-4, C2=9e-4, photometric_reduce_op='mean', disp_norm=True, clip_loss=0.5,
+                 C1=1e-4, C2=9e-4, photometric_reduce_op='min', disp_norm=True, clip_loss=0.5,
                  progressive_scaling=0.0, padding_mode='zeros',
                  automask_loss=False,
                  mask_ego=True,
@@ -347,8 +347,9 @@ class MultiViewPhotometricLoss(LossBase):
                 else:
                     return 0
             elif self.photometric_reduce_op == 'min':
+                n_losses = len(losses)
                 C = torch.cat(losses,1)
-                zero_pixels = (C.max(1,True)[0] == 0)
+                zero_pixels = (C.max(1,True)[0] == 0).repeat(1, n_losses, 1, 1)
                 C[C == 0] = 10000
                 min_pixels = C
                 min_pixels[zero_pixels] = 0

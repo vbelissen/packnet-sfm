@@ -104,12 +104,14 @@ class SelfSupModel_fisheye(SfmModel):
         else:
             with torch.no_grad():
                 context_inv_depths = []
-                if self.use_ref_depth:
-                    n_context = len(batch['rgb_context_original'])
-                    for i_context in range(n_context):
+                n_context = len(batch['rgb_context_original'])
+                for i_context in range(n_context):
+                    if self.use_ref_depth:
                         context = {'rgb': batch['rgb_context_original'][i_context]}
                         output_context = super().forward(context, return_logs=return_logs)
                         context_inv_depths.append(output_context['inv_depths'])
+                    else:
+                        context_inv_depths.append(0)
             # Otherwise, calculate self-supervised loss
             self_sup_output = self.self_supervised_loss(
                 batch['rgb_original'], batch['rgb_context_original'],

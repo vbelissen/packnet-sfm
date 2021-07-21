@@ -350,7 +350,7 @@ class MultiViewPhotometricLoss(LossBase):
                 n_losses = len(losses)
                 print(n_losses)
                 print(losses[0].shape)
-                print(losses[0])
+                print(losses[0][0,0,::20,::20])
                 C = torch.cat(losses,1)
                 zero_pixels = (C.max(1,True)[0] == 0).repeat(1, n_losses, 1, 1)
                 C[C == 0] = 10000

@@ -16,14 +16,13 @@ class SelfSupModel_fisheye(SfmModel):
     kwargs : dict
         Extra parameters
     """
-    def __init__(self, mask_occlusion=False, mask_disocclusion=False, mask_spatial_context=False, mask_temporal_context=False,
-                 depth_consistency_weight=0.2, **kwargs):
-        self.mask_occlusion = mask_occlusion
-        self.mask_disocclusion = mask_disocclusion
-        self.mask_spatial_context = mask_spatial_context
-        self.mask_temporal_context = mask_temporal_context
-        self.depth_consistency_weight = depth_consistency_weight
-        self.use_ref_depth = ((self.mask_occlusion or self.mask_disocclusion) and (self.mask_spatial_context or self.mask_temporal_context)) or (self.depth_consistency_weight > 0)
+    def __init__(self, **kwargs):
+        # self.mask_occlusion = mask_occlusion
+        # self.mask_disocclusion = mask_disocclusion
+        # self.mask_spatial_context = mask_spatial_context
+        # self.mask_temporal_context = mask_temporal_context
+        # self.depth_consistency_weight = depth_consistency_weight
+        # self.use_ref_depth = ((self.mask_occlusion or self.mask_disocclusion) and (self.mask_spatial_context or self.mask_temporal_context)) or (self.depth_consistency_weight > 0)
         # Initializes SfmModel
         super().__init__(**kwargs)
         # Initializes the photometric loss
@@ -106,7 +105,8 @@ class SelfSupModel_fisheye(SfmModel):
                 context_inv_depths = []
                 n_context = len(batch['rgb_context_original'])
                 for i_context in range(n_context):
-                    if self.use_ref_depth:
+                    use_ref_depth = False
+                    if use_ref_depth:
                         context = {'rgb': batch['rgb_context_original'][i_context]}
                         output_context = super().forward(context, return_logs=return_logs)
                         context_inv_depths.append(output_context['inv_depths'])

@@ -479,7 +479,7 @@ class MultiViewPhotometricLoss(LossBase):
                 ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
 
         B = len(path_to_ego_mask)
-        
+
         print(self.depth_consistency_weight)
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):

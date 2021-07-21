@@ -96,7 +96,9 @@ class MultiViewPhotometricLoss(LossBase):
     def __init__(self, num_scales=4, ssim_loss_weight=0.85, occ_reg_weight=0.1, smooth_loss_weight=0.1,
                  C1=1e-4, C2=9e-4, photometric_reduce_op='mean', disp_norm=True, clip_loss=0.5,
                  progressive_scaling=0.0, padding_mode='zeros',
-                 automask_loss=False, mask_occlusion=False, mask_disocclusion=False, mask_spatial_context=False, mask_temporal_context=False,
+                 automask_loss=False,
+                 mask_ego=True,
+                 mask_occlusion=False, mask_disocclusion=False, mask_spatial_context=False, mask_temporal_context=False,
                  depth_consistency_weight=0.2,
                  mult_margin_occlusion=1.5, add_margin_occlusion=1.5,
                  allow_context_rotation=False,
@@ -114,6 +116,7 @@ class MultiViewPhotometricLoss(LossBase):
         self.clip_loss = clip_loss
         self.padding_mode = padding_mode
         self.automask_loss = automask_loss
+        self.mask_ego = mask_ego
         self.mask_occlusion = mask_occlusion
         self.mask_disocclusion = mask_disocclusion
         self.mask_spatial_context = mask_spatial_context
@@ -347,7 +350,7 @@ class MultiViewPhotometricLoss(LossBase):
                 C = torch.cat(losses,1)
                 zero_pixels = (C.max(1,True)[0] == 0)
                 C[C == 0] = 10000
-                min_pixels = C.min(1, True)[0]
+                min_pixels = C
                 min_pixels[zero_pixels] = 0
                 mask = min_pixels!=0
                 s = mask.sum()
@@ -510,7 +513,9 @@ class MultiViewPhotometricLoss(LossBase):
                 valid_pixels_occ = [torch.ones_like(inv_depths[i]) for i in range(self.n)]
 
             if self.depth_consistency_weight > 0.0:
-                consistency_tensors = [self.depth_consistency_weight * inv_depths_wrt_ref_cam[i] * torch.abs(inv2depth(inv_depths_wrt_ref_cam[i]) - inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
+                consistency_tensors_1 = [self.depth_consistency_weight * inv_depths_wrt_ref_cam[i] * torch.abs(inv2depth(inv_depths_wrt_ref_cam[i]) - inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
+                consistency_tensors_2 = [self.depth_consistency_weight * ref_inv_depths_warped[i]  * torch.abs(inv2depth(inv_depths_wrt_ref_cam[i]) - inv2depth(ref_inv_depths_warped[i])) for i in range(self.n)]
+                consistency_tensors = [torch.cat([consistency_tensors_1[i], consistency_tensors_2[i]],1).min(1, True)[0] for i in range(self.n)]
             else:
                 consistency_tensors = [torch.zeros_like(inv_depths[i]) for i in range(self.n)]
 

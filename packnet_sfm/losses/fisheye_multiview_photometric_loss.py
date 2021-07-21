@@ -348,13 +348,10 @@ class MultiViewPhotometricLoss(LossBase):
                     return 0
             elif self.photometric_reduce_op == 'min':
                 n_losses = len(losses)
-                print(n_losses)
-                print(losses[0].shape)
-                print(losses[0][0,0,::20,::20])
                 C = torch.cat(losses,1)
                 zero_pixels = (C.max(1,True)[0] == 0).repeat(1, n_losses, 1, 1)
                 C[C == 0] = 10000
-                min_pixels = C
+                min_pixels = C.min(1, True)[0]
                 min_pixels[zero_pixels] = 0
                 mask = min_pixels!=0
                 s = mask.sum()

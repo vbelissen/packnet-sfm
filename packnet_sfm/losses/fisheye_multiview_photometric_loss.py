@@ -348,6 +348,9 @@ class MultiViewPhotometricLoss(LossBase):
                     return 0
             elif self.photometric_reduce_op == 'min':
                 n_losses = len(losses)
+                print(n_losses)
+                print(losses[0].shape)
+                print(losses[0])
                 C = torch.cat(losses,1)
                 zero_pixels = (C.max(1,True)[0] == 0).repeat(1, n_losses, 1, 1)
                 C[C == 0] = 10000
@@ -480,8 +483,6 @@ class MultiViewPhotometricLoss(LossBase):
                 ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
 
         B = len(path_to_ego_mask)
-
-        print(self.depth_consistency_weight)
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             ref_warped, ref_ego_mask_tensors_warped, inv_depths_wrt_ref_cam, ref_inv_depths_warped \

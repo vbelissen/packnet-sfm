@@ -16,11 +16,11 @@ class SelfSupModel_fisheye(SfmModel):
     kwargs : dict
         Extra parameters
     """
-    def __init__(self, **kwargs):
+    def __init__(self, predict_context_depth=False, **kwargs):
         # Initializes SfmModel
         super().__init__(**kwargs)
         # Initializes the photometric loss
-
+        self.predict_context_depth = predict_context_depth
         self._photometric_loss = MultiViewPhotometricLoss(**kwargs)
 
     @property
@@ -99,9 +99,12 @@ class SelfSupModel_fisheye(SfmModel):
                 context_inv_depths = []
                 n_context = len(batch['rgb_context_original'])
                 for i_context in range(n_context):
-                    context = {'rgb': batch['rgb_context_original'][i_context]}
-                    output_context = super().forward(context, return_logs=return_logs)
-                    context_inv_depths.append(output_context['inv_depths'])
+                    if self.predict_context_depth:
+                        context = {'rgb': batch['rgb_context_original'][i_context]}
+                        output_context = super().forward(context, return_logs=return_logs)
+                        context_inv_depths.append(output_context['inv_depths'])
+                    else:
+                        context_inv_depths.append(0)
             # Otherwise, calculate self-supervised loss
             self_sup_output = self.self_supervised_loss(
                 batch['rgb_original'], batch['rgb_context_original'],

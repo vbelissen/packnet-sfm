@@ -117,6 +117,7 @@ cfg.model.loss.mult_margin_occlusion = 1.5              # Multiplicative margin 
 cfg.model.loss.add_margin_occlusion = 1.5                # Additive margin (in meters)
 cfg.model.loss.depth_consistency_weight = 0.0           # Weight for a depth consistency loss
 cfg.model.loss.allow_context_rotation = False           # Allow some rotation even in spatial context
+cfg.model.loss.predict_context_depth = False
 ########################################################################################################################
 ### MODEL.DEPTH_NET
 ########################################################################################################################

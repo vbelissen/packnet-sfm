@@ -200,18 +200,12 @@ class MultiViewPhotometricLoss(LossBase):
                                       poly_coeffs=poly_coeffs.float(),
                                       principal_point=principal_point.float(),
                                       scale_factors=scale_factors.float()).scaled(scale_factor).to(device))
-            if allow_context_rotation:
-                ref_cams.append(CameraFisheye(path_to_theta_lut=ref_path_to_theta_lut,
-                                              path_to_ego_mask=ref_path_to_ego_mask,
-                                              poly_coeffs=ref_poly_coeffs.float(),
-                                              principal_point=ref_principal_point.float(),
-                                              scale_factors=ref_scale_factors.float(), Tcw=pose_matrix).scaled(scale_factor).to(device))
-            else:
-                ref_cams.append(CameraFisheye(path_to_theta_lut=ref_path_to_theta_lut,
-                                              path_to_ego_mask=ref_path_to_ego_mask,
-                                              poly_coeffs=ref_poly_coeffs.float(),
-                                              principal_point=ref_principal_point.float(),
-                                              scale_factors=ref_scale_factors.float(), Tcw=pose).scaled(scale_factor).to(device))
+            ref_cams.append(CameraFisheye(path_to_theta_lut=ref_path_to_theta_lut,
+                                          path_to_ego_mask=ref_path_to_ego_mask,
+                                          poly_coeffs=ref_poly_coeffs.float(),
+                                          principal_point=ref_principal_point.float(),
+                                          scale_factors=ref_scale_factors.float(),
+                                          Tcw=pose_matrix if allow_context_rotation else pose).scaled(scale_factor).to(device))
         # View synthesis
         depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
         ref_images = match_scales(ref_image, inv_depths, self.n)
@@ -352,12 +346,13 @@ class MultiViewPhotometricLoss(LossBase):
                 C[C == 0] = 10000
                 min_pixels = C.min(1, True)[0]
                 min_pixels[zero_pixels] = 0
-                mask = min_pixels!=0
-                s = mask.sum()
-                if s > 0:
-                    return (min_pixels*mask).sum()/s
-                else:
-                    return 0
+                return min_pixels.mean()
+                # mask = min_pixels!=0
+                # s = mask.sum()
+                # if s > 0:
+                #     return (min_pixels*mask).sum()/s
+                # else:
+                #     return 0
             else:
                 raise NotImplementedError(
                     'Unknown photometric_reduce_op: {}'.format(self.photometric_reduce_op))

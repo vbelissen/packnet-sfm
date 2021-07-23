@@ -2,6 +2,7 @@
 
 import numpy as np
 import torch
+import torch.nn as nn
 import torchvision.transforms as transforms
 from matplotlib.cm import get_cmap
 
@@ -293,6 +294,82 @@ def compute_depth_metrics(config, gt, pred, use_gt_scale=True):
         gt_i, pred_i = torch.squeeze(gt_i), torch.squeeze(pred_i)
         # Keep valid pixels (min/max depth and crop)
         valid = (gt_i > config.min_depth) & (gt_i < config.max_depth)
+        valid = valid & crop_mask.bool() if crop else valid
+        # Stop if there are no remaining valid pixels
+        if valid.sum() == 0:
+            continue
+        # Keep only valid pixels
+        gt_i, pred_i = gt_i[valid], pred_i[valid]
+        # Ground-truth median scaling if needed
+        if use_gt_scale:
+            pred_i = pred_i * torch.median(gt_i) / torch.median(pred_i)
+        # Clamp predicted depth values to min/max values
+        pred_i = pred_i.clamp(config.min_depth, config.max_depth)
+
+        # Calculate depth metrics
+
+        thresh = torch.max((gt_i / pred_i), (pred_i / gt_i))
+        a1 += (thresh < 1.25     ).float().mean()
+        a2 += (thresh < 1.25 ** 2).float().mean()
+        a3 += (thresh < 1.25 ** 3).float().mean()
+
+        diff_i = gt_i - pred_i
+        abs_diff += torch.mean(torch.abs(diff_i))
+        abs_rel += torch.mean(torch.abs(diff_i) / gt_i)
+        sq_rel += torch.mean(diff_i ** 2 / gt_i)
+        rmse += torch.sqrt(torch.mean(diff_i ** 2))
+        rmse_log += torch.sqrt(torch.mean((torch.log(gt_i) -
+                                           torch.log(pred_i)) ** 2))
+    # Return average values for each metric
+    return torch.tensor([metric / batch_size for metric in
+        [abs_rel, sq_rel, rmse, rmse_log, a1, a2, a3]]).type_as(gt)
+
+def compute_ego_depth_metrics(config, gt, pred, path_to_ego_masks=[], use_gt_scale=True):
+    """
+    Compute depth metrics from predicted and ground-truth depth maps
+
+    Parameters
+    ----------
+    config : CfgNode
+        Metrics parameters
+    gt : torch.Tensor [B,1,H,W]
+        Ground-truth depth map
+    pred : torch.Tensor [B,1,H,W]
+        Predicted depth map
+    use_gt_scale : bool
+        True if ground-truth median-scaling is to be used
+
+    Returns
+    -------
+    metrics : torch.Tensor [7]
+        Depth metrics (abs_rel, sq_rel, rmse, rmse_log, a1, a2, a3)
+    """
+    crop = config.crop == 'garg'
+
+    # Initialize variables
+    batch_size, _, gt_height, gt_width = gt.shape
+    abs_diff = abs_rel = sq_rel = rmse = rmse_log = a1 = a2 = a3 = 0.0
+    device = pred.get_device()
+    H_full, W_full = np.load(path_to_ego_masks[0]).shape
+    ego_mask_tensor_orig = torch.ones(batch_size, 1, H_full, W_full).to(device)
+    for b in range(batch_size):
+        ego_mask_tensor_orig[b, 0] = torch.from_numpy(np.load(path_to_ego_masks[b])).float()
+    if gt_width < W_full:
+        inv_scale_factor = int(W_full / gt_width)
+        ego_mask_tensor = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor_orig).byte().type_as(gt)
+    # Interpolate predicted depth to ground-truth resolution
+    pred = interpolate_image(pred, gt.shape, mode='bilinear', align_corners=True)
+    # If using crop
+    if crop:
+        crop_mask = torch.zeros(gt.shape[-2:]).byte().type_as(gt)
+        y1, y2 = int(0.40810811 * gt_height), int(0.99189189 * gt_height)
+        x1, x2 = int(0.03594771 * gt_width), int(0.96405229 * gt_width)
+        crop_mask[y1:y2, x1:x2] = 1
+    # For each depth map
+    for pred_i, gt_i, ego_i in zip(pred, gt, ego_mask_tensor):
+        gt_i, pred_i, ego_i = torch.squeeze(gt_i), torch.squeeze(pred_i), torch.squeeze(ego_i)
+        # Keep valid pixels (min/max depth and crop)
+        valid = (gt_i > config.min_depth) & (gt_i < config.max_depth) & ego_mask_tensor.bool()
         valid = valid & crop_mask.bool() if crop else valid
         # Stop if there are no remaining valid pixels
         if valid.sum() == 0:

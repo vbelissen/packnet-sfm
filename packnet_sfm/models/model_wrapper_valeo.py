@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import ConcatDataset, DataLoader
 
 from packnet_sfm.datasets.transforms_valeo import get_transforms, get_transforms_fisheye, get_transforms_woodscape_fisheye
-from packnet_sfm.utils.depth import inv2depth, post_process_inv_depth, compute_depth_metrics
+from packnet_sfm.utils.depth import inv2depth, post_process_inv_depth, compute_depth_metrics, compute_ego_depth_metrics
 from packnet_sfm.utils.horovod import print0, world_size, rank, on_rank_0
 from packnet_sfm.utils.image import flip_lr
 from packnet_sfm.utils.load import load_class, load_class_args_create, \
@@ -304,10 +304,18 @@ class ModelWrapper(torch.nn.Module):
         metrics = OrderedDict()
         if 'depth' in batch:
             for mode in self.metrics_modes:
-                metrics[self.metrics_name + mode] = compute_depth_metrics(
-                    self.config.model.params, gt=batch['depth'],
-                    pred=depth_pp if 'pp' in mode else depth,
-                    use_gt_scale='gt' in mode)
+                if self.config.model.loss.mask_ego:
+                    metrics[self.metrics_name + mode] = compute_ego_depth_metrics(
+                        self.config.model.params, gt=batch['depth'],
+                        pred=depth_pp if 'pp' in mode else depth,
+                        path_to_ego_masks=batch['path_to_ego_mask'],
+                        use_gt_scale='gt' in mode)
+                else:
+                    metrics[self.metrics_name + mode] = compute_depth_metrics(
+                        self.config.model.params, gt=batch['depth'],
+                        pred=depth_pp if 'pp' in mode else depth,
+                        path_to_ego_masks=batch['path_to_ego_mask'],
+                        use_gt_scale='gt' in mode)
         # Return metrics and extra information
         return {
             'metrics': metrics,

@@ -314,7 +314,6 @@ class ModelWrapper(torch.nn.Module):
                     metrics[self.metrics_name + mode] = compute_depth_metrics(
                         self.config.model.params, gt=batch['depth'],
                         pred=depth_pp if 'pp' in mode else depth,
-                        path_to_ego_masks=batch['path_to_ego_mask'],
                         use_gt_scale='gt' in mode)
         # Return metrics and extra information
         return {

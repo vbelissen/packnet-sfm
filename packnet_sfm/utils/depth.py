@@ -369,7 +369,7 @@ def compute_ego_depth_metrics(config, gt, pred, path_to_ego_masks=[], use_gt_sca
     for pred_i, gt_i, ego_i in zip(pred, gt, ego_mask_tensor):
         gt_i, pred_i, ego_i = torch.squeeze(gt_i), torch.squeeze(pred_i), torch.squeeze(ego_i)
         # Keep valid pixels (min/max depth and crop)
-        valid = (gt_i > config.min_depth) & (gt_i < config.max_depth) & ego_mask_tensor.bool()
+        valid = (gt_i > config.min_depth) & (gt_i < config.max_depth) & ego_i.bool()
         valid = valid & crop_mask.bool() if crop else valid
         # Stop if there are no remaining valid pixels
         if valid.sum() == 0:

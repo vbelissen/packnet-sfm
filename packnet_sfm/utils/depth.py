@@ -351,12 +351,12 @@ def compute_ego_depth_metrics(config, gt, pred, path_to_ego_masks=[], use_gt_sca
     abs_diff = abs_rel = sq_rel = rmse = rmse_log = a1 = a2 = a3 = 0.0
     device = pred.get_device()
     H_full, W_full = np.load(path_to_ego_masks[0]).shape
-    ego_mask_tensor_orig = torch.ones(batch_size, 1, H_full, W_full).to(device)
+    ego_mask_tensor = torch.ones(batch_size, 1, H_full, W_full).to(device)
     for b in range(batch_size):
-        ego_mask_tensor_orig[b, 0] = torch.from_numpy(np.load(path_to_ego_masks[b])).float()
+        ego_mask_tensor[b, 0] = torch.from_numpy(np.load(path_to_ego_masks[b])).float()
     if gt_width < W_full:
         inv_scale_factor = int(W_full / gt_width)
-        ego_mask_tensor = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor_orig).byte().type_as(gt)
+        ego_mask_tensor = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor).byte().type_as(gt)
     # Interpolate predicted depth to ground-truth resolution
     pred = interpolate_image(pred, gt.shape, mode='bilinear', align_corners=True)
     # If using crop

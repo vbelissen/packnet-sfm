@@ -3,7 +3,7 @@
 import argparse
 import torch
 
-from packnet_sfm.models.model_wrapper import ModelWrapper
+from packnet_sfm.models.model_wrapper_valeo import ModelWrapper
 from packnet_sfm.trainers.horovod_trainer import HorovodTrainer
 from packnet_sfm.utils.config import parse_test_file
 from packnet_sfm.utils.load import set_debug

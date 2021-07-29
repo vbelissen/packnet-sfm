@@ -28,20 +28,27 @@ datasets:
     train:
         batch_size: 4
         dataset: ['DGP']
-        path: ['/data/datasets/DDAD_tiny/ddad_tiny.json']
+        path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/DDAD_tiny/ddad_tiny.json']
         split: ['train']
         depth_type: ['lidar']
         cameras: [['camera_01']]
         repeat: [500]
     validation:
         dataset: ['DGP']
-        path: ['/data/datasets/DDAD_tiny/ddad_tiny.json']
+        path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/DDAD_tiny/ddad_tiny.json']
         split: ['train']
         depth_type: ['lidar']
         cameras: [['camera_01']]
     test:
         dataset: ['DGP']
-        path: ['/data/datasets/DDAD_tiny/ddad_tiny.json']
+        path: ['/home/users/vbelissen/packnet-sfm_ancien/data/datasets/DDAD_tiny/ddad_tiny.json']
         split: ['train']
         depth_type: ['lidar']
         cameras: [['camera_01']]
+checkpoint:
+    save_top_k: 0
+    filepath: '/home/users/vbelissen/saved_models_v3' # Where the models will be saved
+    monitor: 'abs_rel_gt' # which metric is observed
+    monitor_index: 0 # from which validation dataset the metric is observed
+    mode: 'min' # if the metric is minimized or maximized
+

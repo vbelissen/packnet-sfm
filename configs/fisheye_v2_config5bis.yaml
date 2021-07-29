@@ -3,7 +3,7 @@ arch:
 model:
     loss:
         mask_ego: False
-    name: 'SelfSupModel_fisheye_valeo'
+    name: 'SelfSupModel_fisheye_valeo_testPose'
     optimizer:
         name: 'Adam'
         depth:
@@ -26,16 +26,16 @@ model:
         max_depth: 40.0
 datasets:
     augmentation:
-        image_shape: (160, 256)
+        image_shape: (800, 1280)
     train:
-        batch_size: 32
+        batch_size: 1
         dataset: ['KITTIValeoFisheye']
         path: ['/home/data/vbelissen/valeo_multiview']
         split: ['list_cam_0_frames_camera0annotated_train_shuffled.txt']
         depth_type: ['']
         cameras: [['cam_0']]
         repeat: [1]
-        with_geometric_context: False
+        with_geometric_context: True
     validation:
         dataset: ['KITTIValeoFisheye']
         path: ['/home/data/vbelissen/valeo_multiview']

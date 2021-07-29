@@ -3,7 +3,9 @@ arch:
 model:
     loss:
         mask_ego: False
-    name: 'SelfSupModel_fisheye_valeo'
+        automask_loss: False
+        photometric_reduce_op: 'mean'
+    name: 'SelfSupModel_fisheye_valeo_testPose'
     optimizer:
         name: 'Adam'
         depth:
@@ -35,7 +37,7 @@ datasets:
         depth_type: ['']
         cameras: [['cam_0']]
         repeat: [1]
-        with_geometric_context: False
+        with_geometric_context: True
     validation:
         dataset: ['KITTIValeoFisheye']
         path: ['/home/data/vbelissen/valeo_multiview']

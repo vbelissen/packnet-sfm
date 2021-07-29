@@ -2,8 +2,10 @@ arch:
     max_epochs: 20
 model:
     loss:
-        mask_ego: False
-    name: 'SelfSupModel_fisheye_valeo'
+        automask_loss: False
+        photometric_reduce_op: 'mean'
+        mask_ego: True
+    name: 'SelfSupModel_fisheye_valeo_testPose4'
     optimizer:
         name: 'Adam'
         depth:
@@ -35,7 +37,7 @@ datasets:
         depth_type: ['']
         cameras: [['cam_0']]
         repeat: [1]
-        with_geometric_context: False
+        with_geometric_context: True
     validation:
         dataset: ['KITTIValeoFisheye']
         path: ['/home/data/vbelissen/valeo_multiview']
@@ -51,6 +53,6 @@ datasets:
 checkpoint:
     save_top_k: 0
     filepath: '/home/users/vbelissen/saved_models_v3' # Where the models will be saved
-    monitor: 'abs_rel_gt' # which metric is observed
+    monitor: 'abs_rel' # which metric is observed
     monitor_index: 0 # from which validation dataset the metric is observed
     mode: 'min' # if the metric is minimized or maximized

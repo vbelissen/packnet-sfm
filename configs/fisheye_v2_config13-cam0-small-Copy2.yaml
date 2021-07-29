@@ -1,9 +1,12 @@
 arch:
     max_epochs: 20
 model:
+    checkpoint_path: '/home/users/vbelissen/saved_models_v3/default_config-fisheye_v2_config13-cam0-small-2021.06.18-18h48m49s/epoch=19_valeo_multiview-list_cam_0_annotated_frames_test_sync_shuffled-velodyne-cam_0-abs_rel=0.422.ckpt'
     loss:
-        mask_ego: False
-    name: 'SelfSupModel_fisheye_valeo'
+        automask_loss: True
+        photometric_reduce_op: 'min'
+        mask_ego: True
+    name: 'SelfSupModel_fisheye_valeo_testPose3'
     optimizer:
         name: 'Adam'
         depth:
@@ -31,11 +34,11 @@ datasets:
         batch_size: 32
         dataset: ['KITTIValeoFisheye']
         path: ['/home/data/vbelissen/valeo_multiview']
-        split: ['list_cam_0_frames_camera0annotated_train_shuffled.txt']
+        split: ['list_cam_0_frames_camera0annotated_test_sync_shuffled.txt']
         depth_type: ['']
         cameras: [['cam_0']]
         repeat: [1]
-        with_geometric_context: False
+        with_geometric_context: True
     validation:
         dataset: ['KITTIValeoFisheye']
         path: ['/home/data/vbelissen/valeo_multiview']
@@ -51,6 +54,6 @@ datasets:
 checkpoint:
     save_top_k: 0
     filepath: '/home/users/vbelissen/saved_models_v3' # Where the models will be saved
-    monitor: 'abs_rel_gt' # which metric is observed
+    monitor: 'abs_rel' # which metric is observed
     monitor_index: 0 # from which validation dataset the metric is observed
     mode: 'min' # if the metric is minimized or maximized

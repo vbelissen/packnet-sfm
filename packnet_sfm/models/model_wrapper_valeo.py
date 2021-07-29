@@ -549,6 +549,14 @@ def setup_dataset(config, mode, requirements, **kwargs):
                 **dataset_args, **dataset_args_i,
                 cameras=config.cameras[i],
             )
+        # DGP dataset
+        elif config.dataset[i] == 'DGPvaleo':
+            from packnet_sfm.datasets.dgp_valeo_dataset import DGPvaleoDataset
+            dataset = DGPvaleoDataset(
+                config.path[i], config.split[i],
+                **dataset_args, **dataset_args_i,
+                cameras=config.cameras[i],
+            )
         # Image dataset
         elif config.dataset[i] == 'Image':
             from packnet_sfm.datasets.image_dataset import ImageDataset

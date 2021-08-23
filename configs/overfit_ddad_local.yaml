@@ -1,7 +1,7 @@
 arch:
     max_epochs: 1
 model:
-    name: 'SelfSupModel'
+    name: 'VelSupModel'
     optimizer:
         name: 'Adam'
         depth:
@@ -33,7 +33,7 @@ datasets:
         depth_type: ['lidar']
         cameras: [['camera_01', 'camera_05']]
         repeat: [10]
-        with_geometric_context: True
+        with_geometric_context: False
     validation:
         dataset: ['DGPvaleo']
         path: ['/home/vbelissen/Downloads/DDAD_tiny/ddad_tiny.json']

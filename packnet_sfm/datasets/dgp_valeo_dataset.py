@@ -364,21 +364,21 @@ class DGPvaleoDataset:
             self.sample_dgp_left = [make_list(sample) for sample in self.sample_dgp_left]
             self.sample_dgp_right = [make_list(sample) for sample in self.sample_dgp_right]
 
-        print('self.sample_dgp :')
-        print(self.sample_dgp)
-        print('self.sample_dgp_left :')
-        print(self.sample_dgp_left)
-        print('self.sample_dgp_right :')
-        print(self.sample_dgp_right)
+        # print('self.sample_dgp :')
+        # print(self.sample_dgp)
+        # print('self.sample_dgp_left :')
+        # print(self.sample_dgp_left)
+        # print('self.sample_dgp_right :')
+        # print(self.sample_dgp_right)
 
 
         # Loop over all cameras
         sample = []
         for i in range(self.num_cameras):
-            print(self.get_current('datum_name', i))
-            print(self.get_filename(idx, i))
-            print(self.get_current('intrinsics', i))
-            print(self.with_depth)
+            # print(self.get_current('datum_name', i))
+            # print(self.get_filename(idx, i))
+            # print(self.get_current('intrinsics', i))
+            # print(self.with_depth)
             data = {
                 'idx': idx,
                 'dataset_idx': self.dataset_idx,
@@ -438,8 +438,18 @@ class DGPvaleoDataset:
                     'rgb_right': self.get_current_right('rgb', i),
                     'intrinsics_left': self.get_current_left('intrinsics', i),
                     'intrinsics_right': self.get_current_right('intrinsics', i),
-                    'extrinsics_left': self.get_current_left('extrinsics', i),
-                    'extrinsics_right': self.get_current_right('extrinsics', i),
+                    'extrinsics_left': self.get_current_left('extrinsics', i).matrix,
+                    'extrinsics_right': self.get_current_right('extrinsics', i).matrix,
+                })
+                orig_extrinsics_left = Pose.from_matrix(data['extrinsics_left'])
+                orig_extrinsics_right = Pose.from_matrix(data['extrinsics_right'])
+                data.update({
+                    'extrinsics_context_left':
+                        [(orig_extrinsics_left.inverse() * extrinsics_left).matrix
+                         for extrinsics_left in self.get_context_left('extrinsics', i)],
+                    'extrinsics_context_right':
+                        [(orig_extrinsics_right.inverse() * extrinsics_right).matrix
+                         for extrinsics_right in self.get_context_right('extrinsics', i)],
                 })
 
             sample.append(data)

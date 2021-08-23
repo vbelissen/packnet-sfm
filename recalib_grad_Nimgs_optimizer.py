@@ -31,7 +31,7 @@ import torch.optim as optim
 
 
 
-import open3d as o3d
+#import open3d as o3d
 import matplotlib.pyplot as plt
 import time
 from matplotlib.cm import get_cmap

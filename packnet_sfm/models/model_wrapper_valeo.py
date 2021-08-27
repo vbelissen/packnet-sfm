@@ -9,6 +9,7 @@ import torch
 from torch.utils.data import ConcatDataset, DataLoader
 
 from packnet_sfm.datasets.transforms_valeo import get_transforms, get_transforms_fisheye, get_transforms_woodscape_fisheye
+from packnet_sfm.datasets.transforms_dgp_valeo import get_transforms as get_transforms_dgp_valeo
 from packnet_sfm.utils.depth import inv2depth, post_process_inv_depth, compute_depth_metrics, compute_ego_depth_metrics
 from packnet_sfm.utils.horovod import print0, world_size, rank, on_rank_0
 from packnet_sfm.utils.image import flip_lr
@@ -520,6 +521,12 @@ def setup_dataset(config, mode, requirements, **kwargs):
                 'depth_type': config.depth_type[i] if requirements['gt_depth'] else None,
                 'with_pose': requirements['gt_pose'],
                 'data_transform': get_transforms_fisheye(mode, **kwargs)
+            }
+        elif config.dataset[i] == 'DGPvaleo':
+            dataset_args_i = {
+                'depth_type': config.depth_type[i] if requirements['gt_depth'] else None,
+                'with_pose': requirements['gt_pose'],
+                'data_transform': get_transforms_dgp_valeo(mode, **kwargs)
             }
         elif config.dataset[i] == 'WoodscapeFisheye':
             dataset_args_i = {

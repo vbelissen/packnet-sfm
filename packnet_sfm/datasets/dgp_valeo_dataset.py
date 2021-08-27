@@ -173,6 +173,28 @@ class DGPvaleoDataset:
                 only_annotated_datums=False,
             )
 
+    @staticmethod
+    def _get_base_folder(image_file):
+        """The base folder"""
+        return '/'.join(image_file.split('/')[:-4])
+
+    @staticmethod
+    def _get_sequence_name(image_file):
+        """Returns a sequence name like '20180227_185324'."""
+        return image_file.split('/')[-4]
+
+    @staticmethod
+    def _get_camera_name(image_file):
+        """Returns 'cam_i', i between 0 and 4"""
+        return image_file.split('/')[-2]
+
+    def _get_path_to_ego_mask(self, image_file):
+        """Get the current folder from image_file."""
+        return os.path.join(self._get_base_folder(image_file),
+                            self._get_sequence_name(image_file),
+                            'semantic_masks',
+                            self._get_camera_name(image_file) + '.npy')
+
     def generate_depth_map(self, sample_idx, datum_idx, filename):
         """
         Generates the depth map for a camera by projecting LiDAR information.
@@ -392,11 +414,22 @@ class DGPvaleoDataset:
                 'extrinsics': self.get_current('extrinsics', i).matrix,
             }
 
-            orig_extrinsics = Pose.from_matrix(data['extrinsics'])
+            if self.has_context:
+                data.update({
+                    'intrinsics_context': self.get_context('intrinsics', i),
+                })
+
+                orig_extrinsics = Pose.from_matrix(data['extrinsics'])
+                data.update({
+                    'extrinsics_context':
+                        [(orig_extrinsics.inverse() * extrinsics).matrix
+                         for extrinsics in self.get_context('extrinsics', i)],
+                })
+
             data.update({
-                'extrinsics_context':
-                    [(orig_extrinsics.inverse() * extrinsics).matrix
-                     for extrinsics in self.get_context('extrinsics', i)],
+                'path_to_ego_mask': os.path.join(
+                    os.path.dirname(self.path),
+                    self._get_path_to_ego_mask(self.get_filename(idx, i))),
             })
 
             # If depth is returned
@@ -440,6 +473,8 @@ class DGPvaleoDataset:
                     'intrinsics_right': self.get_current_right('intrinsics', i),
                     'extrinsics_left': self.get_current_left('extrinsics', i).matrix,
                     'extrinsics_right': self.get_current_right('extrinsics', i).matrix,
+                    'path_to_ego_mask_left': self._get_path_to_ego_mask(self.get_filename_left(idx, i)),
+                    'path_to_ego_mask_right': self._get_path_to_ego_mask(self.get_filename_right(idx, i)),
                 })
                 orig_extrinsics_left = Pose.from_matrix(data['extrinsics_left'])
                 orig_extrinsics_right = Pose.from_matrix(data['extrinsics_right'])
@@ -450,6 +485,8 @@ class DGPvaleoDataset:
                     'extrinsics_context_right':
                         [(orig_extrinsics_right.inverse() * extrinsics_right).matrix
                          for extrinsics_right in self.get_context_right('extrinsics', i)],
+                    'intrinsics_context_left': self.get_context_left('intrinsics', i),
+                    'intrinsics_context_right': self.get_context_right('intrinsics', i),
                 })
 
             sample.append(data)

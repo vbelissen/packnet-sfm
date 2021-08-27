@@ -1,7 +1,7 @@
 arch:
-    max_epochs: 100
+    max_epochs: 10
 model:
-    name: 'SelfSupModel_DGPValeo'
+    name: 'VelSupModel'
     optimizer:
         name: 'Adam'
         depth:
@@ -27,21 +27,20 @@ datasets:
         image_shape: (192, 320)
     train:
         batch_size: 1
-        dataset: ['DGPvaleo']
+        dataset: ['DGP']
         path: ['/home/vbelissen/Downloads/DDAD_tiny/ddad_tiny.json']
         split: ['train']
         depth_type: ['lidar']
         cameras: [['camera_01', 'camera_05']]
         repeat: [10]
-        with_geometric_context: False
     validation:
-        dataset: ['DGPvaleo']
+        dataset: ['DGP']
         path: ['/home/vbelissen/Downloads/DDAD_tiny/ddad_tiny.json']
         split: ['train']
         depth_type: ['lidar']
         cameras: [['camera_01']]
     test:
-        dataset: ['DGPvaleo']
+        dataset: ['DGP']
         path: ['/home/vbelissen/Downloads/DDAD_tiny/ddad_tiny.json']
         split: ['train']
         depth_type: ['lidar']

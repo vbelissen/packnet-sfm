@@ -29,18 +29,13 @@ class SelfSupModel_DGPValeo(SfmModel):
             **self._photometric_loss.logs
         }
 
-    def self_supervised_loss(self, image, ref_images_temporal, inv_depths, poses,
-                             intrinsics,
-                             ref_image_left,
-                             ref_image_right,
-                             path_to_ego_mask,
-                             path_to_ego_mask_left,
-                             path_to_ego_mask_right,
-                             ref_intrinsics_left,
-                             ref_intrinsics_right,
-                             extrinsics,
-                             ref_extrinsics_left,
-                             ref_extrinsics_right,
+    def self_supervised_loss(self,
+                             image, ref_images,
+                             inv_depths, poses,
+                             path_to_ego_mask, path_to_ego_mask_context,
+                             intrinsics, ref_intrinsics,
+                             extrinsics, ref_extrinsics,
+                             context_type,
                              return_logs=False, progress=0.0):
         """
         Calculates the self-supervised photometric loss.
@@ -68,16 +63,12 @@ class SelfSupModel_DGPValeo(SfmModel):
             Dictionary containing a "loss" scalar a "metrics" dictionary
         """
         return self._photometric_loss(
-            image, ref_images_temporal, ref_image_left, ref_image_right, inv_depths,
-            intrinsics, intrinsics, poses,
-            path_to_ego_mask,
-            path_to_ego_mask_left,
-            path_to_ego_mask_right,
-            ref_intrinsics_left,
-            ref_intrinsics_right,
-            extrinsics,
-            ref_extrinsics_left,
-            ref_extrinsics_right,
+            image, ref_images,
+            inv_depths, poses,
+            path_to_ego_mask, path_to_ego_mask_context,
+            intrinsics, ref_intrinsics,
+            extrinsics, ref_extrinsics,
+            context_type,
             return_logs=return_logs, progress=progress)
 
     def forward(self, batch, return_logs=False, progress=0.0):
@@ -100,25 +91,33 @@ class SelfSupModel_DGPValeo(SfmModel):
             for logging and downstream usage.
         """
         # Calculate predicted depth and pose output
+
         output = super().forward(batch, return_logs=return_logs)
+        # print(batch['rgb_original'].shape)
+        # print(len(batch['rgb_context_original']))
+        # print(batch['rgb_context_original'][0].shape)
+        # print(output['inv_depths'].shape)
+        # print(output['poses'].shape)
+        # print(batch['path_to_ego_mask'].shape)
+        # print(batch['path_to_ego_mask_context'].shape)
+        # print(batch['intrinsics'].shape)
+        # print(batch['intrinsics_context'].shape)
+        # print(batch['extrinsics'].shape)
+        # print(batch['extrinsics_context'].shape)
+
+
         if not self.training:
             # If not training, no need for self-supervised loss
             return output
         else:
             # Otherwise, calculate self-supervised loss
             self_sup_output = self.self_supervised_loss(
-                batch['rgb_original'], batch['rgb_context_original'],
-                output['inv_depths'], output['poses'], batch['intrinsics'],
-                batch['rgb_left_original'],
-                batch['rgb_right_original'],
-                batch['path_to_ego_mask'],
-                batch['path_to_ego_mask_left'],
-                batch['path_to_ego_mask_right'],
-                batch['intrinsics_left'],
-                batch['intrinsics_right'],
-                batch['extrinsics'],
-                batch['extrinsics_left'],
-                batch['extrinsics_right'],
+                batch['rgb_original'],  batch['rgb_context_original'],
+                output['inv_depths'], output['poses'],
+                batch['path_to_ego_mask'], batch['path_to_ego_mask_context'],
+                batch['intrinsics'], batch['intrinsics_context'],
+                batch['extrinsics'], batch['extrinsics_context'],
+                batch['context_type'],
                 return_logs=return_logs, progress=progress)
             # Return loss and metrics
             return {

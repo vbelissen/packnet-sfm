@@ -7,6 +7,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 
 from packnet_sfm.utils.misc import filter_dict
+from packnet_sfm.utils.types import is_list
 
 ########################################################################################################################
 
@@ -51,8 +52,7 @@ def resize_depth(depth, shape):
                        interpolation=cv2.INTER_NEAREST)
     return np.expand_dims(depth, axis=2)
 
-def resize_sample_image_and_intrinsics(sample, shape,
-                                       image_interpolation=Image.ANTIALIAS):
+def resize_sample_image_and_intrinsics(sample, shape, image_interpolation=Image.ANTIALIAS):
     """
     Resizes the image and intrinsics of a sample
 
@@ -76,11 +76,16 @@ def resize_sample_image_and_intrinsics(sample, shape,
     (out_h, out_w) = shape
     # Scale intrinsics
     for key in filter_dict(sample, [
-        'intrinsics'
+        'intrinsics', 'intrinsics_context', 'intrinsics_left', 'intrinsics_context_left', 'intrinsics_right', 'intrinsics_context_right',
     ]):
         intrinsics = np.copy(sample[key])
-        intrinsics[0] *= out_w / orig_w
-        intrinsics[1] *= out_h / orig_h
+        if len(intrinsics.shape) == 2: # single intrinsics
+            intrinsics[0] *= out_w / orig_w
+            intrinsics[1] *= out_h / orig_h
+        else:
+            for c in range(intrinsics.shape[0]):
+                intrinsics[c, 0] *= out_w / orig_w
+                intrinsics[c, 1] *= out_h / orig_h
         sample[key] = intrinsics
     # Scale images
     for key in filter_dict(sample, [

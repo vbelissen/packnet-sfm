@@ -284,16 +284,12 @@ class MultiViewPhotometricLoss(LossBase):
 
 ########################################################################################################################
 
-    def forward(self, image, temporal_context, left_context, right_context, inv_depths,
-                K, ref_K_temporal, poses,
-                path_to_ego_mask,
-                path_to_ego_mask_left,
-                path_to_ego_mask_right,
-                ref_K_left,
-                ref_K_right,
-                extrinsics,
-                ref_extrinsics_left,
-                ref_extrinsics_right,
+    def forward(self, image, context,
+                inv_depths, poses,
+                path_to_ego_mask, path_to_ego_mask_context,
+                K,                ref_K,
+                extrinsics,       ref_extrinsics,
+                context_type,
                 return_logs=False, progress=0.0):
         """
         Calculates training photometric loss.
@@ -327,9 +323,11 @@ class MultiViewPhotometricLoss(LossBase):
         # Loop over all reference images
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
+
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
+            ref_context_type = [c[j][0] for c in context_type]
             # Calculate warped images
-            ref_warped = self.warp_ref_image(inv_depths, ref_image, K, ref_K, pose)
+            ref_warped = self.warp_ref_image(inv_depths, ref_image, K, ref_K[:, j, :, :], pose)
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
             for i in range(self.n):

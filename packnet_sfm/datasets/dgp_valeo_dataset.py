@@ -9,7 +9,7 @@ from dgp.utils.camera import Camera, generate_depth_map
 from dgp.utils.geometry import Pose
 
 from packnet_sfm.utils.misc import make_list
-from packnet_sfm.utils.types import is_tensor, is_numpy, is_list
+from packnet_sfm.utils.types import is_tensor, is_numpy, is_list, is_str
 
 
 cam_left_dict = {
@@ -43,11 +43,13 @@ def stack_sample(sample):
     stacked_sample = {}
     for key in sample[0]:
         # Global keys (do not stack)
-        if key in ['idx', 'dataset_idx', 'sensor_name', 'filename']:
+        if key in ['idx', 'dataset_idx']:#['idx', 'dataset_idx', 'sensor_name', 'filename']:
             stacked_sample[key] = sample[0][key]
         else:
             # Stack torch tensors
-            if is_tensor(sample[0][key]):
+            if is_str(sample[0][key]):
+                stacked_sample[key] = [s[key] for s in sample]
+            elif is_tensor(sample[0][key]):
                 stacked_sample[key] = torch.stack([s[key] for s in sample], 0)
             # Stack numpy arrays
             elif is_numpy(sample[0][key]):
@@ -55,6 +57,9 @@ def stack_sample(sample):
             # Stack list
             elif is_list(sample[0][key]):
                 stacked_sample[key] = []
+                if is_str(sample[0][key][0]):
+                    for i in range(len(sample)):
+                        stacked_sample[key].append(sample[i][key])
                 # Stack list of torch tensors
                 if is_tensor(sample[0][key][0]):
                     for i in range(len(sample[0][key])):
@@ -65,7 +70,6 @@ def stack_sample(sample):
                     for i in range(len(sample[0][key])):
                         stacked_sample[key].append(
                             np.stack([s[key][i] for s in sample], 0))
-
     # Return stacked sample
     return stacked_sample
 
@@ -412,25 +416,8 @@ class DGPvaleoDataset:
                 'rgb': self.get_current('rgb', i),
                 'intrinsics': self.get_current('intrinsics', i),
                 'extrinsics': self.get_current('extrinsics', i).matrix,
+                'path_to_ego_mask': os.path.join(os.path.dirname(self.path), self._get_path_to_ego_mask(self.get_filename(idx, i))),
             }
-
-            if self.has_context:
-                data.update({
-                    'intrinsics_context': self.get_context('intrinsics', i),
-                })
-
-                orig_extrinsics = Pose.from_matrix(data['extrinsics'])
-                data.update({
-                    'extrinsics_context':
-                        [(orig_extrinsics.inverse() * extrinsics).matrix
-                         for extrinsics in self.get_context('extrinsics', i)],
-                })
-
-            data.update({
-                'path_to_ego_mask': os.path.join(
-                    os.path.dirname(self.path),
-                    self._get_path_to_ego_mask(self.get_filename(idx, i))),
-            })
 
             # If depth is returned
             if self.with_depth:
@@ -444,11 +431,28 @@ class DGPvaleoDataset:
                     'pose': self.get_current('pose', i).matrix,
                 })
 
-            # If context is returned
             if self.has_context:
+                orig_extrinsics = Pose.from_matrix(data['extrinsics'])
                 data.update({
                     'rgb_context': self.get_context('rgb', i),
+                    'intrinsics_context': self.get_context('intrinsics', i),
+                    'extrinsics_context':
+                        [(orig_extrinsics.inverse() * extrinsics).matrix
+                         for extrinsics in self.get_context('extrinsics', i)],
+
                 })
+                data.update({
+                    'path_to_ego_mask_context': [os.path.join(os.path.dirname(self.path), self._get_path_to_ego_mask(self.get_filename(idx, i)))] * len(data['rgb_context']),
+                })
+                data.update({
+                    'context_type': [],
+                })
+                for _ in range(self.bwd):
+                    data['context_type'].append('backward')
+
+                for _ in range(self.fwd):
+                    data['context_type'].append('forward')
+
                 # If context pose is returned
                 if self.with_pose:
                     # Get original values to calculate relative motion
@@ -460,6 +464,26 @@ class DGPvaleoDataset:
                     })
 
             if self.with_geometric_context:
+                orig_extrinsics       = Pose.from_matrix(data['extrinsics'])
+
+                orig_extrinsics_left  = Pose.from_matrix(self.get_current_left('extrinsics', i).matrix)
+                orig_extrinsics_right = Pose.from_matrix(self.get_current_right('extrinsics', i).matrix)
+
+                data['rgb_context'].append(self.get_current_left('rgb', i))
+                data['rgb_context'].append(self.get_current_right('rgb', i))
+
+                data['intrinsics_context'].append(self.get_current_left('intrinsics', i))
+                data['intrinsics_context'].append(self.get_current_right('intrinsics', i))
+
+                data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_left).matrix)
+                data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_right).matrix)
+
+                data['path_to_ego_mask_context'].append(self._get_path_to_ego_mask(self.get_filename_left(idx, i)))
+                data['path_to_ego_mask_context'].append(self._get_path_to_ego_mask(self.get_filename_right(idx, i)))
+
+                data['context_type'].append('left')
+                data['context_type'].append('right')
+
                 data.update({
                     'sensor_name_left': self.get_current_left('datum_name', i),
                     'sensor_name_right': self.get_current_right('datum_name', i),
@@ -467,27 +491,26 @@ class DGPvaleoDataset:
                     'filename_left': self.get_filename_left(idx, i),
                     'filename_right': self.get_filename_right(idx, i),
                     #
-                    'rgb_left': self.get_current_left('rgb', i),
-                    'rgb_right': self.get_current_right('rgb', i),
-                    'intrinsics_left': self.get_current_left('intrinsics', i),
-                    'intrinsics_right': self.get_current_right('intrinsics', i),
-                    'extrinsics_left': self.get_current_left('extrinsics', i).matrix,
-                    'extrinsics_right': self.get_current_right('extrinsics', i).matrix,
-                    'path_to_ego_mask_left': self._get_path_to_ego_mask(self.get_filename_left(idx, i)),
-                    'path_to_ego_mask_right': self._get_path_to_ego_mask(self.get_filename_right(idx, i)),
+                    #'rgb_left': self.get_current_left('rgb', i),
+                    #'rgb_right': self.get_current_right('rgb', i),
+                    #'intrinsics_left': self.get_current_left('intrinsics', i),
+                    #'intrinsics_right': self.get_current_right('intrinsics', i),
+                    #'extrinsics_left': self.get_current_left('extrinsics', i).matrix,
+                    #'extrinsics_right': self.get_current_right('extrinsics', i).matrix,
+                    #'path_to_ego_mask_left': self._get_path_to_ego_mask(self.get_filename_left(idx, i)),
+                    #'path_to_ego_mask_right': self._get_path_to_ego_mask(self.get_filename_right(idx, i)),
                 })
-                orig_extrinsics_left = Pose.from_matrix(data['extrinsics_left'])
-                orig_extrinsics_right = Pose.from_matrix(data['extrinsics_right'])
-                data.update({
-                    'extrinsics_context_left':
-                        [(orig_extrinsics_left.inverse() * extrinsics_left).matrix
-                         for extrinsics_left in self.get_context_left('extrinsics', i)],
-                    'extrinsics_context_right':
-                        [(orig_extrinsics_right.inverse() * extrinsics_right).matrix
-                         for extrinsics_right in self.get_context_right('extrinsics', i)],
-                    'intrinsics_context_left': self.get_context_left('intrinsics', i),
-                    'intrinsics_context_right': self.get_context_right('intrinsics', i),
-                })
+
+                # data.update({
+                #     'extrinsics_context_left':
+                #         [(orig_extrinsics_left.inverse() * extrinsics_left).matrix
+                #          for extrinsics_left in self.get_context_left('extrinsics', i)],
+                #     'extrinsics_context_right':
+                #         [(orig_extrinsics_right.inverse() * extrinsics_right).matrix
+                #          for extrinsics_right in self.get_context_right('extrinsics', i)],
+                #     'intrinsics_context_left': self.get_context_left('intrinsics', i),
+                #     'intrinsics_context_right': self.get_context_right('intrinsics', i),
+                # })
 
             sample.append(data)
 

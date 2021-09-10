@@ -1,7 +1,11 @@
 arch:
     max_epochs: 100
 model:
-    name: 'SelfSupModel_DGPValeo'
+    loss:
+        photometric_reduce_op: 'min'            # Method for photometric loss reducing
+        automask_loss: True
+        supervised_loss_weight: 0.01            # Supervised loss weight
+    name: 'SemiSupModel_DGPValeo'
     optimizer:
         name: 'Adam'
         depth:
@@ -33,7 +37,7 @@ datasets:
         depth_type: ['lidar']
         cameras: [['camera_01', 'camera_05']]
         repeat: [10]
-        with_geometric_context: True
+        with_geometric_context: False
     validation:
         dataset: ['DGPvaleo']
         path: ['/home/vbelissen/Downloads/DDAD_tiny/ddad_tiny.json']

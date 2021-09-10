@@ -124,7 +124,7 @@ class MultiViewPhotometricLoss(LossBase):
 
 ########################################################################################################################
 
-    def warp_ref_image(self, inv_depths, ref_image, K, ref_K, pose):
+    def warp_ref_image(self, inv_depths, ref_image, K, ref_K, pose, ref_extrinsics, ref_context_type):
         """
         Warps a reference image to produce a reconstruction of the original one.
 
@@ -150,6 +150,9 @@ class MultiViewPhotometricLoss(LossBase):
         device = ref_image.get_device()
         # Generate cameras for all scales
         cams, ref_cams = [], []
+        for b in range(B):
+            if ref_context_type[b] == 'left' or ref_context_type[b] == 'right':
+                pose.mat[b, :, :] = ref_extrinsics[b, :, :]
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
@@ -327,7 +330,7 @@ class MultiViewPhotometricLoss(LossBase):
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             ref_context_type = [c[j][0] for c in context_type]
             # Calculate warped images
-            ref_warped = self.warp_ref_image(inv_depths, ref_image, K, ref_K[:, j, :, :], pose)
+            ref_warped = self.warp_ref_image(inv_depths, ref_image, K, ref_K[:, j, :, :], pose, ref_extrinsics[j], ref_context_type)
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
             for i in range(self.n):

@@ -223,7 +223,7 @@ class DGPvaleoDataset:
             os.path.dirname(self.path), filename.format('depth/{}'.format(self.depth_type)))
         # Load and return if exists
         if os.path.exists(filename):
-            return np.load(filename)['depth']
+            return np.load(filename, allow_pickle=True)['depth']
         # Otherwise, create, save and return
         else:
             # Get pointcloud

@@ -152,7 +152,6 @@ class MultiViewPhotometricLoss(LossBase):
         # Generate cameras for all scales
         cams, ref_cams = [], []
         for b in range(B):
-            print(ref_context_type[b])
             if ref_context_type[b] == 'left' or ref_context_type[b] == 'right':
                 pose.mat[b, :, :] = ref_extrinsics[b, :, :]
         for i in range(self.n):

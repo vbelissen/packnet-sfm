@@ -8,6 +8,7 @@ from packnet_sfm.geometry.camera import Camera
 from packnet_sfm.geometry.camera_utils import view_synthesis
 from packnet_sfm.utils.depth import calc_smoothness, inv2depth
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
+from packnet_sfm.utils.types import is_list
 
 ########################################################################################################################
 
@@ -151,6 +152,7 @@ class MultiViewPhotometricLoss(LossBase):
         # Generate cameras for all scales
         cams, ref_cams = [], []
         for b in range(B):
+            print(ref_context_type[b])
             if ref_context_type[b] == 'left' or ref_context_type[b] == 'right':
                 pose.mat[b, :, :] = ref_extrinsics[b, :, :]
         for i in range(self.n):
@@ -326,9 +328,8 @@ class MultiViewPhotometricLoss(LossBase):
         # Loop over all reference images
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
-
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
-            ref_context_type = [c[j][0] for c in context_type]
+            ref_context_type = [c[j][0] for c in context_type] if is_list(context_type[0][0]) else context_type[j]
             # Calculate warped images
             ref_warped = self.warp_ref_image(inv_depths, ref_image, K, ref_K[:, j, :, :], pose, ref_extrinsics[j], ref_context_type)
             # Calculate and store image loss

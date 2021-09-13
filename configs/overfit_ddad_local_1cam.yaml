@@ -30,14 +30,14 @@ datasets:
     augmentation:
         image_shape: (192, 320)
     train:
-        batch_size: 1
+        batch_size: 10
         dataset: ['DGPvaleo']
         path: ['/home/vbelissen/Downloads/DDAD_tiny/ddad_tiny.json']
         split: ['train']
         depth_type: ['lidar']
-        cameras: [['camera_01', 'camera_05']]
+        cameras: [['camera_01']]
         repeat: [10]
-        with_geometric_context: True
+        with_geometric_context: False
     validation:
         dataset: ['DGPvaleo']
         path: ['/home/vbelissen/Downloads/DDAD_tiny/ddad_tiny.json']

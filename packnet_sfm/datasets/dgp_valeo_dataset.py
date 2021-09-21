@@ -129,8 +129,8 @@ class DGPvaleoDataset:
         self.with_pose = with_pose
         self.with_semantic = with_semantic
 
-        print(cameras)
-        print(self.with_depth)
+        # arrange cameras alphabetically
+        cameras = sorted(cameras)
         cameras_left = list(cameras)
         cameras_right = list(cameras)
         for i_cam in range(self.num_cameras):
@@ -145,9 +145,16 @@ class DGPvaleoDataset:
                     cameras_right[i_cam] = cameras_right[i_cam].replace(k, cam_right_dict[k])
                     replaced = True
 
+        print(cameras)
         print(cameras_left)
         print(cameras_right)
 
+        # arrange cameras left and right and extract sorting indices
+        self.cameras_left_sort_idxs  = list(np.argsort(cameras_left))
+        self.cameras_right_sort_idxs = list(np.argsort(cameras_right))
+
+        cameras_left_sorted  = sorted(cameras_left)
+        cameras_right_sorted = sorted(cameras_right)
 
         self.dataset = SynchronizedSceneDataset(path,
             split=split,
@@ -375,6 +382,12 @@ class DGPvaleoDataset:
         return os.path.splitext(os.path.join(os.path.basename(scene_dir),
                                              filename.replace('rgb', '{}')))[0]
 
+    def get_camera_idx_left(self, camera_idx):
+        return self.cameras_left_sort_idxs[camera_idx]
+
+    def get_camera_idx_right(self, camera_idx):
+        return self.cameras_right_sort_idxs[camera_idx]
+
     def __len__(self):
         """Length of dataset"""
         return len(self.dataset)
@@ -386,8 +399,8 @@ class DGPvaleoDataset:
         self.sample_dgp = [make_list(sample) for sample in self.sample_dgp]
         if self.with_geometric_context:
             self.sample_dgp_left = self.dataset_left[idx]
-            self.sample_dgp_right = self.dataset_right[idx]
             self.sample_dgp_left = [make_list(sample) for sample in self.sample_dgp_left]
+            self.sample_dgp_right = self.dataset_right[idx]
             self.sample_dgp_right = [make_list(sample) for sample in self.sample_dgp_right]
 
         # print('self.sample_dgp :')
@@ -401,6 +414,9 @@ class DGPvaleoDataset:
         # Loop over all cameras
         sample = []
         for i in range(self.num_cameras):
+            i_left = self.get_camera_idx_left(i)
+            i_right = self.get_camera_idx_right(i)
+
             # print(self.get_current('datum_name', i))
             # print(self.get_filename(idx, i))
             # print(self.get_current('intrinsics', i))
@@ -442,7 +458,8 @@ class DGPvaleoDataset:
 
                 })
                 data.update({
-                    'path_to_ego_mask_context': [os.path.join(os.path.dirname(self.path), self._get_path_to_ego_mask(self.get_filename(idx, i)))] * len(data['rgb_context']),
+                    'path_to_ego_mask_context': [os.path.join(os.path.dirname(self.path), self._get_path_to_ego_mask(self.get_filename(idx, i)))
+                                                 for _ in range(len(data['rgb_context']))],
                 })
                 data.update({
                     'context_type': [],
@@ -466,30 +483,32 @@ class DGPvaleoDataset:
             if self.with_geometric_context:
                 orig_extrinsics       = Pose.from_matrix(data['extrinsics'])
 
-                orig_extrinsics_left  = Pose.from_matrix(self.get_current_left('extrinsics', i).matrix)
-                orig_extrinsics_right = Pose.from_matrix(self.get_current_right('extrinsics', i).matrix)
+                orig_extrinsics_left  = Pose.from_matrix(self.get_current_left('extrinsics', i_left).matrix)
+                orig_extrinsics_right = Pose.from_matrix(self.get_current_right('extrinsics', i_right).matrix)
 
-                data['rgb_context'].append(self.get_current_left('rgb', i))
-                data['rgb_context'].append(self.get_current_right('rgb', i))
+                data['rgb_context'].append(self.get_current_left('rgb', i_left))
+                data['rgb_context'].append(self.get_current_right('rgb', i_right))
 
-                data['intrinsics_context'].append(self.get_current_left('intrinsics', i))
-                data['intrinsics_context'].append(self.get_current_right('intrinsics', i))
+                data['intrinsics_context'].append(self.get_current_left('intrinsics', i_left))
+                data['intrinsics_context'].append(self.get_current_right('intrinsics', i_right))
 
                 data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_left).matrix)
                 data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_right).matrix)
 
-                data['path_to_ego_mask_context'].append(self._get_path_to_ego_mask(self.get_filename_left(idx, i)))
-                data['path_to_ego_mask_context'].append(self._get_path_to_ego_mask(self.get_filename_right(idx, i)))
+                data['path_to_ego_mask_context'].append(os.path.join(os.path.dirname(self.path),
+                                                                     self._get_path_to_ego_mask(self.get_filename_left(idx, i_left))))
+                data['path_to_ego_mask_context'].append(os.path.join(os.path.dirname(self.path),
+                                                                     self._get_path_to_ego_mask(self.get_filename_right(idx, i_right))))
 
                 data['context_type'].append('left')
                 data['context_type'].append('right')
 
                 data.update({
-                    'sensor_name_left': self.get_current_left('datum_name', i),
-                    'sensor_name_right': self.get_current_right('datum_name', i),
+                    'sensor_name_left': self.get_current_left('datum_name', i_left),
+                    'sensor_name_right': self.get_current_right('datum_name', i_right),
                     #
-                    'filename_left': self.get_filename_left(idx, i),
-                    'filename_right': self.get_filename_right(idx, i),
+                    'filename_left': self.get_filename_left(idx, i_left),
+                    'filename_right': self.get_filename_right(idx, i_right),
                     #
                     #'rgb_left': self.get_current_left('rgb', i),
                     #'rgb_right': self.get_current_right('rgb', i),

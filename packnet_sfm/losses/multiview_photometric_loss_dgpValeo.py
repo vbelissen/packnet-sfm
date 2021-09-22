@@ -6,7 +6,7 @@ import torch.nn as nn
 from packnet_sfm.utils.image import match_scales
 from packnet_sfm.geometry.camera import Camera
 from packnet_sfm.geometry.camera_utils import view_synthesis
-from packnet_sfm.utils.depth import calc_smoothness, inv2depth
+from packnet_sfm.utils.depth import calc_smoothness, inv2depth, depth2inv
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
 from packnet_sfm.utils.types import is_list
 from packnet_sfm.utils.image import interpolate_image
@@ -409,6 +409,17 @@ class MultiViewPhotometricLoss(LossBase):
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
 
+        inv_depths2 = []
+        for k in range(len(inv_depths)):
+
+            Btmp, C, H, W = inv_depths[k].shape
+            depths2 = torch.zeros_like(inv_depths[k])
+            for i in range(H):
+                for j in range(W):
+                    depths2[0, 0, i, j] = (2/H)**4 * (2/W)**4 * i**2 * (H - i)**2 * j**2 * (1279 - j)**2 * 50
+
+            inv_depths2.append(depth2inv(depths2))
+
         if is_list(context_type[0][0]):
             n_context = len(context_type[0])
         else:
@@ -479,7 +490,7 @@ class MultiViewPhotometricLoss(LossBase):
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             ref_context_type = [c[j][0] for c in context_type] if is_list(context_type[0][0]) else context_type[j]
             # Calculate warped images
-            ref_warped, ref_ego_mask_tensors_warped = self.warp_ref_image(inv_depths,
+            ref_warped, ref_ego_mask_tensors_warped = self.warp_ref_image(inv_depths2,
                                                                           ref_image,
                                                                           ref_ego_mask_tensor[j],
                                                                           K, ref_K[:, j, :, :],

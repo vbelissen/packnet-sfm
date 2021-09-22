@@ -469,7 +469,11 @@ class MultiViewPhotometricLoss(LossBase):
             _, C, H, W = context[i_context].shape
             if W < W_full:
                 inv_scale_factor = int(W_full / W)
-                ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
+                #ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
+                ref_ego_mask_tensor[i_context].append(interpolate_image(ref_ego_mask_tensor[i_context],
+                                                                         shape=(Btmp, 1, H, W),
+                                                                         mode='nearest',
+                                                                         align_corners=None))
 
 
         for j, (ref_image, pose) in enumerate(zip(context, poses)):

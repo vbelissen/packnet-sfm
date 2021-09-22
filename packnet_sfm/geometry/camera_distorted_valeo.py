@@ -8,6 +8,8 @@ from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.geometry.camera_utils import scale_intrinsics
 from packnet_sfm.utils.image import image_grid
 
+import numpy as np
+
 ########################################################################################################################
 
 class CameraDistorted(nn.Module):
@@ -142,6 +144,8 @@ class CameraDistorted(nn.Module):
         grid = image_grid(B, H, W, depth.dtype, depth.device, normalized=False)  # [B,3,H,W]
         flat_grid = grid.view(B, 3, -1)  # [B,3,HW]
 
+        device = depth.get_device()
+
         # Estimate the outward undistored rays in the camera frame
         Xnorm_u = (self.Kinv.bmm(flat_grid)).view(B, 3, H, W)
 
@@ -192,6 +196,16 @@ class CameraDistorted(nn.Module):
             # Distorted rays
             Xnorm_d = torch.stack([x_list[-1], y_list[-1], torch.ones_like(x_list[-1])], dim=1)
 
+        elif version == 'v3':
+            Xnorm_d = torch.zeros(B, 3, H, W)
+            for b in range(B):
+                Xnorm_d[b] = torch.from_numpy(np.load(self.path_to_theta_lut[b]))
+
+        Xnorm_d = Xnorm_d.to(device)
+
+        # ATTENTION RENORMALISER Xnorm_d
+
+        Xnorm_d /= norm(Xnorm_d)
         # Scale rays to metric depth
         Xc = Xnorm_d * depth
 

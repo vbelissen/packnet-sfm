@@ -168,7 +168,7 @@ class DGPvaleoDataset:
         if self.with_geometric_context:
             self.dataset_left = SynchronizedSceneDataset(path,
                 split=split,
-                datum_names=cameras_left,
+                datum_names=cameras_left_sorted,
                 backward_context=back_context,
                 forward_context=forward_context,
                 requested_annotations=None,
@@ -177,7 +177,7 @@ class DGPvaleoDataset:
 
             self.dataset_right = SynchronizedSceneDataset(path,
                 split=split,
-                datum_names=cameras_right,
+                datum_names=cameras_right_sorted,
                 backward_context=back_context,
                 forward_context=forward_context,
                 requested_annotations=None,

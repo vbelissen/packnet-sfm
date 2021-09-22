@@ -495,8 +495,8 @@ class DGPvaleoDataset:
                 #data['extrinsics_context'].append((orig_extrinsics_left * orig_extrinsics.inverse()).matrix)
                 #data['extrinsics_context'].append((orig_extrinsics_right * orig_extrinsics.inverse()).matrix)
 
-                data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_left).matrix)
-                data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_right).matrix)
+                data['extrinsics_context'].append((orig_extrinsics * orig_extrinsics_left.inverse()).matrix)
+                data['extrinsics_context'].append((orig_extrinsics * orig_extrinsics_right.inverse()).matrix)
 
                 data['path_to_ego_mask_context'].append(os.path.join(os.path.dirname(self.path),
                                                                      self._get_path_to_ego_mask(self.get_filename_left(idx, i_left))))

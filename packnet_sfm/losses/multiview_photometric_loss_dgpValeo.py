@@ -416,7 +416,7 @@ class MultiViewPhotometricLoss(LossBase):
             depths2 = torch.zeros_like(inv_depths[k])
             for i in range(H):
                 for j in range(W):
-                    depths2[0, 0, i, j] = (2/H)**4 * (2/W)**4 * i**2 * (H - i)**2 * j**2 * (W - j)**2 * 50
+                    depths2[0, 0, i, j] = (2/H)**4 * (2/W)**4 * i**2 * (H - i)**2 * j**2 * (W - j)**2 * 20
 
             inv_depths2.append(depth2inv(depths2))
 

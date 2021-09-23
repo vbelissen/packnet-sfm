@@ -7,6 +7,7 @@ import numpy as np
 from dgp.datasets.synchronized_dataset import SynchronizedSceneDataset
 from dgp.utils.camera import Camera, generate_depth_map
 from dgp.utils.geometry import Pose
+from packnet_sfm.geometry.pose_utils import invert_pose_numpy
 
 from packnet_sfm.utils.misc import make_list
 from packnet_sfm.utils.types import is_tensor, is_numpy, is_list, is_str
@@ -492,8 +493,8 @@ class DGPvaleoDataset:
                 data['intrinsics_context'].append(self.get_current_left('intrinsics', i_left))
                 data['intrinsics_context'].append(self.get_current_right('intrinsics', i_right))
 
-                data['extrinsics_context'].append((orig_extrinsics_left.inverse() * orig_extrinsics).matrix)
-                data['extrinsics_context'].append((orig_extrinsics_right.inverse() * orig_extrinsics).matrix)
+                data['extrinsics_context'].append((invert_pose_numpy(orig_extrinsics_left) @ orig_extrinsics).matrix)
+                data['extrinsics_context'].append((invert_pose_numpy(orig_extrinsics_right) @ orig_extrinsics).matrix)
 
                 #data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_left).matrix)
                 #data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_right).matrix)

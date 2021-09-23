@@ -492,8 +492,8 @@ class DGPvaleoDataset:
                 data['intrinsics_context'].append(self.get_current_right('intrinsics', i_right))
                 data['intrinsics_context'].append(self.get_current_left('intrinsics', i_left))
 
-                data['extrinsics_context'].append((orig_extrinsics_left.inverse() * orig_extrinsics).matrix)
                 data['extrinsics_context'].append((orig_extrinsics_right.inverse() * orig_extrinsics).matrix)
+                data['extrinsics_context'].append((orig_extrinsics_left.inverse() * orig_extrinsics).matrix)
 
                 #data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_left).matrix)
                 #data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_right).matrix)

@@ -159,7 +159,7 @@ class MultiViewPhotometricLoss(LossBase):
         cams, ref_cams = [], []
         for b in range(B):
             if ref_context_type[b] == 'left' or ref_context_type[b] == 'right':
-                pose.mat[b, :, :] = torch.clone(ref_extrinsics[b, :, :])
+                pose.mat[b, :, :] = ref_extrinsics[b, :, :]
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
@@ -491,6 +491,7 @@ class MultiViewPhotometricLoss(LossBase):
             print(ref_extrinsics[j])
             ref_context_type = [c[j][0] for c in context_type] if is_list(context_type[0][0]) else context_type[j]
             print(ref_context_type)
+            print(pose.mat)
             # Calculate warped images
             ref_warped, ref_ego_mask_tensors_warped = self.warp_ref_image(inv_depths2,
                                                                           ref_image,
@@ -499,6 +500,7 @@ class MultiViewPhotometricLoss(LossBase):
                                                                           pose,
                                                                           ref_extrinsics[j],
                                                                           ref_context_type)
+            print(pose.mat)
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
 

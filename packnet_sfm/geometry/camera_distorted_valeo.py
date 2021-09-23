@@ -205,9 +205,9 @@ class CameraDistorted(nn.Module):
 
         # ATTENTION RENORMALISER Xnorm_d
 
-        Xnorm_d /= norm(Xnorm_d)
+        #Xnorm_d /= norm(Xnorm_d)
         # Scale rays to metric depth
-        Xc = Xnorm_d * depth
+        Xc = (Xnorm_d / torch.linalg.norm(Xnorm_d, ord=2, dim=1, keepdim=True)) * depth
 
         # If in camera frame of reference
         if frame == 'c':

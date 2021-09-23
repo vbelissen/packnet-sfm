@@ -160,6 +160,7 @@ class MultiViewPhotometricLoss(LossBase):
         for b in range(B):
             if ref_context_type[b] == 'left' or ref_context_type[b] == 'right':
                 pose.mat[b, :, :] = ref_extrinsics[b, :, :]
+                pose.mat[b,:3,3]=0
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)

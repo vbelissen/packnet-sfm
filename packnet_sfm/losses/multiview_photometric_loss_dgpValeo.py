@@ -486,9 +486,9 @@ class MultiViewPhotometricLoss(LossBase):
                                                                          mode='nearest',
                                                                          align_corners=None)
 
-        print(ref_K)
+        print(ref_extrinsics)
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
-            print(ref_K[:, j, :, :])
+            print(ref_extrinsics[j])
             ref_context_type = [c[j][0] for c in context_type] if is_list(context_type[0][0]) else context_type[j]
             print(ref_context_type)
             # Calculate warped images

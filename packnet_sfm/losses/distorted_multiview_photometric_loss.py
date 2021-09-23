@@ -156,8 +156,8 @@ class DistortedMultiViewPhotometricLoss(LossBase):
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
-            cams.append(CameraDistorted(K=K.float(), k1=k[0], k2=k[1], k3=k[2], p1=p[0], p2=p[1]).scaled(scale_factor).to(device))
-            ref_cams.append(CameraDistorted(K=ref_K.float(), k1=ref_k[0], k2=ref_k[1], k3=ref_k[2], p1=ref_p[0], p2=ref_p[1], Tcw=pose).scaled(scale_factor).to(device))
+            cams.append(CameraDistorted(K=K.float(), k1=k[:,0], k2=k[:,1], k3=k[:,2], p1=p[:,0], p2=p[1]).scaled(scale_factor).to(device))
+            ref_cams.append(CameraDistorted(K=ref_K.float(), k1=ref_k[:,0], k2=ref_k[:,1], k3=ref_k[:,2], p1=ref_p[:,0], p2=ref_p[:,1], Tcw=pose).scaled(scale_factor).to(device))
         # View synthesis
         depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
         ref_images = match_scales(ref_image, inv_depths, self.n)
@@ -323,10 +323,6 @@ class DistortedMultiViewPhotometricLoss(LossBase):
         # Loop over all reference images
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
-        print(k)
-        print(k.shape)
-        print(ref_k)
-        print(ref_k[0].shape)
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
             ref_warped = self.warp_ref_image(inv_depths, ref_image,

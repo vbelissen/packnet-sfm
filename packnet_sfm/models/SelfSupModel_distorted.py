@@ -30,7 +30,9 @@ class SelfSupModel_distorted(SfmModel):
         }
 
     def self_supervised_loss(self, image, ref_images, inv_depths, poses,
-                             intrinsics, return_logs=False, progress=0.0):
+                             intrinsics_K, intrinsics_k, intrinsics_p,
+                             intrinsics_ref_K, intrinsics_ref_k, intrinsics_ref_p,
+                             return_logs=False, progress=0.0):
         """
         Calculates the self-supervised photometric loss.
 
@@ -57,7 +59,10 @@ class SelfSupModel_distorted(SfmModel):
             Dictionary containing a "loss" scalar a "metrics" dictionary
         """
         return self._photometric_loss(
-            image, ref_images, inv_depths, intrinsics, intrinsics, poses,
+            image, ref_images, inv_depths,
+            intrinsics_K, intrinsics_k, intrinsics_p,
+            intrinsics_ref_K, intrinsics_ref_k, intrinsics_ref_p,
+            poses,
             return_logs=return_logs, progress=progress)
 
     def forward(self, batch, return_logs=False, progress=0.0):
@@ -88,7 +93,9 @@ class SelfSupModel_distorted(SfmModel):
             # Otherwise, calculate self-supervised loss
             self_sup_output = self.self_supervised_loss(
                 batch['rgb_original'], batch['rgb_context_original'],
-                output['inv_depths'], output['poses'], batch['intrinsics'],
+                output['inv_depths'], output['poses'],
+                batch['intrinsics_K'], batch['intrinsics_k'], batch['intrinsics_p'],
+                batch['intrinsics_K_context'], batch['intrinsics_k_context'], batch['intrinsics_p_context'],
                 return_logs=return_logs, progress=progress)
             # Return loss and metrics
             return {

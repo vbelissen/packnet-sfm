@@ -5,7 +5,7 @@ from packnet_sfm.losses.distorted_multiview_photometric_loss import DistortedMul
 from packnet_sfm.models.model_utils import merge_outputs
 
 
-class SelfSupModel(SfmModel):
+class SelfSupModel_distorted(SfmModel):
     """
     Model that inherits a depth and pose network from SfmModel and
     includes the photometric loss for self-supervised training.

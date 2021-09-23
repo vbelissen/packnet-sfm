@@ -124,7 +124,10 @@ class DistortedMultiViewPhotometricLoss(LossBase):
 
 ########################################################################################################################
 
-    def warp_ref_image(self, inv_depths, ref_image, K, k1, k2, k3, p1, p2, ref_K, ref_k1, ref_k2, ref_k3, ref_p1, ref_p2, pose):
+    def warp_ref_image(self, inv_depths, ref_image,
+                       K,     k1,     k2,     k3,     p1,     p2,
+                       ref_K, ref_k1, ref_k2, ref_k3, ref_p1, ref_p2,
+                       pose):
         """
         Warps a reference image to produce a reconstruction of the original one.
 

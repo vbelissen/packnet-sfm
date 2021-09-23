@@ -505,7 +505,6 @@ class MultiViewPhotometricLoss(LossBase):
             tt = str(int(time.time() % 10000))
             for i in range(self.n):
                 B, C, H, W = images[i].shape
-                print(photometric_loss[i][:,:,::20,::20])
                 for b in range(B):
                     orig_PIL_0   = torch.transpose((ref_image[b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
                     orig_PIL     = torch.transpose((ref_image[b,:,:,:]* ref_ego_mask_tensor[j][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()

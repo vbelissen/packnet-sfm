@@ -159,7 +159,7 @@ class MultiViewPhotometricLoss(LossBase):
         cams, ref_cams = [], []
         for b in range(B):
             if ref_context_type[b] == 'left' or ref_context_type[b] == 'right':
-                pose.mat[b, :, :] = ref_extrinsics[b, :, :]
+                pose.mat[b, :, :] = torch.clone(ref_extrinsics[b, :, :])
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)

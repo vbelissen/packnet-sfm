@@ -323,6 +323,8 @@ class DistortedMultiViewPhotometricLoss(LossBase):
         # Loop over all reference images
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
+        print(k)
+        print(ref_k)
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
             # Calculate warped images
             ref_warped = self.warp_ref_image(inv_depths, ref_image,

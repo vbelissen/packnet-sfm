@@ -491,6 +491,10 @@ class DGPvaleoDataset:
                 orig_extrinsics_left[:3,3] = -np.dot(orig_extrinsics_left[:3,:3], orig_extrinsics_left[:3,3])
                 orig_extrinsics_right[:3,3] = -np.dot(orig_extrinsics_right[:3,:3], orig_extrinsics_right[:3,3])
 
+                orig_extrinsics = Pose.from_matrix(orig_extrinsics)
+                orig_extrinsics_left = Pose.from_matrix(orig_extrinsics_left)
+                orig_extrinsics_right = Pose.from_matrix(orig_extrinsics_right)
+
                 data['rgb_context'].append(self.get_current_left('rgb', i_left))
                 data['rgb_context'].append(self.get_current_right('rgb', i_right))
 

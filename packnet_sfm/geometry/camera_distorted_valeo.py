@@ -164,9 +164,9 @@ class CameraDistorted(nn.Module):
                 r4 = r2.pow(2)
                 r6 = r2 * r4
 
-                rad_dist = 1 / (1 + self.k1 * r2 + self.k2 * r4 + self.k3 * r6)
-                tang_dist_x = 2 * self.p1 * x * y + self.p2 * (r2 + 2 * x.pow(2))
-                tang_dist_y = 2 * self.p2 * x * y + self.p1 * (r2 + 2 * y.pow(2))
+                rad_dist = 1 / (1 + self.k1.view(B,1,1,1) * r2 + self.k2.view(B,1,1,1) * r4 + self.k3.view(B,1,1,1) * r6)
+                tang_dist_x = 2 * self.p1.view(B,1,1,1) * x * y + self.p2.view(B,1,1,1) * (r2 + 2 * x.pow(2))
+                tang_dist_y = 2 * self.p2.view(B,1,1,1) * x * y + self.p1.view(B,1,1,1) * (r2 + 2 * y.pow(2))
 
                 x = (x_src - tang_dist_x) * rad_dist
                 y = (y_src - tang_dist_y) * rad_dist
@@ -186,9 +186,9 @@ class CameraDistorted(nn.Module):
                 r4 = r2.pow(2)
                 r6 = r2 * r4
 
-                rad_dist = 1 / (1 + self.k1 * r2 + self.k2 * r4 + self.k3 * r6)
-                tang_dist_x = 2 * self.p1 * x_list[-1] * y_list[-1] + self.p2 * (r2 + 2 * x_list[-1].pow(2))
-                tang_dist_y = 2 * self.p2 * x_list[-1] * y_list[-1] + self.p1 * (r2 + 2 * y_list[-1].pow(2))
+                rad_dist = 1 / (1 + self.k1.view(B,1,1,1) * r2 + self.k2.view(B,1,1,1) * r4 + self.k3.view(B,1,1,1) * r6)
+                tang_dist_x = 2 * self.p1.view(B,1,1,1) * x_list[-1] * y_list[-1] + self.p2.view(B,1,1,1) * (r2 + 2 * x_list[-1].pow(2))
+                tang_dist_y = 2 * self.p2.view(B,1,1,1) * x_list[-1] * y_list[-1] + self.p1.view(B,1,1,1) * (r2 + 2 * y_list[-1].pow(2))
 
                 x_list.append((x_list[0] - tang_dist_x) * rad_dist)
                 y_list.append((y_list[0] - tang_dist_y) * rad_dist)

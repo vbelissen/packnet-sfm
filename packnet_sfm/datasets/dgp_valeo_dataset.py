@@ -482,10 +482,10 @@ class DGPvaleoDataset:
                     })
 
             if self.with_geometric_context:
-                orig_extrinsics       = Pose.from_matrix(data['extrinsics'])
+                orig_extrinsics       = data['extrinsics']
 
-                orig_extrinsics_left  = Pose.from_matrix(self.get_current_left('extrinsics', i_left).matrix)
-                orig_extrinsics_right = Pose.from_matrix(self.get_current_right('extrinsics', i_right).matrix)
+                orig_extrinsics_left  = self.get_current_left('extrinsics', i_left).matrix
+                orig_extrinsics_right = self.get_current_right('extrinsics', i_right).matrix
 
                 data['rgb_context'].append(self.get_current_left('rgb', i_left))
                 data['rgb_context'].append(self.get_current_right('rgb', i_right))
@@ -493,8 +493,8 @@ class DGPvaleoDataset:
                 data['intrinsics_context'].append(self.get_current_left('intrinsics', i_left))
                 data['intrinsics_context'].append(self.get_current_right('intrinsics', i_right))
 
-                data['extrinsics_context'].append((invert_pose_numpy(orig_extrinsics_left) @ orig_extrinsics).matrix)
-                data['extrinsics_context'].append((invert_pose_numpy(orig_extrinsics_right) @ orig_extrinsics).matrix)
+                data['extrinsics_context'].append((invert_pose_numpy(orig_extrinsics_left) @ orig_extrinsics))
+                data['extrinsics_context'].append((invert_pose_numpy(orig_extrinsics_right) @ orig_extrinsics))
 
                 #data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_left).matrix)
                 #data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_right).matrix)

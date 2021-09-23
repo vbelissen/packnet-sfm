@@ -483,13 +483,13 @@ class DGPvaleoDataset:
 
             if self.with_geometric_context:
                 orig_extrinsics       = data['extrinsics']
-                #orig_extrinsics[:3,3] = -orig_extrinsics[:3,3]
+                orig_extrinsics[:3,3] = np.dot(orig_extrinsics[:3,:3], orig_extrinsics[:3,3])
 
                 orig_extrinsics_left  = self.get_current_left('extrinsics', i_left).matrix
                 orig_extrinsics_right = self.get_current_right('extrinsics', i_right).matrix
 
-                #orig_extrinsics_left[:3,3] = -orig_extrinsics_left[:3,3]
-                #orig_extrinsics_right[:3,3] = -orig_extrinsics_right[:3,3]
+                orig_extrinsics_left[:3,3] = np.dot(orig_extrinsics_left[:3,:3], orig_extrinsics_left[:3,3])
+                orig_extrinsics_right[:3,3] = np.dot(orig_extrinsics_right[:3,:3], orig_extrinsics_right[:3,3])
 
                 orig_extrinsics = Pose.from_matrix(orig_extrinsics)
                 orig_extrinsics_left = Pose.from_matrix(orig_extrinsics_left)

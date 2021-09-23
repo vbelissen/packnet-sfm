@@ -4,6 +4,7 @@ from functools import partial
 from packnet_sfm.datasets.augmentations import resize_image, resize_sample, \
     duplicate_sample, colorjitter_sample, to_tensor_sample
 from packnet_sfm.datasets.augmentations_valeo_fisheye import resize_sample as resize_sample_fisheye
+from packnet_sfm.datasets.augmentations_valeo_distorted import resize_sample as resize_sample_distorted
 from packnet_sfm.datasets.augmentations_woodscape_fisheye import resize_sample as resize_sample_woodscape_fisheye
 
 
@@ -55,6 +56,32 @@ def train_transforms_fisheye(sample, image_shape, jittering):
     """
     if len(image_shape) > 0:
         sample = resize_sample_fisheye(sample, image_shape)
+    sample = duplicate_sample(sample)
+    if len(jittering) > 0:
+        sample = colorjitter_sample(sample, jittering)
+    sample = to_tensor_sample(sample)
+    return sample
+
+def train_transforms_distorted(sample, image_shape, jittering):
+    """
+    Training data augmentation transformations
+
+    Parameters
+    ----------
+    sample : dict
+        Sample to be augmented
+    image_shape : tuple (height, width)
+        Image dimension to reshape
+    jittering : tuple (brightness, contrast, saturation, hue)
+        Color jittering parameters
+
+    Returns
+    -------
+    sample : dict
+        Augmented sample
+    """
+    if len(image_shape) > 0:
+        sample = resize_sample_distorted(sample, image_shape)
     sample = duplicate_sample(sample)
     if len(jittering) > 0:
         sample = colorjitter_sample(sample, jittering)
@@ -180,6 +207,37 @@ def get_transforms_fisheye(mode, image_shape, jittering, **kwargs):
     """
     if mode == 'train':
         return partial(train_transforms_fisheye,
+                       image_shape=image_shape,
+                       jittering=jittering)
+    elif mode == 'validation':
+        return partial(validation_transforms,
+                       image_shape=image_shape)
+    elif mode == 'test':
+        return partial(test_transforms,
+                       image_shape=image_shape)
+    else:
+        raise ValueError('Unknown mode {}'.format(mode))
+
+def get_transforms_distorted(mode, image_shape, jittering, **kwargs):
+    """
+    Get data augmentation transformations for each split
+
+    Parameters
+    ----------
+    mode : str {'train', 'validation', 'test'}
+        Mode from which we want the data augmentation transformations
+    image_shape : tuple (height, width)
+        Image dimension to reshape
+    jittering : tuple (brightness, contrast, saturation, hue)
+        Color jittering parameters
+
+    Returns
+    -------
+        XXX_transform: Partial function
+            Data augmentation transformation for that mode
+    """
+    if mode == 'train':
+        return partial(train_transforms_distorted,
                        image_shape=image_shape,
                        jittering=jittering)
     elif mode == 'validation':

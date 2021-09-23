@@ -416,7 +416,7 @@ class MultiViewPhotometricLoss(LossBase):
             depths2 = torch.zeros_like(inv_depths[k])
             for i in range(H):
                 for j in range(W):
-                    depths2[0, 0, i, j] = 2.0#(2/H)**4 * (2/W)**4 * i**2 * (H - i)**2 * j**2 * (W - j)**2 * 20
+                    depths2[0, 0, i, j] = (2/H)**4 * (2/W)**4 * i**2 * (H - i)**2 * j**2 * (W - j)**2 * 20
 
             inv_depths2.append(depth2inv(depths2))
 
@@ -486,9 +486,11 @@ class MultiViewPhotometricLoss(LossBase):
                                                                          mode='nearest',
                                                                          align_corners=None)
 
-
+        print(ref_K)
         for j, (ref_image, pose) in enumerate(zip(context, poses)):
+            print(ref_K[:, j, :, :])
             ref_context_type = [c[j][0] for c in context_type] if is_list(context_type[0][0]) else context_type[j]
+            print(ref_context_type)
             # Calculate warped images
             ref_warped, ref_ego_mask_tensors_warped = self.warp_ref_image(inv_depths2,
                                                                           ref_image,

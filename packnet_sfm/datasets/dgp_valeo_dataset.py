@@ -453,7 +453,7 @@ class DGPvaleoDataset:
                     'rgb_context': self.get_context('rgb', i),
                     'intrinsics_context': self.get_context('intrinsics', i),
                     'extrinsics_context':
-                        [(orig_extrinsics.inverse() * extrinsics).matrix
+                        [(extrinsics.inverse() * orig_extrinsics).matrix
                          for extrinsics in self.get_context('extrinsics', i)],
 
                 })
@@ -486,25 +486,25 @@ class DGPvaleoDataset:
                 orig_extrinsics_left  = Pose.from_matrix(self.get_current_left('extrinsics', i_left).matrix)
                 orig_extrinsics_right = Pose.from_matrix(self.get_current_right('extrinsics', i_right).matrix)
 
-                data['rgb_context'].append(self.get_current_right('rgb', i_right))
                 data['rgb_context'].append(self.get_current_left('rgb', i_left))
+                data['rgb_context'].append(self.get_current_right('rgb', i_right))
 
-                data['intrinsics_context'].append(self.get_current_right('intrinsics', i_right))
                 data['intrinsics_context'].append(self.get_current_left('intrinsics', i_left))
+                data['intrinsics_context'].append(self.get_current_right('intrinsics', i_right))
 
-                data['extrinsics_context'].append((orig_extrinsics_right.inverse() * orig_extrinsics).matrix)
                 data['extrinsics_context'].append((orig_extrinsics_left.inverse() * orig_extrinsics).matrix)
+                data['extrinsics_context'].append((orig_extrinsics_right.inverse() * orig_extrinsics).matrix)
 
                 #data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_left).matrix)
                 #data['extrinsics_context'].append((orig_extrinsics.inverse() * orig_extrinsics_right).matrix)
 
                 data['path_to_ego_mask_context'].append(os.path.join(os.path.dirname(self.path),
-                                                                     self._get_path_to_ego_mask(self.get_filename_right(idx, i_right))))
-                data['path_to_ego_mask_context'].append(os.path.join(os.path.dirname(self.path),
                                                                      self._get_path_to_ego_mask(self.get_filename_left(idx, i_left))))
+                data['path_to_ego_mask_context'].append(os.path.join(os.path.dirname(self.path),
+                                                                     self._get_path_to_ego_mask(self.get_filename_right(idx, i_right))))
 
-                data['context_type'].append('right')
                 data['context_type'].append('left')
+                data['context_type'].append('right')
 
                 data.update({
                     'sensor_name_left': self.get_current_left('datum_name', i_left),

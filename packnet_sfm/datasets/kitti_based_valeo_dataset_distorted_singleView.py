@@ -68,7 +68,7 @@ class KITTIBasedValeoDatasetDistorted_singleView(Dataset):
     """
     def __init__(self, root_dir, file_list, train=True,
                  data_transform=None, depth_type=None, with_pose=False,
-                 back_context=0, forward_context=0, strides=(1,), cameras=None):
+                 back_context=0, forward_context=0, strides=(1,), cameras=None, with_geometric_context=False):
         # Assertions
         backward_context = back_context
         assert backward_context >= 0 and forward_context >= 0, 'Invalid contexts'

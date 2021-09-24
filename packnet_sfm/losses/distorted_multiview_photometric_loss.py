@@ -318,10 +318,6 @@ class DistortedMultiViewPhotometricLoss(LossBase):
         losses_and_metrics : dict
             Output dictionary
         """
-        print(k)
-        print(k.shape)
-        print(ref_k)
-        print(ref_k.shape)
         # If using progressive scaling
         self.n = self.progressive_scaling(progress)
         # Loop over all reference images
@@ -331,7 +327,7 @@ class DistortedMultiViewPhotometricLoss(LossBase):
             # Calculate warped images
             ref_warped = self.warp_ref_image(inv_depths, ref_image,
                                              K, k, p,
-                                             ref_K[:,j,:,:], ref_k[j], ref_p[j],
+                                             ref_K, ref_k, ref_p,
                                              pose)
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)

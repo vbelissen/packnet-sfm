@@ -562,24 +562,24 @@ class KITTIBasedValeoDatasetDistorted_singleView(Dataset):
             # Add context images
             all_context_idxs = self.backward_context_paths[idx] + self.forward_context_paths[idx]
             image_context_paths, _ = self._get_context_files(self.paths[idx], all_context_idxs)
-            same_timestep_as_origin   = [False for _ in range(len(image_context_paths))]
-            intrinsics_K_context       = [K for _ in range(len(image_context_paths))]
-            intrinsics_k_context       = [k for _ in range(len(image_context_paths))]
-            intrinsics_p_context       = [p for _ in range(len(image_context_paths))]
+            # same_timestep_as_origin   = [False for _ in range(len(image_context_paths))]
+            # intrinsics_K_context       = [K for _ in range(len(image_context_paths))]
+            # intrinsics_k_context       = [k for _ in range(len(image_context_paths))]
+            # intrinsics_p_context       = [p for _ in range(len(image_context_paths))]
             path_to_ego_mask_context  = [sample['path_to_ego_mask'] for _ in range(len(image_context_paths))]
             image_context = [load_convert_image(f) for f in image_context_paths]
             sample.update({
                 'rgb_context': image_context
             })
-            sample.update({
-                'intrinsics_K_context': intrinsics_K_context
-            })
-            sample.update({
-                'intrinsics_k_context': intrinsics_k_context
-            })
-            sample.update({
-                'intrinsics_p_context': intrinsics_p_context
-            })
+            # sample.update({
+            #     'intrinsics_K_context': intrinsics_K_context
+            # })
+            # sample.update({
+            #     'intrinsics_k_context': intrinsics_k_context
+            # })
+            # sample.update({
+            #     'intrinsics_p_context': intrinsics_p_context
+            # })
             sample.update({
                 'path_to_ego_mask_context': path_to_ego_mask_context
             })

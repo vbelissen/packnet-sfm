@@ -78,10 +78,8 @@ def resize_sample_image_and_intrinsics_distorted(sample, shape,
     (out_h, out_w) = shape
     # Scale intrinsics
     for key in filter_dict(sample, [
-        'intrinsics_K', 'intrinsics_K_context'
+        'intrinsics_K',# 'intrinsics_K_context'
     ]):
-        print(key)
-        print(sample[key])
         intrinsics = np.copy(sample[key])
         intrinsics[0] *= out_w / orig_w
         intrinsics[1] *= out_h / orig_h

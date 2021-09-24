@@ -319,7 +319,9 @@ class DistortedMultiViewPhotometricLoss(LossBase):
             Output dictionary
         """
         print(K)
+        print(K.shape)
         print(ref_K)
+        print(ref_K.shape)
         # If using progressive scaling
         self.n = self.progressive_scaling(progress)
         # Loop over all reference images

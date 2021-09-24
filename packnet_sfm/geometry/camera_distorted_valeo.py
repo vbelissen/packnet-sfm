@@ -271,4 +271,4 @@ class CameraDistorted(nn.Module):
         vNorm = 2 * v / (H - 1) - 1.
 
         # Return pixel coordinates
-        return torch.stack([uNorm, vNorm], dim=-1).view(B, H, W, 2)
+        return torch.stack([uNorm, vNorm], dim=-1).view(B, H, W, 2).float()

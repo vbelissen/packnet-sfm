@@ -208,7 +208,7 @@ class CameraDistorted(nn.Module):
         #Xnorm_d /= norm(Xnorm_d)
         # Scale rays to metric depth
 
-        Xc = (Xnorm_d / torch.sqrt(torch.pow(Xnorm_d[:, 0, :, :], 2) + torch.pow(Xnorm_d[:, 1, :, :], 2) + torch.pow(Xnorm_d[:, 2, :, :], 2))) * depth
+        Xc = (Xnorm_d / torch.sqrt(torch.pow(Xnorm_d[:, 0, :, :], 2) + torch.pow(Xnorm_d[:, 1, :, :], 2) + torch.pow(Xnorm_d[:, 2, :, :], 2)).view(B, 3, H, W)) * depth
 
         # If in camera frame of reference
         if frame == 'c':

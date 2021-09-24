@@ -153,8 +153,8 @@ class CameraDistorted(nn.Module):
         N = 5
 
         if version == 'v1':
-            x = Xnorm_u[:, 0, :, :]
-            y = Xnorm_u[:, 1, :, :]
+            x = Xnorm_u[:, 0, :, :].view(B, 1, H, W)
+            y = Xnorm_u[:, 1, :, :].view(B, 1, H, W)
 
             x_src = torch.clone(x)
             y_src = torch.clone(y)
@@ -173,14 +173,14 @@ class CameraDistorted(nn.Module):
 
             print(x.shape)
             # Distorted rays
-            Xnorm_d = torch.stack([x, y, torch.ones_like(x)], dim=1)
+            Xnorm_d = torch.stack([x.squeeze(1), y.squeeze(1), torch.ones_like(x).squeeze(1)], dim=1)
 
         elif version == 'v2':
             x_list = []
             y_list = []
 
-            x_list.append(Xnorm_u[:, 0, :, :])
-            y_list.append(Xnorm_u[:, 1, :, :])
+            x_list.append(Xnorm_u[:, 0, :, :].view(B, 1, H, W))
+            y_list.append(Xnorm_u[:, 1, :, :].view(B, 1, H, W))
 
             for n in range(N):
                 r2 = x_list[-1].pow(2) + y_list[-1].pow(2)
@@ -195,7 +195,7 @@ class CameraDistorted(nn.Module):
                 y_list.append((y_list[0] - tang_dist_y) * rad_dist)
 
             # Distorted rays
-            Xnorm_d = torch.stack([x_list[-1], y_list[-1], torch.ones_like(x_list[-1])], dim=1)
+            Xnorm_d = torch.stack([x_list[-1].squeeze(1), y_list[-1].squeeze(1), torch.ones_like(x_list[-1]).squeeze(1)], dim=1)
 
         elif version == 'v3':
             Xnorm_d = torch.zeros(B, 3, H, W)

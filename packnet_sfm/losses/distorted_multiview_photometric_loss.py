@@ -153,6 +153,10 @@ class DistortedMultiViewPhotometricLoss(LossBase):
         device = ref_image.get_device()
         # Generate cameras for all scales
         cams, ref_cams = [], []
+        print(K)
+        print(K.shape)
+        print(ref_K)
+        print(ref_K.shape)
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)

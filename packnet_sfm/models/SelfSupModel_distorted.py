@@ -90,8 +90,6 @@ class SelfSupModel_distorted(SfmModel):
             # If not training, no need for self-supervised loss
             return output
         else:
-            print(batch['intrinsics_K'])
-            print(batch['intrinsics_K'].shape)
             # Otherwise, calculate self-supervised loss
             self_sup_output = self.self_supervised_loss(
                 batch['rgb_original'], batch['rgb_context_original'],

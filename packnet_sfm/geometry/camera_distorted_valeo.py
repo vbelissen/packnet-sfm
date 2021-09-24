@@ -207,7 +207,9 @@ class CameraDistorted(nn.Module):
 
         #Xnorm_d /= norm(Xnorm_d)
         # Scale rays to metric depth
-        Xc = ((Xnorm_d / torch.sqrt(torch.pow(Xnorm_d[:, 0, :, :], 2) + torch.pow(Xnorm_d[:, 1, :, :], 2) + torch.pow(Xnorm_d[:, 2, :, :], 2)).view(B, 1, H, W)) * depth).float()
+        Xc = ((Xnorm_d / torch.sqrt((Xnorm_d[:, 0, :, :].pow(2)
+                                    + Xnorm_d[:, 1, :, :].pow(2)
+                                    + Xnorm_d[:, 2, :, :].pow(2)).clamp(min=1e-5)).view(B, 1, H, W)) * depth).float()
 
         # If in camera frame of reference
         if frame == 'c':
@@ -256,9 +258,9 @@ class CameraDistorted(nn.Module):
         r6 = r2 * r4
 
         # Distorted normalized points
-        rad_dist = (1 + self.k1 * r2 + self.k2 * r4 + self.k3 * r6)
-        Xd = Xn * rad_dist + 2 * self.p1 * Xn * Yn + self.p2 * (r2 + 2 * Xn.pow(2))
-        Yd = Yn * rad_dist + 2 * self.p2 * Xn * Yn + self.p1 * (r2 + 2 * Yn.pow(2))
+        rad_dist = (1 + self.k1.view(B,1) * r2 + self.k2.view(B,1) * r4 + self.k3.view(B,1) * r6)
+        Xd = Xn * rad_dist + 2 * self.p1.view(B,1) * Xn * Yn + self.p2.view(B,1) * (r2 + 2 * Xn.pow(2))
+        Yd = Yn * rad_dist + 2 * self.p2.view(B,1) * Xn * Yn + self.p1.view(B,1) * (r2 + 2 * Yn.pow(2))
 
         # Final projection
         u = self.fx * Xd + self.cx

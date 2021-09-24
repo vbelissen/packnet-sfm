@@ -171,6 +171,7 @@ class CameraDistorted(nn.Module):
                 x = (x_src - tang_dist_x) * rad_dist
                 y = (y_src - tang_dist_y) * rad_dist
 
+            print(x.shape)
             # Distorted rays
             Xnorm_d = torch.stack([x, y, torch.ones_like(x)], dim=1)
 

@@ -263,6 +263,9 @@ class CameraDistorted(nn.Module):
         Yd = Yn * rad_dist + 2 * self.p2.view(B,1) * Xn * Yn + self.p1.view(B,1) * (r2 + 2 * Yn.pow(2))
 
         # Final projection
+        print(self.fx.shape)
+        print(Xd.shape)
+        print(self.cx.shape)
         u = self.fx * Xd + self.cx
         v = self.fy * Yd + self.cy
 

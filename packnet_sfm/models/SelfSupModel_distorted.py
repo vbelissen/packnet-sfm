@@ -30,6 +30,7 @@ class SelfSupModel_distorted(SfmModel):
         }
 
     def self_supervised_loss(self, image, ref_images, inv_depths, poses,
+                             path_to_ego_mask, path_to_ego_mask_context,
                              intrinsics_K, intrinsics_k, intrinsics_p,
                              return_logs=False, progress=0.0):
         """
@@ -59,8 +60,8 @@ class SelfSupModel_distorted(SfmModel):
         """
         return self._photometric_loss(
             image, ref_images, inv_depths,
-            intrinsics_K, intrinsics_k, intrinsics_p,
-            intrinsics_K, intrinsics_k, intrinsics_p,
+            intrinsics_K, intrinsics_k, intrinsics_p, path_to_ego_mask,
+            intrinsics_K, intrinsics_k, intrinsics_p, path_to_ego_mask_context,
             poses,
             return_logs=return_logs, progress=progress)
 
@@ -93,6 +94,7 @@ class SelfSupModel_distorted(SfmModel):
             self_sup_output = self.self_supervised_loss(
                 batch['rgb_original'], batch['rgb_context_original'],
                 output['inv_depths'], output['poses'],
+                batch['path_to_ego_mask'], batch['path_to_ego_mask_context'],
                 batch['intrinsics_K'], batch['intrinsics_k'], batch['intrinsics_p'],
                 #batch['intrinsics_K_context'], batch['intrinsics_k_context'], batch['intrinsics_p_context'],
                 return_logs=return_logs, progress=progress)

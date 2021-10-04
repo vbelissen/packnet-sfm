@@ -507,7 +507,7 @@ class DistortedMultiViewPhotometricLoss(LossBase):
             if self.mask_ego:
                 ref_warped, ref_ego_mask_tensors_warped = self.warp_ref_image_tensor(inv_depths, ref_image,
                                                  K, k, p,
-                                                 ref_K, ref_k, ref_p, ref_ego_mask_tensor,
+                                                 ref_K, ref_k, ref_p, ref_ego_mask_tensor[j],
                                                  pose)
             else:
                 ref_warped = self.warp_ref_image(inv_depths, ref_image,

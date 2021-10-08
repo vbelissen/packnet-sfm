@@ -126,22 +126,44 @@ class CameraFisheye(nn.Module):
 
         device = depth.get_device()
 
-        theta_tensor = torch.zeros(B, 1, H, W)
-        for b in range(B):
-            theta_tensor[b, 0] = torch.from_numpy(np.load(self.path_to_theta_lut[b]))
-        theta_tensor = theta_tensor.to(device)
-        #get_roots_table_tensor(self.poly_coeffs, self.principal_point, self.scale_factors, H, W).to(device)
-
-        rc = depth * torch.sin(theta_tensor)
-
-        #yi, xi = centered_2d_grid(B, H, W, depth.dtype, depth.device, self.principal_point, self.scale_factors)
-
         xi, yi = meshgrid(B, H, W, depth.dtype, depth.device, normalized=False)
 
         xi = ((xi - (W - 1) / 2 - self.principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
               * self.scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
         yi = ((yi - (H - 1) / 2 - self.principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
               * self.scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
+
+        use_precomputed_theta_lut = True
+        if use_precomputed_theta_lut:
+            theta_tensor = torch.zeros(B, 1, H, W)
+            for b in range(B):
+                theta_tensor[b, 0] = torch.from_numpy(np.load(self.path_to_theta_lut[b]))
+            theta_tensor = theta_tensor.to(device)
+        else:
+            N = 12
+            theta_tensor = (torch.zeros(B, 1, H, W)).to(device)
+            ri = torch.sqrt(xi.pow(2) + yi.pow(2))
+            for _ in range(N):
+                t1 = theta_tensor
+                t2 = theta_tensor * t1
+                t3 = theta_tensor * t2
+                t4 = theta_tensor * t3
+                theta_tensor = t1 + .5 * (ri - (self.poly_coeffs[:, 0] * t1
+                                                + self.poly_coeffs[:, 1] * t2
+                                                + self.poly_coeffs[:, 2] * t3
+                                                + self.poly_coeffs[:, 3] * t4)) \
+                                       / (self.poly_coeffs[:, 0]
+                                          + 2 * self.poly_coeffs[:, 1] * t1
+                                          + 3 * self.poly_coeffs[:, 2] * t2
+                                          + 4 * self.poly_coeffs[:, 3] * t3)
+                # l'astuce pour que ça marche a été de multiplier la mise à jour par 0.5 (au lieu de 1 selon Newton...)
+
+        #get_roots_table_tensor(self.poly_coeffs, self.principal_point, self.scale_factors, H, W).to(device)
+
+        rc = depth * torch.sin(theta_tensor)
+
+        #yi, xi = centered_2d_grid(B, H, W, depth.dtype, depth.device, self.principal_point, self.scale_factors)
+
 
         phi = torch.atan2(yi, xi).to(device)
 

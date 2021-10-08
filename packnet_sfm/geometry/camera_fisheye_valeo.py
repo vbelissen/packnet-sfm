@@ -148,14 +148,14 @@ class CameraFisheye(nn.Module):
                 t2 = theta_tensor * t1
                 t3 = theta_tensor * t2
                 t4 = theta_tensor * t3
-                theta_tensor = t1 + .5 * (ri - (self.poly_coeffs[:, 0] * t1
-                                                + self.poly_coeffs[:, 1] * t2
-                                                + self.poly_coeffs[:, 2] * t3
-                                                + self.poly_coeffs[:, 3] * t4)) \
-                                       / (self.poly_coeffs[:, 0]
-                                          + 2 * self.poly_coeffs[:, 1] * t1
-                                          + 3 * self.poly_coeffs[:, 2] * t2
-                                          + 4 * self.poly_coeffs[:, 3] * t3)
+                theta_tensor = t1 + .5 * (ri - (self.poly_coeffs[:, 0].view(B, 1, 1, 1) * t1
+                                                + self.poly_coeffs[:, 1].view(B, 1, 1, 1) * t2
+                                                + self.poly_coeffs[:, 2].view(B, 1, 1, 1) * t3
+                                                + self.poly_coeffs[:, 3].view(B, 1, 1, 1) * t4)) \
+                                       / (self.poly_coeffs[:, 0].view(B, 1, 1, 1)
+                                          + 2 * self.poly_coeffs[:, 1].view(B, 1, 1, 1) * t1
+                                          + 3 * self.poly_coeffs[:, 2].view(B, 1, 1, 1) * t2
+                                          + 4 * self.poly_coeffs[:, 3].view(B, 1, 1, 1) * t3)
                 # l'astuce pour que ça marche a été de multiplier la mise à jour par 0.5 (au lieu de 1 selon Newton...)
 
         #get_roots_table_tensor(self.poly_coeffs, self.principal_point, self.scale_factors, H, W).to(device)

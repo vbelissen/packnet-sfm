@@ -133,7 +133,7 @@ class CameraFisheye(nn.Module):
         yi = ((yi - (H - 1) / 2 - self.principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
               * self.scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
 
-        use_precomputed_theta_lut = True
+        use_precomputed_theta_lut = False
         if use_precomputed_theta_lut:
             theta_tensor = torch.zeros(B, 1, H, W)
             for b in range(B):

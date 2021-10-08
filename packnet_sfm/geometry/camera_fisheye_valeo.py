@@ -140,6 +140,8 @@ class CameraFisheye(nn.Module):
                 theta_tensor[b, 0] = torch.from_numpy(np.load(self.path_to_theta_lut[b]))
             theta_tensor = theta_tensor.to(device)
         else:
+            print(W)
+            print(self.poly_coeffs[:, 0])
             N = 12
             theta_tensor = (torch.zeros(B, 1, H, W)).to(device)
             ri = torch.sqrt(xi.pow(2) + yi.pow(2))

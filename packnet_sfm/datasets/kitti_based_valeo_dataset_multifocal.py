@@ -524,7 +524,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
             'filename': '%s_%010d' % (self.split, idx),
             'rgb': load_convert_image(self.paths[idx]),
         }
-        
+
         print(self.paths[idx])
         print(self.paths_geometric_context[idx])
 
@@ -741,6 +741,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                 image_geometric_context_temporal_context_paths = [
                     item for sublist in image_geometric_context_temporal_context_paths_nested for item in sublist
                 ]
+                print(image_geometric_context_temporal_context_paths)
                 n_spatiotemp_context = len(image_geometric_context_temporal_context_paths)
                 image_geometric_context_temporal_context = [
                     load_convert_image(f) for f in image_geometric_context_temporal_context_paths

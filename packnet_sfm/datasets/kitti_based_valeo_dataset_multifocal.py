@@ -181,6 +181,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                                     paths_with_context_backward_context_paths_geometric_context.append(
                                         backward_context_paths_tmp
                                     )
+                                    print(paths_with_context_backward_context_paths_geometric_context)
                                     paths_with_context_forward_context_paths_geometric_context.append(
                                         forward_context_paths_tmp
                                     )

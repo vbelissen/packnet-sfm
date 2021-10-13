@@ -730,10 +730,11 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                 # Backward
                 image_context_paths_geometric_context_backward_nested = \
                     self.backward_context_paths_geometric_context[idx]
+                print(image_context_paths_geometric_context_backward_nested)
                 # Forward
                 image_context_paths_geometric_context_forward_nested = \
                     self.forward_context_paths_geometric_context[idx]
-
+                print(image_context_paths_geometric_context_forward_nested)
                 image_geometric_context_temporal_context_paths_nested = [
                     b + f for b, f in zip(image_context_paths_geometric_context_backward_nested,
                                           image_context_paths_geometric_context_forward_nested)

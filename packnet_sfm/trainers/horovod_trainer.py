@@ -74,11 +74,11 @@ class HorovodTrainer(BaseTrainer):
         # Prepare progress bar
         progress_bar = self.train_progress_bar(
             dataloader, module.config.datasets.train)
+        print(module.config.datasets.train)
         # Start training loop
         outputs = []
         # For all batches
         for i, batch in progress_bar:
-            print(batch)
             # Reset optimizer
             optimizer.zero_grad()
             # Send samples to GPU and take a training step

@@ -192,7 +192,6 @@ def to_tensor_sample(sample, tensor_type='torch.FloatTensor'):
     sample : dict
         Sample with keys cast as tensors
     """
-    print(sample)
     transform = transforms.ToTensor()
     # Convert single items
     for key in filter_dict(sample, [
@@ -209,14 +208,12 @@ def to_tensor_sample(sample, tensor_type='torch.FloatTensor'):
         'rgb_geometric_context_temporal_context',
         'rgb_temporal_context_original',
         'rgb_geometric_context_original',
-        'rgb_geometric_context_temporal_context_original'
+        'rgb_geometric_context_temporal_context_original',
         'depth_temporal_context',
         'depth_geometric_context',
         'depth_temporal_context_geometric_context',
     ]):
-        print('tranform2')
         sample[key] = [transform(k).type(tensor_type) for k in sample[key]]
-    print(sample)
     # Return converted sample
     return sample
 

@@ -78,6 +78,7 @@ class HorovodTrainer(BaseTrainer):
         outputs = []
         # For all batches
         for i, batch in progress_bar:
+            print(batch)
             # Reset optimizer
             optimizer.zero_grad()
             # Send samples to GPU and take a training step

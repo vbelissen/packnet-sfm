@@ -132,6 +132,7 @@ class SelfSupModel_multifocal(SfmModel_multifocal):
         """
         # Calculate predicted depth and pose output
         output = super().forward(batch, return_logs=return_logs)
+        print(output)
         if not self.training:
             # If not training, no need for self-supervised loss
             return output

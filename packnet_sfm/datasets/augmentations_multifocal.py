@@ -199,7 +199,6 @@ def to_tensor_sample(sample, tensor_type='torch.FloatTensor'):
         'rgb_original',
         'depth',
     ]):
-        print('tranform1')
         sample[key] = transform(sample[key]).type(tensor_type)
     # Convert lists
     for key in filter_dict(sample, [

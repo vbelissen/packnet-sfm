@@ -154,6 +154,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     backward_context_idxs, forward_context_idxs = \
                         self._get_sample_context(file, backward_context, forward_context, stride)
                     if backward_context_idxs is not None and forward_context_idxs is not None:
+                        print(self.paths[idx])
                         paths_with_context.append(self.paths[idx])
                         self.forward_context_paths.append(forward_context_idxs)
                         self.backward_context_paths.append(backward_context_idxs[::-1])
@@ -161,13 +162,16 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                             if self.with_spatiotemp_context:
                                 paths_with_context_geometric_context.append(self.paths_geometric_context[idx])
                                 for path_geometric_context in self.paths_geometric_context[idx]:
+                                    print(path_geometric_context)
                                     backward_context_idxs_geometric_context, forward_context_idxs_geometric_context = \
                                         self._get_sample_context(
                                             path_geometric_context, backward_context, forward_context, stride
                                         )
+                                    print(backward_context_idxs_geometric_context)
                                     backward_context_paths_tmp, _ = self._get_context_files(
                                         path_geometric_context, backward_context_idxs_geometric_context
                                     )
+                                    print(backward_context_paths_tmp)
                                     forward_context_paths_tmp, _ = self._get_context_files(
                                         path_geometric_context, forward_context_idxs_geometric_context
                                     )

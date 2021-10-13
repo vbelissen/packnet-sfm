@@ -524,6 +524,9 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
             'filename': '%s_%010d' % (self.split, idx),
             'rgb': load_convert_image(self.paths[idx]),
         }
+        
+        print(self.paths[idx])
+        print(self.paths_geometric_context[idx])
 
         # Add intrinsics
         #parent_folder = self._get_parent_folder(self.paths[idx])

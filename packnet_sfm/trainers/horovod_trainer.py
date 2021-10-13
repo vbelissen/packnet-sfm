@@ -74,7 +74,6 @@ class HorovodTrainer(BaseTrainer):
         # Prepare progress bar
         progress_bar = self.train_progress_bar(
             dataloader, module.config.datasets.train)
-        print(module.config.datasets.train)
         # Start training loop
         outputs = []
         # For all batches

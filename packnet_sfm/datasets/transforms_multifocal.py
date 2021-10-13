@@ -31,6 +31,7 @@ def train_transforms_multifocal(sample, image_shape, jittering):
     if len(jittering) > 0:
         sample = colorjitter_sample(sample, jittering)
     sample = to_tensor_sample(sample)
+    print('totensor')
     return sample
 
 def validation_transforms(sample, image_shape):

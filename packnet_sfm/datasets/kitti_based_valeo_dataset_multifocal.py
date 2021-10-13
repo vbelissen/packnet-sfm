@@ -534,9 +534,6 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
             'rgb': load_convert_image(self.paths[idx]),
         }
 
-        print(self.paths[idx])
-        print(self.paths_geometric_context[idx])
-
         # Add intrinsics
         #parent_folder = self._get_parent_folder(self.paths[idx])
         base_folder_str = self._get_base_folder(self.paths[idx])
@@ -739,11 +736,9 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                 # Backward
                 image_context_paths_geometric_context_backward_nested = \
                     self.backward_context_paths_geometric_context[idx]
-                print(image_context_paths_geometric_context_backward_nested)
                 # Forward
                 image_context_paths_geometric_context_forward_nested = \
                     self.forward_context_paths_geometric_context[idx]
-                print(image_context_paths_geometric_context_forward_nested)
                 image_geometric_context_temporal_context_paths_nested = [
                     b + f for b, f in zip(image_context_paths_geometric_context_backward_nested,
                                           image_context_paths_geometric_context_forward_nested)
@@ -751,7 +746,6 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                 image_geometric_context_temporal_context_paths = [
                     item for sublist in image_geometric_context_temporal_context_paths_nested for item in sublist
                 ]
-                print(image_geometric_context_temporal_context_paths)
                 n_spatiotemp_context = len(image_geometric_context_temporal_context_paths)
                 image_geometric_context_temporal_context = [
                     load_convert_image(f) for f in image_geometric_context_temporal_context_paths

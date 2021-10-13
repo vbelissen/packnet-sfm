@@ -31,7 +31,6 @@ def train_transforms_multifocal(sample, image_shape, jittering):
     if len(jittering) > 0:
         sample = colorjitter_sample(sample, jittering)
     sample = to_tensor_sample(sample)
-    print('totensor')
     return sample
 
 def validation_transforms(sample, image_shape):
@@ -94,7 +93,6 @@ def get_transforms_multifocal(mode, image_shape, jittering, **kwargs):
         XXX_transform: Partial function
             Data augmentation transformation for that mode
     """
-    print(mode)
     if mode == 'train':
         return partial(train_transforms_multifocal,
                        image_shape=image_shape,

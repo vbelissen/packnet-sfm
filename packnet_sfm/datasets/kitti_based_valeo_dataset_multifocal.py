@@ -135,7 +135,6 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
             else:
                 # Check if the depth file exists
                 depth = self._get_depth_file(path)
-                #print(depth)
                 if depth is not None and os.path.exists(depth):
                     self.paths.append(path)
                     if self.with_geometric_context:
@@ -154,7 +153,6 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     backward_context_idxs, forward_context_idxs = \
                         self._get_sample_context(file, backward_context, forward_context, stride)
                     if backward_context_idxs is not None and forward_context_idxs is not None:
-                        print(self.paths[idx])
                         paths_with_context.append(self.paths[idx])
                         self.forward_context_paths.append(forward_context_idxs)
                         self.backward_context_paths.append(backward_context_idxs[::-1])

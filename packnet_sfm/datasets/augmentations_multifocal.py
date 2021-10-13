@@ -216,6 +216,7 @@ def to_tensor_sample(sample, tensor_type='torch.FloatTensor'):
     ]):
         print('tranform2')
         sample[key] = [transform(k).type(tensor_type) for k in sample[key]]
+    print(sample)
     # Return converted sample
     return sample
 

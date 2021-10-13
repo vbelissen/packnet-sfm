@@ -160,6 +160,7 @@ cfg.datasets.train.cameras = [[]]                   # Training cameras (double l
 cfg.datasets.train.repeat = [1]                     # Number of times training dataset is repeated per epoch
 cfg.datasets.train.num_logs = 5                     # Number of training images to log
 cfg.datasets.train.with_geometric_context = False   #
+cfg.datasets.train.with_spatiotemp_context = False
 ########################################################################################################################
 ### DATASETS.VALIDATION
 ########################################################################################################################

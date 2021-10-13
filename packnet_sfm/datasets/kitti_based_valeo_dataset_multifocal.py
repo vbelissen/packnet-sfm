@@ -4,6 +4,8 @@ import glob
 import numpy as np
 import os
 import sys
+from PIL import Image, ImageFile
+
 
 from torch.utils.data import Dataset
 
@@ -67,8 +69,9 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
     with_geometric_context : bool
         True if surrounding camera views are used in context
     """
-    def __init__(self, root_dir, file_list, file_list_geometric_context, train=True,
+    def __init__(self, root_dir, file_list_and_geometric_context, train=True,
                  data_transform=None, depth_type=None, with_pose=False, with_geometric_context=False,
+                 with_spatiotemp_context=False,
                  back_context=0, forward_context=0, strides=(1,), cameras=None):
         # Assertions
         backward_context = back_context
@@ -80,7 +83,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         self.forward_context_paths = []
 
         self.with_context = (backward_context != 0 or forward_context != 0)
-        self.split = file_list.split('/')[-1].split('.')[0]
+        self.split = file_list_and_geometric_context.split('/')[-1].split('.')[0]
 
         self.train = train
         self.root_dir = root_dir
@@ -91,6 +94,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         self.with_pose = with_pose
 
         self.with_geometric_context = with_geometric_context
+        self.with_spatiotemp_context = with_spatiotemp_context
 
         self._cache = {}
         self.pose_cache = {}
@@ -102,27 +106,28 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         self.cameras = cameras
         self.num_cameras = len(cameras)
 
+        self.max_geometric_context = 3 # maximum number of overlapping cameras
+
         assert self.num_cameras == 1
         assert self.cameras == ['mixed']
 
-        with open(file_list, "r") as f:
-            data = f.readlines()
-
-        with open(file_list_geometric_context, "r") as f:
+        with open(file_list_and_geometric_context, "r") as f:
             data_geometric_context = f.readlines()
 
         if self.with_geometric_context:
             self.paths_geometric_context  = []
-            if self.with_context:
+            if self.with_spatiotemp_context:
                 self.backward_context_paths_geometric_context = []
                 self.forward_context_paths_geometric_context = []
 
         self.paths = []
         # Get file list from data
-        for i, fname in enumerate(data):
-            path = os.path.join(root_dir, fname.split()[0])
+        for i, fname in enumerate(data_geometric_context):
+            list_paths = fname.split()[0].split(',')
+            Np = len(list_paths)
+            path = os.path.join(root_dir, list_paths[0])
             if self.with_geometric_context:
-                paths_geometric_context_i = [os.path.join(root_dir, p.split()[0]) for p in data_geometric_context[i]]
+                paths_geometric_context_i = [os.path.join(root_dir, list_paths[p]) for p in range(1, Np)]
             if not self.with_depth:
                 self.paths.append(path)
                 if self.with_geometric_context:
@@ -141,8 +146,9 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
             paths_with_context = []
             if self.with_geometric_context:
                 paths_with_context_geometric_context = []
-                paths_with_context_backward_context_paths_geometric_context = []
-                paths_with_context_forward_context_paths_geometric_context = []
+                if self.with_spatiotemp_context:
+                    paths_with_context_backward_context_paths_geometric_context = []
+                    paths_with_context_forward_context_paths_geometric_context = []
             for stride in strides:
                 for idx, file in enumerate(self.paths):
                     backward_context_idxs, forward_context_idxs = \
@@ -152,17 +158,31 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                         self.forward_context_paths.append(forward_context_idxs)
                         self.backward_context_paths.append(backward_context_idxs[::-1])
                         if self.with_geometric_context:
-                            for path_geometric_context in self.paths_geometric_context[idx]:
-                                backward_context_idxs_geometric_context, forward_context_idxs_geometric_context = \
-                                    self._get_sample_context(path_geometric_context, backward_context, forward_context, stride)
-                                paths_with_context_backward_context_paths_geometric_context.append(backward_context_idxs_geometric_context)
-                                paths_with_context_forward_context_paths_geometric_context.append(forward_context_idxs_geometric_context)
-                            paths_with_context_geometric_context.append(self.paths_geometric_context[idx])
+                            if self.with_spatiotemp_context:
+                                paths_with_context_geometric_context.append(self.paths_geometric_context[idx])
+                                for path_geometric_context in self.paths_geometric_context[idx]:
+                                    backward_context_idxs_geometric_context, forward_context_idxs_geometric_context = \
+                                        self._get_sample_context(
+                                            path_geometric_context, backward_context, forward_context, stride
+                                        )
+                                    backward_context_paths_tmp, _ = self._get_context_files(
+                                        path_geometric_context, backward_context_idxs_geometric_context
+                                    )
+                                    forward_context_paths_tmp, _ = self._get_context_files(
+                                        path_geometric_context, forward_context_idxs_geometric_context
+                                    )
+                                    paths_with_context_backward_context_paths_geometric_context.append(
+                                        backward_context_paths_tmp
+                                    )
+                                    paths_with_context_forward_context_paths_geometric_context.append(
+                                        forward_context_paths_tmp
+                                    )
             self.paths = paths_with_context
             if self.with_geometric_context:
                 self.paths_geometric_context = paths_with_context_geometric_context
-                self.backward_context_paths_geometric_context = paths_with_context_backward_context_paths_geometric_context
-                self.forward_context_paths_geometric_context = paths_with_context_forward_context_paths_geometric_context
+                if self.with_spatiotemp_context:
+                    self.backward_context_paths_geometric_context = paths_with_context_backward_context_paths_geometric_context
+                    self.forward_context_paths_geometric_context = paths_with_context_forward_context_paths_geometric_context
 
 ########################################################################################################################
 
@@ -172,7 +192,8 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         base, ext = os.path.splitext(os.path.basename(file))
         base_splitted = base.split('_')
         base_number = base_splitted[-1]
-        return os.path.join(os.path.dirname(file), '_'.join(base_splitted[:-1]) + '_' + str(idx).zfill(len(base_number)) + ext)
+        return os.path.join(os.path.dirname(file),
+                            '_'.join(base_splitted[:-1]) + '_' + str(idx).zfill(len(base_number)) + ext)
 
     @staticmethod
     def _get_base_folder(image_file):
@@ -212,7 +233,8 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
     def _get_camera_type(self, image_file, calib_data):
         cam = self._get_camera_name(image_file)
         camera_type = calib_data[cam]['type']
-        assert camera_type == 'fisheye' or camera_type == 'perspective', 'Only fisheye and perspective cameras supported'
+        assert camera_type == 'fisheye' or camera_type == 'perspective', \
+            'Only fisheye and perspective cameras supported'
         return camera_type
 
     def _get_intrinsics_fisheye(self, image_file, calib_data):
@@ -268,6 +290,15 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
             sys.exit('Wrong camera type')
         return poly_coeffs, principal_point, scale_factors, K, k, p
 
+    def _get_extrinsics_pose_matrix(self, image_file, calib_data):
+        camera_type = self._get_camera_type(image_file, calib_data)
+        if camera_type == 'fisheye':
+            return self._get_extrinsics_pose_matrix_fisheye(image_file, calib_data)
+        elif camera_type == 'perspective':
+            return self._get_extrinsics_pose_matrix_distorted(image_file, calib_data)
+        else:
+            sys.exit('Wrong camera type')
+
     def _get_extrinsics_pose_matrix_fisheye(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
         cam = self._get_camera_name(image_file)
@@ -306,7 +337,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         self.pose_cache[image_file] = pose_matrix
         return pose_matrix
 
-    def _get_extrinsics_pose_matrix_fisheye(self, image_file, calib_data):
+    def _get_extrinsics_pose_matrix_distorted(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
         cam = self._get_camera_name(image_file)
         if image_file in self.pose_cache:
@@ -519,23 +550,27 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
             'intrinsics_K': K,
             'intrinsics_k': k,
             'intrinsics_p': p,
+            'path_to_ego_mask': self._get_path_to_ego_mask(self.paths[idx]),
         })
 
         # sample.update({
         #     'path_to_theta_lut': self._get_path_to_theta_lut(self.paths[idx]),
         # })
-        sample.update({
-            'path_to_ego_mask': self._get_path_to_ego_mask(self.paths[idx]),
-        })
+
         if self.with_geometric_context:
             sample.update({
                 'pose_matrix': self._get_extrinsics_pose_matrix(self.paths[idx], c_data),
             })
-        # Add pose information if requested
-        if self.with_pose:
+
+        if self.with_geometric_context and self.with_spatiotemp_context:
             sample.update({
-                'pose': self._get_pose(self.paths[idx]),
+                'with_spatiotemp_context': 1,
             })
+        # # Add pose information if requested
+        # if self.with_pose:
+        #     sample.update({
+        #         'pose': self._get_pose(self.paths[idx]),
+        #     })
 
         # Add depth information if requested
         if self.with_depth:
@@ -546,116 +581,178 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         # Add context information if requested
         if self.with_context:
             # Add context images
-            all_context_idxs = self.backward_context_paths[idx] + \
-                               self.forward_context_paths[idx]
-            image_context_paths, _ = \
-                self._get_context_files(self.paths[idx], all_context_idxs)
-            same_timestep_as_origin   = [False] \
-                                        * len(image_context_paths)
-            poly_coeffs_context       = [poly_coeffs] \
-                                        * len(image_context_paths)
-            principal_point_context   = [principal_point] \
-                                        * len(image_context_paths)
-            scale_factors_context     = [scale_factors] \
-                                        * len(image_context_paths)
-            path_to_theta_lut_context = [sample['path_to_theta_lut']] \
-                                        * len(image_context_paths)
-            path_to_ego_mask_context  = [sample['path_to_ego_mask']] \
-                                        * len(image_context_paths)
-            if self.with_geometric_context:
-                base_folder_str = self._get_base_folder(self.paths_left[idx])
-                split_type_str  = self._get_split_type(self.paths_left[idx])
-                seq_name_str    = self._get_sequence_name(self.paths_left[idx])
-                camera_str      = self._get_camera_name(self.paths_left[idx])
-                calib_identifier = base_folder_str + split_type_str + seq_name_str + camera_str
-                if calib_identifier in self.calibration_cache:
-                    c_data = self.calibration_cache[calib_identifier]
-                else:
-                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
-                    self.calibration_cache[calib_identifier] = c_data
-                poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths_left[idx], c_data)
-                image_context_paths.append(self.paths_left[idx])
-                same_timestep_as_origin.append(True)
-                poly_coeffs_context.append(poly_coeffs)
-                principal_point_context.append(principal_point)
-                scale_factors_context.append(scale_factors)
-                path_to_theta_lut_context.append(self._get_path_to_theta_lut(self.paths_left[idx]))
-                path_to_ego_mask_context.append(self._get_path_to_ego_mask(self.paths_left[idx]))
 
-                base_folder_str = self._get_base_folder(self.paths_right[idx])
-                split_type_str  = self._get_split_type(self.paths_right[idx])
-                seq_name_str    = self._get_sequence_name(self.paths_right[idx])
-                camera_str      = self._get_camera_name(self.paths_right[idx])
-                calib_identifier = base_folder_str + split_type_str + seq_name_str + camera_str
-                if calib_identifier in self.calibration_cache:
-                    c_data = self.calibration_cache[calib_identifier]
-                else:
-                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
-                    self.calibration_cache[calib_identifier] = c_data
-                poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths_right[idx], c_data)
-                image_context_paths.append(self.paths_right[idx])
-                same_timestep_as_origin.append(True)
-                poly_coeffs_context.append(poly_coeffs)
-                principal_point_context.append(principal_point)
-                scale_factors_context.append(scale_factors)
-                path_to_theta_lut_context.append(self._get_path_to_theta_lut(self.paths_right[idx]))
-                path_to_ego_mask_context.append(self._get_path_to_ego_mask(self.paths_right[idx]))
-            image_context = [load_convert_image(f) for f in image_context_paths]
-            sample.update({
-                'rgb_context': image_context
-            })
-            sample.update({
-                'intrinsics_poly_coeffs_context': poly_coeffs_context
-            })
-            sample.update({
-                'intrinsics_principal_point_context': principal_point_context
-            })
-            sample.update({
-                'intrinsics_scale_factors_context': scale_factors_context
-            })
-            sample.update({
-                'path_to_theta_lut_context': path_to_theta_lut_context
-            })
-            sample.update({
-                'path_to_ego_mask_context': path_to_ego_mask_context
-            })
-            # Add context poses
-            if self.with_geometric_context:
-                first_pose = sample['pose_matrix']
-                image_context_pose = []
+            # 1. TEMPORAL CONTEXT
+            image_context_paths_backward, _ = \
+                self._get_context_files(self.paths[idx], self.backward_context_paths[idx])
+            image_context_paths_forward, _ = \
+                self._get_context_files(self.paths[idx], self.forward_context_paths[idx])
 
-                for i, f in enumerate(image_context_paths):
-                    #if same_timestep_as_origin[i]:
-                    base_folder_str = self._get_base_folder(f)
-                    split_type_str  = self._get_split_type(f)
-                    seq_name_str    = self._get_sequence_name(f)
-                    camera_str      = self._get_camera_name(f)
-                    calib_identifier = base_folder_str + split_type_str + seq_name_str + camera_str
-                    # current_folder = self._get_current_folder(self.paths[idx])
-                    if calib_identifier in self.calibration_cache:
-                        c_data = self.calibration_cache[calib_identifier]
+            image_temporal_context_paths = image_context_paths_backward + image_context_paths_forward
+            n_temporal_context = len(image_temporal_context_paths)
+            image_temporal_context = [load_convert_image(f) for f in image_temporal_context_paths]
+
+            sample.update({
+                'rgb_temporal_context': image_temporal_context,
+            })
+
+            # 2. GEOMETRIC CONTEXT
+            if self.with_geometric_context:
+                image_context_paths_geometric_context = self.paths_geometric_context[idx]
+                n_geometric_context = len(image_context_paths_geometric_context)
+                base_folder_str_geometric_context = [
+                    self._get_base_folder(context_path) for context_path in image_context_paths_geometric_context
+                ]
+                split_type_str_geometric_context = [
+                    self._get_split_type(context_path) for context_path in image_context_paths_geometric_context
+                ]
+                seq_name_str_geometric_context = [
+                    self._get_sequence_name(context_path) for context_path in image_context_paths_geometric_context
+                ]
+                camera_str_geometric_context = [
+                    self._get_camera_name(context_path) for context_path in image_context_paths_geometric_context
+                ]
+                calib_identifier_geometric_context = [
+                    base_folder_str + split_type_str + seq_name_str + camera_str
+                    for base_folder_str, split_type_str, seq_name_str, camera_str
+                    in zip(base_folder_str_geometric_context, 
+                           split_type_str_geometric_context, 
+                           seq_name_str_geometric_context, 
+                           camera_str_geometric_context)
+                ]
+                c_data_geometric_context = []
+                for i_context in range(n_geometric_context):
+                    if calib_identifier_geometric_context[i_context] in self.calibration_cache:
+                        c_data_geometric_context.append(
+                            self.calibration_cache[calib_identifier_geometric_context[i_context]]
+                        )
                     else:
-                        c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
-                        self.calibration_cache[calib_identifier] = c_data
-                    context_pose = self._get_extrinsics_pose_matrix(f, c_data)
-                    image_context_pose.append(context_pose @ invert_pose_numpy(first_pose))
-                    #image_context_pose.append(invert_pose_numpy(invert_pose_numpy(context_pose) @ first_pose))
-                    #else:
-                    #    image_context_pose.append(None)
+                        c_data_tmp = self._read_raw_calib_files(base_folder_str_geometric_context[i_context],
+                                                                split_type_str_geometric_context[i_context],
+                                                                seq_name_str_geometric_context[i_context],
+                                                                [camera_str_geometric_context[i_context]])
+                        c_data_geometric_context.append(c_data_tmp)
+                        self.calibration_cache[calib_identifier_geometric_context[i_context]] = c_data_tmp
+                camera_type_geometric_context = [
+                    self._get_camera_type(image_context_paths_geometric_context[i_context], 
+                                          c_data_geometric_context[i_context])
+                    for i_context in range(n_geometric_context)
+                ]
+                poly_coeffs_geometric_context = []
+                principal_point_geometric_context = []
+                scale_factors_geometric_context = []
+                K_geometric_context = []
+                k_geometric_context = []
+                p_geometric_context = []
+                for i_context in range(n_geometric_context):
+                    poly_coeffs_tmp, principal_point_tmp, scale_factors_tmp, K_tmp, k_tmp, p_tmp = \
+                        self._get_full_intrinsics(image_context_paths_geometric_context[i_context], 
+                                                  c_data_geometric_context[i_context])
+                    poly_coeffs_geometric_context.append(poly_coeffs_tmp)
+                    principal_point_geometric_context.append(principal_point_tmp)
+                    scale_factors_geometric_context.append(scale_factors_tmp)
+                    K_geometric_context.append(K_tmp)
+                    k_geometric_context.append(k_tmp)
+                    p_geometric_context.append(p_tmp)
+                path_to_ego_mask_geometric_context = [
+                    self._get_path_to_ego_mask(context_path) 
+                    for context_path in image_context_paths_geometric_context
+                ]
+                absolute_pose_matrix_geometric_context = [
+                    self._get_extrinsics_pose_matrix(image_context_paths_geometric_context[i_context], 
+                                                     c_data_geometric_context[i_context])
+                    for i_context in range(n_geometric_context)
+                ]
+                relative_pose_matrix_geometric_context = [
+                    absolute_context_pose @ invert_pose_numpy(sample['pose_matrix'])
+                    for absolute_context_pose in absolute_pose_matrix_geometric_context
+                ]
+
+                image_geometric_context = [load_convert_image(f) for f in image_context_paths_geometric_context]
+
+                dummy_camera_geometric_context = []
+                for i_context in range(n_geometric_context):
+                    dummy_camera_geometric_context.append(0.0)
+
+                # must fill with dummy values
+                for i_context in range(n_geometric_context, self.max_geometric_context):
+                    image_geometric_context.append(Image.new('RGB', (1280, 800)))
+                    camera_type_geometric_context.append('dummy')
+                    K_tmp, k_tmp, p_tmp = self._get_null_intrinsics_distorted()
+                    poly_coeffs_tmp, principal_point_tmp, scale_factors_tmp = self._get_null_intrinsics_fisheye()
+                    poly_coeffs_geometric_context.append(poly_coeffs_tmp)
+                    principal_point_geometric_context.append(principal_point_tmp)
+                    scale_factors_geometric_context.append(scale_factors_tmp)
+                    K_geometric_context.append(K_tmp)
+                    k_geometric_context.append(k_tmp)
+                    p_geometric_context.append(p_tmp)
+                    path_to_ego_mask_geometric_context.append('')
+                    relative_pose_matrix_geometric_context.append(np.eye(4))
+                    dummy_camera_geometric_context.append(1.0)
+
+                dummy_camera_geometric_context = np.array(dummy_camera_geometric_context)
 
                 sample.update({
-                    'pose_matrix_context': image_context_pose
+                    'rgb_geometric_context': image_geometric_context,
+                    'camera_type_geometric_context': camera_type_geometric_context,
+                    'intrinsics_poly_coeffs_geometric_context': poly_coeffs_geometric_context,
+                    'intrinsics_principal_point_geometric_context': principal_point_geometric_context,
+                    'intrinsics_scale_factors_geometric_context': scale_factors_geometric_context,
+                    'intrinsics_K_geometric_context': K_geometric_context,
+                    'intrinsics_k_geometric_context': k_geometric_context,
+                    'intrinsics_p_geometric_context': p_geometric_context,
+                    'path_to_ego_mask_geometric_context': path_to_ego_mask_geometric_context,
+                    'pose_matrix_geometric_context': relative_pose_matrix_geometric_context,
+                    'dummy_camera_geometric_context': dummy_camera_geometric_context,
                 })
+            else:
                 sample.update({
-                    'same_timestep_as_origin_context': same_timestep_as_origin
+                    'rgb_geometric_context': [],
+                    'camera_type_geometric_context': [],
+                    'intrinsics_poly_coeffs_geometric_context': [],
+                    'intrinsics_principal_point_geometric_context': [],
+                    'intrinsics_scale_factors_geometric_context': [],
+                    'intrinsics_K_geometric_context': [],
+                    'intrinsics_k_geometric_context': [],
+                    'intrinsics_p_geometric_context': [],
+                    'path_to_ego_mask_geometric_context': [],
+                    'pose_matrix_geometric_context': [],
+                    'dummy_camera_geometric_context': [],
+
+                    'rgb_geometric_context_temporal_context': [],
                 })
-            if self.with_pose:
-                first_pose = sample['pose']
-                image_context_pose = [self._get_pose(f) for f in image_context_paths]
-                image_context_pose = [invert_pose_numpy(context_pose) @ first_pose
-                                      for context_pose in image_context_pose]
+
+            # 3. GEOMETRIC-TEMPORAL CONTEXT
+            if self.with_geometric_context and self.with_spatiotemp_context:
+                # Backward
+                image_context_paths_geometric_context_backward_nested = \
+                    self.backward_context_paths_geometric_context[idx]
+                # Forward
+                image_context_paths_geometric_context_forward_nested = \
+                    self.forward_context_paths_geometric_context[idx]
+
+                image_geometric_context_temporal_context_paths_nested = [
+                    b + f for b, f in zip(image_context_paths_geometric_context_backward_nested,
+                                          image_context_paths_geometric_context_forward_nested)
+                ]
+                image_geometric_context_temporal_context_paths = [
+                    item for sublist in image_geometric_context_temporal_context_paths_nested for item in sublist
+                ]
+                n_spatiotemp_context = len(image_geometric_context_temporal_context_paths)
+                image_geometric_context_temporal_context = [
+                    load_convert_image(f) for f in image_geometric_context_temporal_context_paths
+                ]
+                # must fill with dummy values
+                for i_context in range(n_geometric_context, self.max_geometric_context):
+                    for j in range(n_temporal_context):
+                        image_geometric_context_temporal_context.append(Image.new('RGB', (1280, 800)))
+
                 sample.update({
-                    'pose_context': image_context_pose
+                    'rgb_geometric_context_temporal_context': image_geometric_context_temporal_context,
+                })
+            else:
+                sample.update({
+                    'rgb_geometric_context_temporal_context':  [],
                 })
 
         # Apply transformations

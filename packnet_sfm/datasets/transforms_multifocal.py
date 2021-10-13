@@ -94,6 +94,7 @@ def get_transforms_multifocal(mode, image_shape, jittering, **kwargs):
         XXX_transform: Partial function
             Data augmentation transformation for that mode
     """
+    print(mode)
     if mode == 'train':
         return partial(train_transforms_multifocal,
                        image_shape=image_shape,

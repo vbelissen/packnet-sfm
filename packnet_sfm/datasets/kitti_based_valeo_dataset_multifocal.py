@@ -102,8 +102,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         self.calibration_cache = {}
         self.imu2velo_calib_cache = {}
         self.sequence_origin_cache = {}
-        
-        print(cameras)
+
         self.cameras = cameras
         self.num_cameras = len(cameras)
 

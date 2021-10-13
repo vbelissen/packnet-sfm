@@ -590,6 +590,7 @@ def setup_dataset(config, mode, requirements, **kwargs):
             dataset = ImageDataset(
                 config.path[i], config.split[i],
                 **dataset_args, **dataset_args_i,
+                cameras=config.cameras[i],
             )
         # KITTI-based Valeo dataset
         elif config.dataset[i] == 'KITTIValeo':

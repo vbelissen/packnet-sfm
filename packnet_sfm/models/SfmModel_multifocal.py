@@ -138,6 +138,9 @@ class SfmModel_multifocal(nn.Module):
         # Generate pose predictions if available
         pose_temporal_context = None
         pose_geometric_context_temporal_context = None
+        print('temp:' + str(len(batch['rgb_temporal_context'])))
+        print('geo:' + str(len(batch['rgb_geometric_context'])))
+        print('geotemp:' + str(len(batch['rgb_geometric_context_temporal_context'])))
         if self.pose_net is not None:
             if 'rgb_temporal_context' in batch:
                 pose_temporal_context = self.compute_poses(batch['rgb'], batch['rgb_temporal_context'])

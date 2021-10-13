@@ -279,7 +279,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         return np.zeros((3, 3)), np.zeros(3), np.zeros(2)
 
     def _get_full_intrinsics(self, image_file, calib_data):
-        camera_type = self._get_camera_type(image_file)
+        camera_type = self._get_camera_type(image_file, calib_data)
         if camera_type == 'fisheye':
             poly_coeffs, principal_point, scale_factors = self._get_intrinsics_fisheye(image_file, calib_data)
             K, k, p = self._get_null_intrinsics_distorted()

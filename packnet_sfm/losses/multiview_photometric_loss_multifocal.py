@@ -7,6 +7,7 @@ import torch.nn.functional as funct
 
 from packnet_sfm.utils.image import match_scales
 from packnet_sfm.geometry.camera_fisheye_valeo import CameraFisheye
+from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.geometry.camera_distorted_valeo import CameraDistorted
 from packnet_sfm.geometry.camera_utils import view_synthesis
 from packnet_sfm.utils.depth import calc_smoothness, inv2depth, depth2inv
@@ -220,7 +221,7 @@ class MultiViewPhotometricLoss(LossBase):
                                   poly_coeffs=ref_intrinsics_poly_coeffs[idx_batch_ref_fisheye].float(),
                                   principal_point=ref_intrinsics_principal_point[idx_batch_ref_fisheye].float(),
                                   scale_factors=ref_intrinsics_scale_factors[idx_batch_ref_fisheye].float(),
-                                  Tcw=ref_pose[idx_batch_ref_fisheye])
+                                  Tcw=Pose(ref_pose.mat[idx_batch_ref_fisheye]))
                         .scaled(scale_factor).to(device)
                 )
             else:
@@ -233,7 +234,7 @@ class MultiViewPhotometricLoss(LossBase):
                                     k3=ref_intrinsics_k[idx_batch_ref_perspective, 2],
                                     p1=ref_intrinsics_p[idx_batch_ref_perspective, 0],
                                     p2=ref_intrinsics_p[idx_batch_ref_perspective, 1],
-                                    Tcw=ref_pose[idx_batch_ref_perspective])
+                                    Tcw=Pose(ref_pose.mat[idx_batch_ref_perspective]))
                         .scaled(scale_factor).to(device)
                 )
             else:

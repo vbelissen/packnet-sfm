@@ -2,9 +2,12 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as funct
+
 
 from packnet_sfm.utils.image import match_scales
-from packnet_sfm.geometry.camera import Camera
+from packnet_sfm.geometry.camera_fisheye_valeo import CameraFisheye
+from packnet_sfm.geometry.camera_distorted_valeo import CameraDistorted
 from packnet_sfm.geometry.camera_utils import view_synthesis
 from packnet_sfm.utils.depth import calc_smoothness, inv2depth, depth2inv
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
@@ -131,7 +134,25 @@ class MultiViewPhotometricLoss(LossBase):
 
 ########################################################################################################################
 
-    def warp_ref_image(self, inv_depths, ref_image, ref_tensor, K, ref_K, pose, ref_extrinsics, ref_context_type):
+    def warp_ref_image(self,
+                       inv_depths,
+                       camera_type,
+                       intrinsics_poly_coeffs,
+                       intrinsics_principal_point,
+                       intrinsics_scale_factors,
+                       intrinsics_K,
+                       intrinsics_k,
+                       intrinsics_p,
+                       ref_image,
+                       ref_pose,
+                       ref_ego_mask_tensors,
+                       ref_camera_type,
+                       ref_intrinsics_poly_coeffs,
+                       ref_intrinsics_principal_point,
+                       ref_intrinsics_scale_factors,
+                       ref_intrinsics_K,
+                       ref_intrinsics_k,
+                       ref_intrinsics_p):
         """
         Warps a reference image to produce a reconstruction of the original one.
 
@@ -153,33 +174,128 @@ class MultiViewPhotometricLoss(LossBase):
         ref_warped : torch.Tensor [B,3,H,W]
             Warped reference image (reconstructing the original one)
         """
-        B, _, H, W = ref_image.shape
+        B, C, H, W = ref_image.shape
         device = ref_image.get_device()
         # Generate cameras for all scales
-        cams, ref_cams = [], []
-        for b in range(B):
-            if ref_context_type[b] == 'left' or ref_context_type[b] == 'right':
-                pose.mat[b, :, :] = ref_extrinsics[b, :, :]
-                #pose.mat[b,:3,3]=0
+        cams_fisheye, ref_cams_fisheye = [], []
+        cams_perspective, ref_cams_perspective = [], []
+        idx_batch_fisheye = [i for i, c in enumerate(camera_type) if c == 'fisheye']
+        idx_batch_ref_fisheye = [i for i, c in enumerate(ref_camera_type) if c == 'fisheye']
+        idx_batch_perspective = [i for i, c in enumerate(camera_type) if c == 'perspective']
+        idx_batch_ref_perspective = [i for i, c in enumerate(ref_camera_type) if c == 'perspective']
+        n_fisheye = len(idx_batch_fisheye)
+        n_ref_fisheye = len(idx_batch_ref_fisheye)
+        n_perspective = len(idx_batch_perspective)
+        n_ref_perspective = len(idx_batch_ref_perspective)
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
-            cams.append(Camera(K=K.float()).scaled(scale_factor).to(device))
-            ref_cams.append(Camera(K=ref_K.float(), Tcw=pose).scaled(scale_factor).to(device))
+            if n_fisheye > 0:
+                cams_fisheye.append(
+                    CameraFisheye(path_to_theta_lut='',
+                                  path_to_ego_mask='',
+                                  poly_coeffs=intrinsics_poly_coeffs[idx_batch_fisheye].float(),
+                                  principal_point=intrinsics_principal_point[idx_batch_fisheye].float(),
+                                  scale_factors=intrinsics_scale_factors[idx_batch_fisheye].float())
+                        .scaled(scale_factor).to(device)
+                )
+            else:
+                cams_fisheye.append(0)
+            if n_perspective > 0:
+                cams_perspective.append(
+                    CameraDistorted(K=intrinsics_K[idx_batch_perspective].float(),
+                                    k1=intrinsics_k[idx_batch_perspective, 0],
+                                    k2=intrinsics_k[idx_batch_perspective, 1],
+                                    k3=intrinsics_k[idx_batch_perspective, 2],
+                                    p1=intrinsics_p[idx_batch_perspective, 0],
+                                    p2=intrinsics_p[idx_batch_perspective, 1])
+                        .scaled(scale_factor).to(device)
+                )
+            else:
+                cams_perspective.append(0)
+            if n_ref_fisheye > 0:
+                ref_cams_fisheye.append(
+                    CameraFisheye(path_to_theta_lut='',
+                                  path_to_ego_mask='',
+                                  poly_coeffs=ref_intrinsics_poly_coeffs[idx_batch_ref_fisheye].float(),
+                                  principal_point=ref_intrinsics_principal_point[idx_batch_ref_fisheye].float(),
+                                  scale_factors=ref_intrinsics_scale_factors[idx_batch_ref_fisheye].float(),
+                                  Tcw=ref_pose[idx_batch_ref_fisheye])
+                        .scaled(scale_factor).to(device)
+                )
+            else:
+                ref_cams_fisheye.append(0)
+            if n_ref_perspective > 0:
+                ref_cams_perspective.append(
+                    CameraDistorted(K=ref_intrinsics_K[idx_batch_ref_perspective].float(),
+                                    k1=ref_intrinsics_k[idx_batch_ref_perspective, 0],
+                                    k2=ref_intrinsics_k[idx_batch_ref_perspective, 1],
+                                    k3=ref_intrinsics_k[idx_batch_ref_perspective, 2],
+                                    p1=ref_intrinsics_p[idx_batch_ref_perspective, 0],
+                                    p2=ref_intrinsics_p[idx_batch_ref_perspective, 1],
+                                    Tcw=ref_pose[idx_batch_ref_perspective])
+                        .scaled(scale_factor).to(device)
+                )
+            else:
+                ref_cams_perspective.append(0)
         # View synthesis
         depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
         ref_images = match_scales(ref_image, inv_depths, self.n)
-        ref_warped = [view_synthesis(
-            ref_images[i], depths[i], ref_cams[i], cams[i],
-            padding_mode=self.padding_mode) for i in range(self.n)]
-        # Return warped reference image
+        if n_fisheye > 0:
+            world_points_fisheye = [
+                cams_fisheye[i][idx_batch_fisheye].reconstruct(depths[i][idx_batch_fisheye], frame='w')
+                for i in range(self.n)
+            ]
+        if n_perspective > 0:
+            world_points_perspective = [
+                cams_perspective[i][idx_batch_perspective].reconstruct(depths[i][idx_batch_perspective], frame='w')
+                for i in range(self.n)
+            ]
+        if n_fisheye == 0:
+            world_points = world_points_perspective
+        elif n_perspective == 0:
+            world_points = world_points_fisheye
+        else:
+            world_points = [torch.zeros(B, 3, H, W).to(device) for i in range(self.n)]
+            for i in range(self.n):
+                world_points[i][idx_batch_fisheye] = world_points_fisheye
+                world_points[i][idx_batch_perspective] = world_points_perspective
+        if n_ref_fisheye > 0:
+            ref_coords_fisheye = [
+                ref_cams_fisheye[i][idx_batch_ref_fisheye].project(world_points[idx_batch_ref_fisheye], frame='w')
+                for i in range(self.n)
+            ]
+        if n_ref_perspective > 0:
+            ref_coords_perspective = [
+                ref_cams_perspective[i][idx_batch_ref_perspective].project(world_points[idx_batch_ref_perspective], frame='w')
+                for i in range(self.n)
+            ]
+        if n_ref_fisheye == 0:
+            ref_coords = ref_coords_perspective
+        elif n_ref_perspective == 0:
+            ref_coords = ref_coords_fisheye
+        else:
+            ref_coords = [torch.zeros(B, H, W, 2).to(device) for i in range(self.n)]
+            for i in range(self.n):
+                ref_coords[i][idx_batch_ref_fisheye] = ref_coords_fisheye
+                ref_coords[i][idx_batch_ref_perspective] = ref_coords_perspective
+        ref_warped = [
+            funct.grid_sample(ref_images[i],
+                              ref_coords[i],
+                              mode='bilinear',
+                              padding_mode=self.padding_mode,
+                              align_corners=True)
+            for i in range(self.n)
+        ]
+        ref_ego_mask_tensors_warped = [
+            funct.grid_sample(ref_ego_mask_tensors[i],
+                              ref_coords[i],
+                              mode = 'nearest',
+                              padding_mode=self.padding_mode, align_corners=None)
+            for i in range(self.n)
+        ]
 
-        ref_tensors = match_scales(ref_tensor, inv_depths, self.n, mode='nearest', align_corners=None)
-        ref_tensors_warped = [view_synthesis(
-            ref_tensors[i], depths[i], ref_cams[i], cams[i],
-            padding_mode=self.padding_mode, mode='nearest') for i in range(self.n)]
-
-        return ref_warped, ref_tensors_warped
+        return ref_warped, ref_ego_mask_tensors_warped
 
 ########################################################################################################################
 
@@ -387,14 +503,15 @@ class MultiViewPhotometricLoss(LossBase):
                 intrinsics_k,
                 intrinsics_p,
                 path_to_ego_mask,
-                camera_type_temporal_context,
-                intrinsics_poly_coeffs_temporal_context,
-                intrinsics_principal_point_temporal_context,
-                intrinsics_scale_factors_temporal_context,
-                intrinsics_K_temporal_context,
-                intrinsics_k_temporal_context,
-                intrinsics_p_temporal_context,
-                path_to_ego_mask_temporal_context,
+                camera_type_geometric_context,
+                intrinsics_poly_coeffs_geometric_context,
+                intrinsics_principal_point_geometric_context,
+                intrinsics_scale_factors_geometric_context,
+                intrinsics_K_geometric_context,
+                intrinsics_k_geometric_context,
+                intrinsics_p_geometric_context,
+                path_to_ego_mask_geometric_context,
+                dummy_camera_geometric_context,
                 return_logs=False, progress=0.0):
         """
         Calculates training photometric loss.
@@ -429,6 +546,11 @@ class MultiViewPhotometricLoss(LossBase):
         photometric_losses = [[] for _ in range(self.n)]
         images = match_scales(image, inv_depths, self.n)
 
+        n_temporal_context = len(ref_images_temporal_context)
+        n_geometric_context = len(ref_images_geometric_context)
+        assert len(ref_images_geometric_context_temporal_context) == n_temporal_context * n_geometric_context
+        B = len(path_to_ego_mask)
+
         device = image.get_device()
 
         # getting ego masks for target and source cameras
@@ -436,87 +558,62 @@ class MultiViewPhotometricLoss(LossBase):
         H_full = 800
         W_full = 1280
         ego_mask_tensor = torch.ones(B, 1, H_full, W_full).to(device)
-        ref_ego_mask_tensor = []
-        for i_context in range(n_context):
-            ref_ego_mask_tensor.append(torch.ones(B, 1, H_full, W_full).to(device))
+        ref_ego_mask_tensor_geometric_context = []
+        for i_geometric_context in range(n_geometric_context):
+            ref_ego_mask_tensor_geometric_context.append(torch.ones(B, 1, H_full, W_full).to(device))
         for b in range(B):
-            if self.mask_ego:
-                ego_mask_tensor[b, 0] = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
-                for i_context in range(n_context):
-                    paths_context_ego = path_to_ego_mask_context[i_context]
-                    ref_ego_mask_tensor[i_context][b, 0] = torch.from_numpy(np.load(paths_context_ego[b])).float()
+            ego_mask_tensor[b, 0] = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
+            for i_geometric_context in range(n_geometric_context):
+                ref_ego_mask_tensor_geometric_context[i_geometric_context][b, 0] = \
+                    torch.from_numpy(np.load(path_to_ego_mask_geometric_context[i_geometric_context][b])).float()
         # resized masks
         ego_mask_tensors = []
-        ref_ego_mask_tensors = []
-        for i_context in range(n_context):
-            ref_ego_mask_tensors.append([])
+        ref_ego_mask_tensors_geometric_context = []
+        for i_geometric_context in range(n_geometric_context):
+            ref_ego_mask_tensors_geometric_context.append([])
         for i in range(self.n):
-            Btmp, C, H, W = images[i].shape
+            _, _, H, W = images[i].shape
             if W < W_full:
-                #inv_scale_factor = int(W_full / W)
-                #print(W_full / W)
-                #ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
-                ego_mask_tensors.append(interpolate_image(ego_mask_tensor,
-                                                          shape=(Btmp, 1, H, W),
-                                                          mode='nearest',
-                                                          align_corners=None))
-                for i_context in range(n_context):
-                    #ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]))
-                    ref_ego_mask_tensors[i_context].append(interpolate_image(ref_ego_mask_tensor[i_context],
-                                                          shape=(Btmp, 1, H, W),
-                                                          mode='nearest',
-                                                          align_corners=None))
+                ego_mask_tensors.append(
+                    interpolate_image(ego_mask_tensor, shape=(B, 1, H, W), mode='nearest', align_corners=None)
+                )
+                for i_geometric_context in range(n_geometric_context):
+                    ref_ego_mask_tensors_geometric_context[i_geometric_context].append(
+                        interpolate_image(ref_ego_mask_tensor_geometric_context[i_geometric_context],
+                                          mode='nearest',
+                                          align_corners=None)
+                    )
             else:
                 ego_mask_tensors.append(ego_mask_tensor)
-                for i_context in range(n_context):
-                    ref_ego_mask_tensors[i_context].append(ref_ego_mask_tensor[i_context])
-        for i_context in range(n_context):
-            _, C, H, W = context[i_context].shape
-            if W < W_full:
-                inv_scale_factor = int(W_full / W)
-                #ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
-                ref_ego_mask_tensor[i_context] = interpolate_image(ref_ego_mask_tensor[i_context],
-                                                                         shape=(Btmp, 1, H, W),
-                                                                         mode='nearest',
-                                                                         align_corners=None)
+                for i_geometric_context in range(n_geometric_context):
+                    ref_ego_mask_tensors_geometric_context[i_geometric_context].append(
+                        ref_ego_mask_tensor_geometric_context[i_geometric_context]
+                    )
 
-        print(ref_extrinsics)
-        for j, (ref_image, pose) in enumerate(zip(context, poses)):
-            print(ref_extrinsics[j])
-            ref_context_type = [c[j][0] for c in context_type] if is_list(context_type[0][0]) else context_type[j]
-            print(ref_context_type)
-            print(pose.mat)
+        # temporal context
+        for j, (ref_image, pose) in enumerate(zip(ref_images_temporal_context, poses_temporal_context)):
             # Calculate warped images
-            ref_warped, ref_ego_mask_tensors_warped = self.warp_ref_image(inv_depths2,
-                                                                          ref_image,
-                                                                          ref_ego_mask_tensor[j],
-                                                                          K, ref_K[:, j, :, :],
-                                                                          pose,
-                                                                          ref_extrinsics[j],
-                                                                          ref_context_type)
-            print(pose.mat)
+            ref_warped, ref_ego_mask_tensors_warped = \
+                self.warp_ref_image(inv_depths,
+                                    camera_type,
+                                    intrinsics_poly_coeffs,
+                                    intrinsics_principal_point,
+                                    intrinsics_scale_factors,
+                                    intrinsics_K,
+                                    intrinsics_k,
+                                    intrinsics_p,
+                                    ref_image,
+                                    pose,
+                                    ego_mask_tensors,
+                                    camera_type,
+                                    intrinsics_poly_coeffs,
+                                    intrinsics_principal_point,
+                                    intrinsics_scale_factors,
+                                    intrinsics_K,
+                                    intrinsics_k,
+                                    intrinsics_p)
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
-
-            tt = str(int(time.time() % 10000))
-            for i in range(self.n):
-                B, C, H, W = images[i].shape
-                for b in range(B):
-                    orig_PIL_0   = torch.transpose((ref_image[b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    orig_PIL     = torch.transpose((ref_image[b,:,:,:]* ref_ego_mask_tensor[j][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    warped_PIL_0 = torch.transpose((ref_warped[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    warped_PIL   = torch.transpose((ref_warped[i][b,:,:,:] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    target_PIL_0 = torch.transpose((images[i][b, :, :, :]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-                    target_PIL   = torch.transpose((images[i][b, :, :, :] * ego_mask_tensors[i][b,:,:,:]).unsqueeze(0).unsqueeze(4), 1, 4).squeeze().detach().cpu().numpy()
-
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_orig_PIL_0.png',   orig_PIL_0*255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_orig_PIL.png',   orig_PIL*255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL_0.png', warped_PIL_0 * 255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_warped_PIL.png', warped_PIL * 255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_target_PIL_0.png', target_PIL_0 * 255)
-                    cv2.imwrite('/home/users/vbelissen/test' + '_' + str(j) + '_' + tt + '_' + str(b) + '_' + str(i) + '_target_PIL.png', target_PIL * 255)
-
-
             for i in range(self.n):
                 photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
             # If using automask
@@ -525,7 +622,75 @@ class MultiViewPhotometricLoss(LossBase):
                 ref_images = match_scales(ref_image, inv_depths, self.n)
                 unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
                 for i in range(self.n):
-                    photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors[j][i])
+                    photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ego_mask_tensors[i])
+
+        # geometric context
+        for j, (ref_image, pose) in enumerate(zip(ref_images_geometric_context, poses_geometric_context)):
+            # Calculate warped images
+            ref_warped, ref_ego_mask_tensors_warped = \
+                self.warp_ref_image(inv_depths,
+                                    camera_type,
+                                    intrinsics_poly_coeffs,
+                                    intrinsics_principal_point,
+                                    intrinsics_scale_factors,
+                                    intrinsics_K,
+                                    intrinsics_k,
+                                    intrinsics_p,
+                                    ref_image,
+                                    pose,
+                                    ref_ego_mask_tensors_geometric_context[j],
+                                    camera_type_geometric_context[j],
+                                    intrinsics_poly_coeffs_geometric_context[j],
+                                    intrinsics_principal_point_geometric_context[j],
+                                    intrinsics_scale_factors_geometric_context[j],
+                                    intrinsics_K_geometric_context[j],
+                                    intrinsics_k_geometric_context[j],
+                                    intrinsics_p_geometric_context[j])
+            # Calculate and store image loss
+            photometric_loss = self.calc_photometric_loss(ref_warped, images)
+            for i in range(self.n):
+                photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+            # If using automask
+            if self.automask_loss:
+                # Calculate and store unwarped image loss
+                ref_images = match_scales(ref_image, inv_depths, self.n)
+                unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
+                for i in range(self.n):
+                    photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j][i])
+
+        # geometric-temporal context
+        for j, (ref_image, pose) in enumerate(zip(ref_images_geometric_context_temporal_context, poses_geometric_context_temporal_context)):
+            # Calculate warped images
+            ref_warped, ref_ego_mask_tensors_warped = \
+                self.warp_ref_image(inv_depths,
+                                    camera_type,
+                                    intrinsics_poly_coeffs,
+                                    intrinsics_principal_point,
+                                    intrinsics_scale_factors,
+                                    intrinsics_K,
+                                    intrinsics_k,
+                                    intrinsics_p,
+                                    ref_image,
+                                    pose, # ATTENTION A CORRIGER (changement de repere !)
+                                    ref_ego_mask_tensors_geometric_context[j],
+                                    camera_type_geometric_context[j],
+                                    intrinsics_poly_coeffs_geometric_context[j],
+                                    intrinsics_principal_point_geometric_context[j],
+                                    intrinsics_scale_factors_geometric_context[j],
+                                    intrinsics_K_geometric_context[j],
+                                    intrinsics_k_geometric_context[j],
+                                    intrinsics_p_geometric_context[j])
+            # Calculate and store image loss
+            photometric_loss = self.calc_photometric_loss(ref_warped, images)
+            for i in range(self.n):
+                photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+            # If using automask
+            if self.automask_loss:
+                # Calculate and store unwarped image loss
+                ref_images = match_scales(ref_image, inv_depths, self.n)
+                unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
+                for i in range(self.n):
+                    photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j][i])
         # Calculate reduced photometric loss
         loss = self.nonzero_reduce_photometric_loss(photometric_losses)
         # Include smoothness loss if requested

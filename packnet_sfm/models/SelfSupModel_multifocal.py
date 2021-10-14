@@ -49,14 +49,15 @@ class SelfSupModel_multifocal(SfmModel_multifocal):
                              intrinsics_k,
                              intrinsics_p,
                              path_to_ego_mask,
-                             camera_type_temporal_context,
-                             intrinsics_poly_coeffs_temporal_context,
-                             intrinsics_principal_point_temporal_context,
-                             intrinsics_scale_factors_temporal_context,
-                             intrinsics_K_temporal_context,
-                             intrinsics_k_temporal_context,
-                             intrinsics_p_temporal_context,
-                             path_to_ego_mask_temporal_context,
+                             camera_type_geometric_context,
+                             intrinsics_poly_coeffs_geometric_context,
+                             intrinsics_principal_point_geometric_context,
+                             intrinsics_scale_factors_geometric_context,
+                             intrinsics_K_geometric_context,
+                             intrinsics_k_geometric_context,
+                             intrinsics_p_geometric_context,
+                             path_to_ego_mask_geometric_context,
+                             dummy_camera_geometric_context,
                              return_logs=False, progress=0.0):
         """
         Calculates the self-supervised photometric loss.
@@ -100,14 +101,15 @@ class SelfSupModel_multifocal(SfmModel_multifocal):
             intrinsics_k,
             intrinsics_p,
             path_to_ego_mask,
-            camera_type_temporal_context,
-            intrinsics_poly_coeffs_temporal_context,
-            intrinsics_principal_point_temporal_context,
-            intrinsics_scale_factors_temporal_context,
-            intrinsics_K_temporal_context,
-            intrinsics_k_temporal_context,
-            intrinsics_p_temporal_context,
-            path_to_ego_mask_temporal_context,
+            camera_type_geometric_context,
+            intrinsics_poly_coeffs_geometric_context,
+            intrinsics_principal_point_geometric_context,
+            intrinsics_scale_factors_geometric_context,
+            intrinsics_K_geometric_context,
+            intrinsics_k_geometric_context,
+            intrinsics_p_geometric_context,
+            path_to_ego_mask_geometric_context,
+            dummy_camera_geometric_context,
             return_logs=return_logs, progress=progress
         )
 
@@ -162,6 +164,7 @@ class SelfSupModel_multifocal(SfmModel_multifocal):
                 batch['intrinsics_k_geometric_context'],
                 batch['intrinsics_p_geometric_context'],
                 batch['path_to_ego_mask_geometric_context'],
+                batch['dummy_camera_geometric_context'],
                 return_logs=return_logs, progress=progress)
 
             pose_consistency_loss = self._pose_consistency_loss(output['poses_temporal_context'],

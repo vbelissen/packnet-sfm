@@ -684,7 +684,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     for i_context in range(n_geometric_context)
                 ]
                 relative_pose_matrix_geometric_context = [
-                    absolute_context_pose @ invert_pose_numpy(sample['pose_matrix'])
+                    (absolute_context_pose @ invert_pose_numpy(sample['pose_matrix'])).astype(np.float32)
                     for absolute_context_pose in absolute_pose_matrix_geometric_context
                 ]
 
@@ -703,7 +703,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     k_geometric_context.append(k_tmp)
                     p_geometric_context.append(p_tmp)
                     path_to_ego_mask_geometric_context.append('')
-                    relative_pose_matrix_geometric_context.append(np.eye(4))
+                    relative_pose_matrix_geometric_context.append(np.eye(4).astype(np.float32))
 
                 camera_type_geometric_context_int = np.array(camera_type_geometric_context_int)
 

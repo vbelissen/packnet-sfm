@@ -248,7 +248,7 @@ class CameraMultifocal(nn.Module):
 
         xc = rc * torch.cos(phi)
         yc = rc * torch.sin(phi)
-        zc = depth * torch.cos(theta_tensor)
+        zc = depth[mask] * torch.cos(theta_tensor)
         #print(zc[0, 0, :, 127])
 
         # mask = (depth == 0).detach()

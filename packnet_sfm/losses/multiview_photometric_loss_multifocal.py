@@ -20,7 +20,7 @@ import numpy as np
 import time
 import cv2
 
-torch.autograd.set_detect_anomaly(True)
+#torch.autograd.set_detect_anomaly(True)
 
 ########################################################################################################################
 

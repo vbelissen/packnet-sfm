@@ -619,8 +619,10 @@ class MultiViewPhotometricLoss(LossBase):
         for b in range(B):
             ego_mask_tensor[b, 0] = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
             for i_geometric_context in range(n_geometric_context):
-                ref_ego_mask_tensor_geometric_context[i_geometric_context][b, 0] = \
-                    torch.from_numpy(np.load(path_to_ego_mask_geometric_context[i_geometric_context][b])).float()
+                if camera_type_geometric_context[b, i_geometric_context] != 2:
+                    ref_ego_mask_tensor_geometric_context[i_geometric_context][b, 0] = \
+                        torch.from_numpy(np.load(path_to_ego_mask_geometric_context[i_geometric_context][b])).float()
+
         # resized masks
         ego_mask_tensors = []
         ref_ego_mask_tensors_geometric_context = []

@@ -210,7 +210,7 @@ class CameraMultifocal(nn.Module):
         """
         B, C, H, W = depth[mask].shape
         device = depth.get_device()
-        print(device)
+        print(depth.dtype)
         assert C == 1
 
         xi, yi = meshgrid(B, H, W, depth.dtype, depth.device, normalized=False)

@@ -186,28 +186,28 @@ class MultiViewPhotometricLoss(LossBase):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
             cams.append(
-                CameraMultifocal(intrinsics_poly_coeffs.float(),
-                                 intrinsics_principal_point.float(),
-                                 intrinsics_scale_factors.float(),
-                                 intrinsics_K.float(),
-                                 intrinsics_k[:, 0].float(),
-                                 intrinsics_k[:, 1].float(),
-                                 intrinsics_k[:, 2].float(),
-                                 intrinsics_p[:, 0].float(),
-                                 intrinsics_p[:, 1].float(),
+                CameraMultifocal(intrinsics_poly_coeffs,
+                                 intrinsics_principal_point,
+                                 intrinsics_scale_factors,
+                                 intrinsics_K,
+                                 intrinsics_k[:, 0],
+                                 intrinsics_k[:, 1],
+                                 intrinsics_k[:, 2],
+                                 intrinsics_p[:, 0],
+                                 intrinsics_p[:, 1],
                                  camera_type,
                                  Tcw=None).scaled(scale_factor).to(device)
             )
             ref_cams.append(
-                CameraMultifocal(ref_intrinsics_poly_coeffs.float(),
-                                 ref_intrinsics_principal_point.float(),
-                                 ref_intrinsics_scale_factors.float(),
-                                 ref_intrinsics_K.float(),
-                                 ref_intrinsics_k[:, 0].float(),
-                                 ref_intrinsics_k[:, 1].float(),
-                                 ref_intrinsics_k[:, 2].float(),
-                                 ref_intrinsics_p[:, 0].float(),
-                                 ref_intrinsics_p[:, 1].float(),
+                CameraMultifocal(ref_intrinsics_poly_coeffs,
+                                 ref_intrinsics_principal_point,
+                                 ref_intrinsics_scale_factors,
+                                 ref_intrinsics_K,
+                                 ref_intrinsics_k[:, 0],
+                                 ref_intrinsics_k[:, 1],
+                                 ref_intrinsics_k[:, 2],
+                                 ref_intrinsics_p[:, 0],
+                                 ref_intrinsics_p[:, 1],
                                  ref_camera_type,
                                  Tcw=ref_pose).scaled(scale_factor).to(device)
             )

@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from packnet_sfm.utils.image import match_scales
+from packnet_sfm.utils.image import match_scales, interpolate_image
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
 
 ########################################################################################################################
@@ -179,17 +179,23 @@ class SupervisedLoss(LossBase):
         if self.mask_ego:
             device = gt_inv_depth.get_device()
             B = len(path_to_ego_mask)
-            ego_mask_tensor = torch.zeros(B, 1, 800, 1280)
+            H_full = 800
+            W_full = 1280
+            ego_mask_tensor = torch.zeros(B, 1, H_full, W_full).to(device)
             for b in range(B):
                 ego_mask_tensor[b, 0] = torch.from_numpy(np.load(path_to_ego_mask[b])).float()
             ego_mask_tensors = []  # = torch.zeros(B, 1, 800, 1280)
             for i in range(self.n):
                 B, C, H, W = inv_depths[i].shape
-                if W < 1280:
+                if W < W_full:
                     inv_scale_factor = int(1280 / W)
-                    ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor).to(device))
+                    #ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor).to(device))
+                    ego_mask_tensors.append(interpolate_image(ego_mask_tensor,
+                                                              shape=(B, 1, H, W),
+                                                              mode='nearest',
+                                                              align_corners=None))
                 else:
-                    ego_mask_tensors.append(ego_mask_tensor.to(device))
+                    ego_mask_tensors.append(ego_mask_tensor)
 
         # Calculate and store supervised loss
         if self.mask_ego:

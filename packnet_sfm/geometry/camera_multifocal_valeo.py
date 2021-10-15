@@ -163,7 +163,7 @@ class CameraMultifocal(nn.Module):
         B, C, H, W = depth.shape
         device = depth.get_device()
 
-        points = torch.zeros(B, 3, H, W).to(device)
+        points = torch.zeros(B, 3, H, W).float().to(device)
 
         if self.n_batch_fisheye() > 0:
             mask_fisheye = self.mask_batch_fisheye()
@@ -180,7 +180,7 @@ class CameraMultifocal(nn.Module):
         B, C, H, W = X.shape
         device = X.get_device()
 
-        coords = torch.zeros(B, H, W, 2).to(device)
+        coords = torch.zeros(B, H, W, 2).float().to(device)
 
         if self.n_batch_fisheye() > 0:
             mask_fisheye = self.mask_batch_fisheye()

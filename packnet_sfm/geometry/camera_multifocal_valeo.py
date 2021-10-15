@@ -289,9 +289,9 @@ class CameraMultifocal(nn.Module):
 
         # World to camera:
         if frame == 'c':
-            Xc = X.view(B, 3, -1) # [B, 3, HW]
+            Xc = X[mask].view(B, 3, -1) # [B, 3, HW]
         elif frame == 'w':
-            Xc = (Pose(self.Tcw.mat[mask]) @ X).view(B, 3, -1) # [B, 3, HW]
+            Xc = (Pose(self.Tcw.mat[mask]) @ X[mask]).view(B, 3, -1) # [B, 3, HW]
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
 
@@ -454,9 +454,9 @@ class CameraMultifocal(nn.Module):
 
         # Project 3D points onto the camera image plane
         if frame == 'c':
-            Xc = X.view(B, 3, -1)
+            Xc = X[mask].view(B, 3, -1)
         elif frame == 'w':
-            Xc = (Pose(self.Tcw.mat[mask]) @ X).view(B, 3, -1)
+            Xc = (Pose(self.Tcw.mat[mask]) @ X[mask]).view(B, 3, -1)
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
 

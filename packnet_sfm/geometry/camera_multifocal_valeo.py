@@ -163,7 +163,7 @@ class CameraMultifocal(nn.Module):
         B, C, H, W = depth.shape
         device = depth.get_device()
 
-        points = torch.zeros(B, 3, H, W).float().to(device)
+        points = torch.zeros(B, 3, H, W).to(device)
 
         if self.n_batch_fisheye() > 0:
             mask_fisheye = self.mask_batch_fisheye()
@@ -180,7 +180,7 @@ class CameraMultifocal(nn.Module):
         B, C, H, W = X.shape
         device = X.get_device()
 
-        coords = torch.zeros(B, H, W, 2).float().to(device)
+        coords = torch.zeros(B, H, W, 2).to(device)
 
         if self.n_batch_fisheye() > 0:
             mask_fisheye = self.mask_batch_fisheye()
@@ -210,11 +210,9 @@ class CameraMultifocal(nn.Module):
         """
         B, C, H, W = depth[mask].shape
         device = depth.get_device()
-        print(depth.dtype)
         assert C == 1
 
         xi, yi = meshgrid(B, H, W, depth.dtype, depth.device, normalized=False)
-        print(xi.dtype)
 
         xi = ((xi - (W - 1) / 2 - self.principal_point[mask, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
               * self.scale_factors[mask, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
@@ -265,14 +263,6 @@ class CameraMultifocal(nn.Module):
             return Xc
         # If in world frame of reference
         elif frame == 'w':
-            print(Xc.dtype)
-            print(yi.dtype)
-            print(ri.dtype)
-            print(rc.dtype)
-            print(phi.dtype)
-            print(theta_tensor.dtype)
-            print(zc.dtype)
-            print(self.Twc.mat[mask].dtype)
             return Pose(self.Twc.mat[mask]) @ Xc
         # If none of the above
         else:

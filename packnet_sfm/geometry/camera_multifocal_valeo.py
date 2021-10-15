@@ -209,6 +209,7 @@ class CameraMultifocal(nn.Module):
             Pixel-wise 3D points
         """
         B, C, H, W = depth[mask].shape
+        print(depth[mask].shape)
         device = depth.get_device()
         assert C == 1
 

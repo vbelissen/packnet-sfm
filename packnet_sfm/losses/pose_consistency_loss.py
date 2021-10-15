@@ -75,7 +75,7 @@ def mat2euler(M):
     #     z = torch.atan2(M[:, 1, 0], M[:, 1, 1])
     #     y = torch.atan2(M[:, 0, 2], cy)  # atan2(sin(y), cy)
     #     x = torch.zeros(B)
-    return z, y, x
+    return torch.stack([x, y, z],dim=1) # z, y, x
 
 class PoseConsistencyLoss(LossBase):
     """

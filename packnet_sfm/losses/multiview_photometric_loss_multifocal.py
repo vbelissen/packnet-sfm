@@ -593,7 +593,7 @@ class MultiViewPhotometricLoss(LossBase):
                                     intrinsics_k,
                                     intrinsics_p,
                                     ref_image,
-                                    pose,
+                                    Pose(pose),
                                     ref_ego_mask_tensors_geometric_context[j],
                                     camera_type_geometric_context[j],
                                     intrinsics_poly_coeffs_geometric_context[j],

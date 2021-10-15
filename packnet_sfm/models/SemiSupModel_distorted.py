@@ -8,7 +8,7 @@ from packnet_sfm.models.model_utils import merge_outputs
 from packnet_sfm.utils.depth import depth2inv
 
 
-class SemiSupModel_fisheye(SelfSupModel_distorted):
+class SemiSupModel_distorted(SelfSupModel_distorted):
     """
     Model that inherits a depth and pose networks, plus the self-supervised loss from
     SelfSupModel and includes a supervised loss for semi-supervision.

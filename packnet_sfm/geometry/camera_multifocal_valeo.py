@@ -184,11 +184,11 @@ class CameraMultifocal(nn.Module):
 
         if self.n_batch_fisheye() > 0:
             mask_fisheye = self.mask_batch_fisheye()
-            coords[mask_fisheye] = self.reconstruct_fisheye(X, mask_fisheye, frame)
+            coords[mask_fisheye] = self.project_fisheye(X, mask_fisheye, frame)
 
         if self.n_batch_distorted() > 0:
             mask_distorted = self.mask_batch_distorted()
-            coords[mask_distorted] = self.reconstruct_distorted(X, mask_distorted, frame)
+            coords[mask_distorted] = self.project_distorted(X, mask_distorted, frame)
 
         return coords
 
@@ -209,7 +209,6 @@ class CameraMultifocal(nn.Module):
             Pixel-wise 3D points
         """
         B, C, H, W = depth[mask].shape
-        print(depth[mask].shape)
         device = depth.get_device()
         assert C == 1
 

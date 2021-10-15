@@ -68,6 +68,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
     """
     def __init__(self, root_dir, file_list, train=True,
                  data_transform=None, depth_type=None, with_pose=False, with_geometric_context=False,
+                 with_spatiotemp_context=False,
                  back_context=0, forward_context=0, strides=(1,), cameras=None):
         # Assertions
         backward_context = back_context

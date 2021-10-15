@@ -214,6 +214,7 @@ class CameraMultifocal(nn.Module):
         assert C == 1
 
         xi, yi = meshgrid(B, H, W, depth.dtype, depth.device, normalized=False)
+        print(xi.dtype)
 
         xi = ((xi - (W - 1) / 2 - self.principal_point[mask, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
               * self.scale_factors[mask, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
@@ -265,7 +266,6 @@ class CameraMultifocal(nn.Module):
         # If in world frame of reference
         elif frame == 'w':
             print(Xc.dtype)
-            print(xi.dtype)
             print(yi.dtype)
             print(ri.dtype)
             print(rc.dtype)

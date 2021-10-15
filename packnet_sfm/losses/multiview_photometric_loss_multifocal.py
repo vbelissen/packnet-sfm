@@ -714,6 +714,8 @@ class MultiViewPhotometricLoss(LossBase):
             #print(torch.isnan(photometric_loss[0]).sum())
             for i in range(self.n):
                 #print(i)
+                # A CORRIGER
+                # COMPRENDRE POURQUOI DES NANS DANS REF_WARPED !
                 photometric_loss[i][torch.isnan(photometric_loss[i])] = 0.0
                 photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
             # If using automask

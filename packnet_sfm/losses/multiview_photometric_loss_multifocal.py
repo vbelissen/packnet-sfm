@@ -683,7 +683,6 @@ class MultiViewPhotometricLoss(LossBase):
         # geometric context
         for j, (ref_image, pose) in enumerate(zip(ref_images_geometric_context, poses_geometric_context)):
             # Calculate warped images
-            print(ref_image)
             ref_warped, ref_ego_mask_tensors_warped = \
                 self.warp_ref_image(inv_depths,
                                     camera_type,

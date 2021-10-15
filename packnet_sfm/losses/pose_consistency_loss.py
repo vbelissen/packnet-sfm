@@ -50,15 +50,28 @@ def mat2euler(M):
     # cy: sqrt((cos(y)*cos(z))**2 + (cos(x)*cos(y))**2)
     B, _, _ = M.shape
     cy = torch.sqrt(M[:, 2, 2] * M[:, 2, 2] + M[:, 1, 2] * M[:, 1, 2])
-    if cy > 1e-4:  # cos(y) not close to zero, standard form
-        z = torch.atan2(-M[:, 0, 1], M[:, 0, 0])  # atan2(cos(y)*sin(z), cos(y)*cos(z))
-        y = torch.atan2(M[:, 0, 2], cy)  # atan2(sin(y), cy)
-        x = torch.atan2(-M[:, 1, 2], M[:, 2, 2])  # atan2(cos(y)*sin(x), cos(x)*cos(y))
-    else:  # cos(y) (close to) zero, so x -> 0.0 (see above)
-        # so M[:, 1, 0] -> sin(z), M[:, 1, 1] -> cos(z) and
-        z = torch.atan2(M[:, 1, 0], M[:, 1, 1])
-        y = torch.atan2(M[:, 0, 2], cy)  # atan2(sin(y), cy)
-        x = torch.zeros(B)
+    x = torch.zeros(B)
+    y = torch.zeros(B)
+    z = torch.zeros(B)
+
+    mask_cy = (cy > 1e-4)
+
+    z[mask_cy] = torch.atan2(-M[mask_cy, 0, 1], M[mask_cy, 0, 0])  # atan2(cos(y)*sin(z), cos(y)*cos(z))
+    y[mask_cy] = torch.atan2(M[mask_cy, 0, 2], cy[mask_cy])  # atan2(sin(y), cy)
+    x[mask_cy] = torch.atan2(-M[mask_cy, 1, 2], M[mask_cy, 2, 2])  # atan2(cos(y)*sin(x), cos(x)*cos(y))
+
+    z[~mask_cy] = torch.atan2(M[~mask_cy, 1, 0], M[~mask_cy, 1, 1])
+    y[~mask_cy] = torch.atan2(M[~mask_cy, 0, 2], cy[~mask_cy])  # atan2(sin(y), cy)
+
+    # if cy > 1e-4:  # cos(y) not close to zero, standard form
+    #     z = torch.atan2(-M[:, 0, 1], M[:, 0, 0])  # atan2(cos(y)*sin(z), cos(y)*cos(z))
+    #     y = torch.atan2(M[:, 0, 2], cy)  # atan2(sin(y), cy)
+    #     x = torch.atan2(-M[:, 1, 2], M[:, 2, 2])  # atan2(cos(y)*sin(x), cos(x)*cos(y))
+    # else:  # cos(y) (close to) zero, so x -> 0.0 (see above)
+    #     # so M[:, 1, 0] -> sin(z), M[:, 1, 1] -> cos(z) and
+    #     z = torch.atan2(M[:, 1, 0], M[:, 1, 1])
+    #     y = torch.atan2(M[:, 0, 2], cy)  # atan2(sin(y), cy)
+    #     x = torch.zeros(B)
     return z, y, x
 
 class PoseConsistencyLoss(LossBase):

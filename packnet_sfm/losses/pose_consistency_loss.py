@@ -94,7 +94,7 @@ class PoseConsistencyLoss(LossBase):
 
         """
         trans_loss = (pose1.mat[:, :3, 3] - pose2.mat[:, :3, 3]).norm(dim=-1)
-        rot_loss = (mat2euler(pose1[:, :3, :3]) - mat2euler(pose2[:, :3, :3])).norm(dim=-1)
+        rot_loss = (mat2euler(pose1.mat[:, :3, :3]) - mat2euler(pose2.mat[:, :3, :3])).norm(dim=-1)
 
         mask = (dummy_camera == 0.0)
         trans_loss_final = trans_loss[mask].mean()

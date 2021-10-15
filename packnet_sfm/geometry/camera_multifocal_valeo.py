@@ -263,6 +263,8 @@ class CameraMultifocal(nn.Module):
             return Xc
         # If in world frame of reference
         elif frame == 'w':
+            print(Xc.dtype)
+            print(self.Twc.mat[mask].dtype)
             return Pose(self.Twc.mat[mask]) @ Xc
         # If none of the above
         else:

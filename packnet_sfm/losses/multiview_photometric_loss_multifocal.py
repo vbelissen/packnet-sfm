@@ -645,6 +645,7 @@ class MultiViewPhotometricLoss(LossBase):
             for i in range(self.n):
                 for b in range(B):
                     print(dummy_camera_geometric_context)
+                    print(ref_images_geometric_context)
                     print(j)
                     print(j_geometric)
                     print(dummy_camera_geometric_context[b, j_geometric])

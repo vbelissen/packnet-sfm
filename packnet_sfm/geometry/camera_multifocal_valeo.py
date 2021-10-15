@@ -214,10 +214,10 @@ class CameraMultifocal(nn.Module):
 
         xi, yi = meshgrid(B, H, W, depth.dtype, depth.device, normalized=False)
 
-        xi = ((xi - (W - 1) / 2 - self.principal_point[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
-              * self.scale_factors[:, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
-        yi = ((yi - (H - 1) / 2 - self.principal_point[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
-              * self.scale_factors[:, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
+        xi = ((xi - (W - 1) / 2 - self.principal_point[mask, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
+              * self.scale_factors[mask, 0].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
+        yi = ((yi - (H - 1) / 2 - self.principal_point[mask, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W]))
+              * self.scale_factors[mask, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
 
         N = 12
         theta_tensor = (torch.zeros(B, 1, H, W)).to(device)
@@ -227,14 +227,14 @@ class CameraMultifocal(nn.Module):
             t2 = theta_tensor * t1
             t3 = theta_tensor * t2
             t4 = theta_tensor * t3
-            theta_tensor = t1 + .5 * (ri - (self.poly_coeffs[:, 0].view(B, 1, 1, 1) * t1
-                                            + self.poly_coeffs[:, 1].view(B, 1, 1, 1) * t2
-                                            + self.poly_coeffs[:, 2].view(B, 1, 1, 1) * t3
-                                            + self.poly_coeffs[:, 3].view(B, 1, 1, 1) * t4)) \
-                                   / (self.poly_coeffs[:, 0].view(B, 1, 1, 1)
-                                      + 2 * self.poly_coeffs[:, 1].view(B, 1, 1, 1) * t1
-                                      + 3 * self.poly_coeffs[:, 2].view(B, 1, 1, 1) * t2
-                                      + 4 * self.poly_coeffs[:, 3].view(B, 1, 1, 1) * t3)
+            theta_tensor = t1 + .5 * (ri - (self.poly_coeffs[mask, 0].view(B, 1, 1, 1) * t1
+                                            + self.poly_coeffs[mask, 1].view(B, 1, 1, 1) * t2
+                                            + self.poly_coeffs[mask, 2].view(B, 1, 1, 1) * t3
+                                            + self.poly_coeffs[mask, 3].view(B, 1, 1, 1) * t4)) \
+                                   / (self.poly_coeffs[mask, 0].view(B, 1, 1, 1)
+                                      + 2 * self.poly_coeffs[mask, 1].view(B, 1, 1, 1) * t1
+                                      + 3 * self.poly_coeffs[mask, 2].view(B, 1, 1, 1) * t2
+                                      + 4 * self.poly_coeffs[mask, 3].view(B, 1, 1, 1) * t3)
             # l'astuce pour que ça marche a été de multiplier la mise à jour par 0.5 (au lieu de 1 selon Newton...)
 
         #get_roots_table_tensor(self.poly_coeffs, self.principal_point, self.scale_factors, H, W).to(device)
@@ -295,10 +295,10 @@ class CameraMultifocal(nn.Module):
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
 
-        c1 = self.poly_coeffs[:, 0].unsqueeze(1)
-        c2 = self.poly_coeffs[:, 1].unsqueeze(1)
-        c3 = self.poly_coeffs[:, 2].unsqueeze(1)
-        c4 = self.poly_coeffs[:, 3].unsqueeze(1)
+        c1 = self.poly_coeffs[mask, 0].unsqueeze(1)
+        c2 = self.poly_coeffs[mask, 1].unsqueeze(1)
+        c3 = self.poly_coeffs[mask, 2].unsqueeze(1)
+        c4 = self.poly_coeffs[mask, 3].unsqueeze(1)
 
         # Project 3D points onto the camera image plane
         X = Xc[:, 0] # [B, HW]
@@ -313,8 +313,8 @@ class CameraMultifocal(nn.Module):
 
         rho = c1 * theta_1 + c2 * theta_2 + c3 * theta_3 + c4 * theta_4 # [B, HW]
         rho = rho * ((X != 0) | (Y != 0) | (Z != 0))
-        u = rho * torch.cos(phi) / self.scale_factors[:, 0].unsqueeze(1) + self.principal_point[:, 0].unsqueeze(1) # [B, HW]
-        v = rho * torch.sin(phi) / self.scale_factors[:, 1].unsqueeze(1) + self.principal_point[:, 1].unsqueeze(1) # [B, HW]
+        u = rho * torch.cos(phi) / self.scale_factors[mask, 0].unsqueeze(1) + self.principal_point[mask, 0].unsqueeze(1) # [B, HW]
+        v = rho * torch.sin(phi) / self.scale_factors[mask, 1].unsqueeze(1) + self.principal_point[mask, 1].unsqueeze(1) # [B, HW]
 
         # Normalize points
         Xnorm = 2 * u / (W - 1)# - 1.
@@ -376,9 +376,9 @@ class CameraMultifocal(nn.Module):
                 r4 = r2.pow(2)
                 r6 = r2 * r4
 
-                rad_dist = 1 / (1 + self.k1.view(B,1,1,1) * r2 + self.k2.view(B,1,1,1) * r4 + self.k3.view(B,1,1,1) * r6)
-                tang_dist_x = 2 * self.p1.view(B,1,1,1) * x * y + self.p2.view(B,1,1,1) * (r2 + 2 * x.pow(2))
-                tang_dist_y = 2 * self.p2.view(B,1,1,1) * x * y + self.p1.view(B,1,1,1) * (r2 + 2 * y.pow(2))
+                rad_dist = 1 / (1 + self.k1[mask].view(B,1,1,1) * r2 + self.k2[mask].view(B,1,1,1) * r4 + self.k3[mask].view(B,1,1,1) * r6)
+                tang_dist_x = 2 * self.p1[mask].view(B,1,1,1) * x * y + self.p2[mask].view(B,1,1,1) * (r2 + 2 * x.pow(2))
+                tang_dist_y = 2 * self.p2[mask].view(B,1,1,1) * x * y + self.p1[mask].view(B,1,1,1) * (r2 + 2 * y.pow(2))
 
                 x = (x_src - tang_dist_x) * rad_dist
                 y = (y_src - tang_dist_y) * rad_dist
@@ -398,9 +398,9 @@ class CameraMultifocal(nn.Module):
                 r4 = r2.pow(2)
                 r6 = r2 * r4
 
-                rad_dist = 1 / (1 + self.k1.view(B,1,1,1) * r2 + self.k2.view(B,1,1,1) * r4 + self.k3.view(B,1,1,1) * r6)
-                tang_dist_x = 2 * self.p1.view(B,1,1,1) * x_list[-1] * y_list[-1] + self.p2.view(B,1,1,1) * (r2 + 2 * x_list[-1].pow(2))
-                tang_dist_y = 2 * self.p2.view(B,1,1,1) * x_list[-1] * y_list[-1] + self.p1.view(B,1,1,1) * (r2 + 2 * y_list[-1].pow(2))
+                rad_dist = 1 / (1 + self.k1[mask].view(B,1,1,1) * r2 + self.k2[mask].view(B,1,1,1) * r4 + self.k3[mask].view(B,1,1,1) * r6)
+                tang_dist_x = 2 * self.p1[mask].view(B,1,1,1) * x_list[-1] * y_list[-1] + self.p2[mask].view(B,1,1,1) * (r2 + 2 * x_list[-1].pow(2))
+                tang_dist_y = 2 * self.p2[mask].view(B,1,1,1) * x_list[-1] * y_list[-1] + self.p1[mask].view(B,1,1,1) * (r2 + 2 * y_list[-1].pow(2))
 
                 x_list.append((x_list[0] - tang_dist_x) * rad_dist)
                 y_list.append((y_list[0] - tang_dist_y) * rad_dist)
@@ -470,13 +470,13 @@ class CameraMultifocal(nn.Module):
         r6 = r2 * r4
 
         # Distorted normalized points
-        rad_dist = (1 + self.k1.view(B,1) * r2 + self.k2.view(B,1) * r4 + self.k3.view(B,1) * r6)
-        Xd = Xn * rad_dist + 2 * self.p1.view(B,1) * Xn * Yn + self.p2.view(B,1) * (r2 + 2 * Xn.pow(2))
-        Yd = Yn * rad_dist + 2 * self.p2.view(B,1) * Xn * Yn + self.p1.view(B,1) * (r2 + 2 * Yn.pow(2))
+        rad_dist = (1 + self.k1[mask].view(B,1) * r2 + self.k2[mask].view(B,1) * r4 + self.k3[mask].view(B,1) * r6)
+        Xd = Xn * rad_dist + 2 * self.p1[mask].view(B,1) * Xn * Yn + self.p2[mask].view(B,1) * (r2 + 2 * Xn.pow(2))
+        Yd = Yn * rad_dist + 2 * self.p2[mask].view(B,1) * Xn * Yn + self.p1[mask].view(B,1) * (r2 + 2 * Yn.pow(2))
 
         # Final projection
-        u = self.fx.view(B,1) * Xd + self.cx.view(B,1)
-        v = self.fy.view(B,1) * Yd + self.cy.view(B,1)
+        u = self.fx[mask].view(B,1) * Xd + self.cx[mask].view(B,1)
+        v = self.fy[mask].view(B,1) * Yd + self.cy[mask].view(B,1)
 
         # normalized coordinates
         uNorm = 2 * u / (W - 1) - 1.

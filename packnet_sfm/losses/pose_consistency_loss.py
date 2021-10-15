@@ -99,7 +99,7 @@ class PoseConsistencyLoss(LossBase):
 
 ########################################################################################################################
 
-    def calculate_loss(self, pose1, pose2, dummy_camera):
+    def calculate_loss(self, pose1, pose2, camera_type):
         """
         Calculates the pose consistency loss.
 
@@ -114,7 +114,7 @@ class PoseConsistencyLoss(LossBase):
         trans_loss = (pose1.mat[:, :3, 3] - pose2.mat[:, :3, 3]).norm(dim=-1)
         rot_loss = (mat2euler(pose1.mat[:, :3, :3]) - mat2euler(pose2.mat[:, :3, :3])).norm(dim=-1)
 
-        mask = (dummy_camera == 0.0)
+        mask = (camera_type < 2)
         trans_loss_final = trans_loss[mask].mean()
         rot_loss_final = rot_loss[mask].mean()
 
@@ -124,7 +124,7 @@ class PoseConsistencyLoss(LossBase):
     def forward(self,
                 poses_temporal_context,
                 poses_geometric_context_temporal_context,
-                dummy_camera_geometric_context,
+                camera_type_geometric_context,
                 **kwargs):
         """
         Calculates training supervised loss.
@@ -152,7 +152,7 @@ class PoseConsistencyLoss(LossBase):
             for i_t in range(n_t):
                 losses.append(self.calculate_loss(poses_temporal_context[i_t],
                                                   poses_geometric_context_temporal_context[i_g * n_t + i_t],
-                                                  dummy_camera_geometric_context[:, i_g]))
+                                                  camera_type_geometric_context[:, i_g]))
         loss = sum(losses) / len(losses)
 
         self.add_metric('pose_consistency_loss', loss)

@@ -244,6 +244,14 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
             'Only fisheye and perspective cameras supported'
         return camera_type
 
+    def _get_camera_type_int(self, camera_type):
+        if camera_type == 'fisheye':
+            return 0
+        elif camera_type == 'perspective':
+            return 1
+        else:
+            return 2
+
     def _get_intrinsics_fisheye(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
         cam = self._get_camera_name(image_file)
@@ -547,10 +555,11 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
             self.calibration_cache[calib_identifier] = c_data
 
         camera_type = self._get_camera_type(self.paths[idx], c_data)
+        camera_type_int = self._get_camera_type_int(camera_type)
         poly_coeffs, principal_point, scale_factors, K, k, p = self._get_full_intrinsics(self.paths[idx], c_data)
 
         sample.update({
-            'camera_type': camera_type,
+            'camera_type': camera_type_int,
             'intrinsics_poly_coeffs': poly_coeffs,
             'intrinsics_principal_point': principal_point,
             'intrinsics_scale_factors': scale_factors,
@@ -645,6 +654,10 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                                           c_data_geometric_context[i_context])
                     for i_context in range(n_geometric_context)
                 ]
+                camera_type_geometric_context_int = [
+                    self._get_camera_type_int(camera_type_geometric_context[i_context])
+                    for i_context in range(n_geometric_context)
+                ]
                 poly_coeffs_geometric_context = []
                 principal_point_geometric_context = []
                 scale_factors_geometric_context = []
@@ -677,14 +690,10 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
 
                 image_geometric_context = [load_convert_image(f) for f in image_context_paths_geometric_context]
 
-                dummy_camera_geometric_context = []
-                for i_context in range(n_geometric_context):
-                    dummy_camera_geometric_context.append(0.0)
-
                 # must fill with dummy values
                 for i_context in range(n_geometric_context, self.max_geometric_context):
                     image_geometric_context.append(Image.new('RGB', (1280, 800)))
-                    camera_type_geometric_context.append('dummy')
+                    camera_type_geometric_context_int.append(2)
                     K_tmp, k_tmp, p_tmp = self._get_null_intrinsics_distorted()
                     poly_coeffs_tmp, principal_point_tmp, scale_factors_tmp = self._get_null_intrinsics_fisheye()
                     poly_coeffs_geometric_context.append(poly_coeffs_tmp)
@@ -695,13 +704,12 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     p_geometric_context.append(p_tmp)
                     path_to_ego_mask_geometric_context.append('')
                     relative_pose_matrix_geometric_context.append(np.eye(4))
-                    dummy_camera_geometric_context.append(1.0)
 
-                dummy_camera_geometric_context = np.array(dummy_camera_geometric_context)
+                camera_type_geometric_context_int = np.array(camera_type_geometric_context_int)
 
                 sample.update({
                     'rgb_geometric_context': image_geometric_context,
-                    'camera_type_geometric_context': camera_type_geometric_context,
+                    'camera_type_geometric_context': camera_type_geometric_context_int,
                     'intrinsics_poly_coeffs_geometric_context': poly_coeffs_geometric_context,
                     'intrinsics_principal_point_geometric_context': principal_point_geometric_context,
                     'intrinsics_scale_factors_geometric_context': scale_factors_geometric_context,
@@ -710,7 +718,6 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     'intrinsics_p_geometric_context': p_geometric_context,
                     'path_to_ego_mask_geometric_context': path_to_ego_mask_geometric_context,
                     'pose_matrix_geometric_context': relative_pose_matrix_geometric_context,
-                    'dummy_camera_geometric_context': dummy_camera_geometric_context,
                 })
             else:
                 sample.update({
@@ -724,7 +731,6 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     'intrinsics_p_geometric_context': [],
                     'path_to_ego_mask_geometric_context': [],
                     'pose_matrix_geometric_context': [],
-                    'dummy_camera_geometric_context': [],
 
                     'rgb_geometric_context_temporal_context': [],
                 })

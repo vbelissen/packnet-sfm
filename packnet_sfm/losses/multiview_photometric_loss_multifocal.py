@@ -9,6 +9,7 @@ from packnet_sfm.utils.image import match_scales
 from packnet_sfm.geometry.camera_fisheye_valeo import CameraFisheye
 from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.geometry.camera_distorted_valeo import CameraDistorted
+from packnet_sfm.geometry.camera_multifocal_valeo import CameraMultifocal
 from packnet_sfm.geometry.camera_utils import view_synthesis
 from packnet_sfm.utils.depth import calc_smoothness, inv2depth, depth2inv
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
@@ -177,83 +178,180 @@ class MultiViewPhotometricLoss(LossBase):
         ref_warped : torch.Tensor [B,3,H,W]
             Warped reference image (reconstructing the original one)
         """
-        B, C, H, W = ref_image.shape
+        B, _, H, W = ref_image.shape
         device = ref_image.get_device()
         # Generate cameras for all scales
-        # View synthesis
-        depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
-        ref_images = match_scales(ref_image, inv_depths, self.n)
-        cams, ref_cams = [[] for i in range(self.n)], [[] for i in range(self.n)]
-        world_points = []
-        ref_coords = []
+        cams, ref_cams = [], []
         for i in range(self.n):
             _, _, DH, DW = inv_depths[i].shape
             scale_factor = DW / float(W)
-            world_points.append(torch.zeros(B, 3, DH, DW).to(device))
-            ref_coords.append(torch.zeros(B, DH, DW, 2).to(device))
-            for b in range(B):
-                if camera_type[b] == 'fisheye':
-                    cams[i].append(
-                        CameraFisheye(path_to_theta_lut='',
-                                      path_to_ego_mask='',
-                                      poly_coeffs=intrinsics_poly_coeffs[b].unsqueeze(0).float(),
-                                      principal_point=intrinsics_principal_point[b].unsqueeze(0).float(),
-                                      scale_factors=intrinsics_scale_factors[b].unsqueeze(0).float())
-                            .scaled(scale_factor).to(device)
-                    )
-                elif camera_type[b] == 'perspective':
-                    cams[i].append(
-                        CameraDistorted(K=intrinsics_K[b].unsqueeze(0).float(),
-                                        k1=intrinsics_k[b, 0].unsqueeze(0),
-                                        k2=intrinsics_k[b, 1].unsqueeze(0),
-                                        k3=intrinsics_k[b, 2].unsqueeze(0),
-                                        p1=intrinsics_p[b, 0].unsqueeze(0),
-                                        p2=intrinsics_p[b, 1].unsqueeze(0))
-                            .scaled(scale_factor).to(device)
-                    )
-                if ref_camera_type[b] == 'fisheye':
-                    ref_cams[i].append(
-                        CameraFisheye(path_to_theta_lut='',
-                                      path_to_ego_mask='',
-                                      poly_coeffs=ref_intrinsics_poly_coeffs[b].unsqueeze(0).float(),
-                                      principal_point=ref_intrinsics_principal_point[b].unsqueeze(0).float(),
-                                      scale_factors=ref_intrinsics_scale_factors[b].unsqueeze(0).float(),
-                                      Tcw=Pose(ref_pose.mat[b].unsqueeze(0)))
-                            .scaled(scale_factor).to(device)
-                    )
-                elif ref_camera_type[b] == 'perspective':
-                    ref_cams[i].append(
-                        CameraDistorted(K=ref_intrinsics_K[b].unsqueeze(0).float(),
-                                        k1=ref_intrinsics_k[b, 0].unsqueeze(0),
-                                        k2=ref_intrinsics_k[b, 1].unsqueeze(0),
-                                        k3=ref_intrinsics_k[b, 2].unsqueeze(0),
-                                        p1=ref_intrinsics_p[b, 0].unsqueeze(0),
-                                        p2=ref_intrinsics_p[b, 1].unsqueeze(0),
-                                        Tcw=Pose(ref_pose.mat[b].unsqueeze(0)))
-                            .scaled(scale_factor).to(device)
-                    )
-
-                if ref_camera_type[b] != 'dummy':
-                    world_points[i][b] = cams[i][b].reconstruct(depths[i][b].unsqueeze(0), frame='w')
-                    ref_coords[i][b] = ref_cams[i][b].project(world_points[i][b].unsqueeze(0), frame='w')
-
+            cams.append(
+                CameraMultifocal(intrinsics_poly_coeffs,
+                                 intrinsics_principal_point,
+                                 intrinsics_scale_factors,
+                                 intrinsics_K,
+                                 intrinsics_k[:, 0],
+                                 intrinsics_k[:, 1],
+                                 intrinsics_k[:, 2],
+                                 intrinsics_p[:, 0],
+                                 intrinsics_p[:, 1],
+                                 camera_type,
+                                 Tcw=None).scaled(scale_factor).to(device)
+            )
+            ref_cams.append(
+                CameraMultifocal(ref_intrinsics_poly_coeffs,
+                                 ref_intrinsics_principal_point,
+                                 ref_intrinsics_scale_factors,
+                                 ref_intrinsics_K,
+                                 ref_intrinsics_k[:, 0],
+                                 ref_intrinsics_k[:, 1],
+                                 ref_intrinsics_k[:, 2],
+                                 ref_intrinsics_p[:, 0],
+                                 ref_intrinsics_p[:, 1],
+                                 ref_camera_type,
+                                 Tcw=ref_pose).scaled(scale_factor).to(device)
+            )
+        # View synthesis
+        depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
+        ref_images = match_scales(ref_image, inv_depths, self.n)
         ref_warped = [
-            funct.grid_sample(ref_images[i],
-                              ref_coords[i],
-                              mode='bilinear',
-                              padding_mode=self.padding_mode,
-                              align_corners=True)
-            for i in range(self.n)
-        ]
-        ref_ego_mask_tensors_warped = [
-            funct.grid_sample(ref_ego_mask_tensors[i],
-                              ref_coords[i],
-                              mode = 'nearest',
-                              padding_mode=self.padding_mode, align_corners=None)
+            view_synthesis(ref_images[i],
+                           depths[i],
+                           ref_cams[i],
+                           cams[i],
+                           padding_mode=self.padding_mode)
             for i in range(self.n)
         ]
 
-        return ref_warped, ref_ego_mask_tensors_warped
+        ref_tensors_warped = [
+            view_synthesis(ref_ego_mask_tensors[i],
+                           depths[i],
+                           ref_cams[i],
+                           cams[i],
+                           padding_mode=self.padding_mode,
+                           mode='nearest')
+            for i in range(self.n)
+        ]
+        # Return warped reference image
+        return ref_warped, ref_tensors_warped
+
+    # def warp_ref_image(self,
+    #                    inv_depths,
+    #                    camera_type,
+    #                    intrinsics_poly_coeffs,
+    #                    intrinsics_principal_point,
+    #                    intrinsics_scale_factors,
+    #                    intrinsics_K,
+    #                    intrinsics_k,
+    #                    intrinsics_p,
+    #                    ref_image,
+    #                    ref_pose,
+    #                    ref_ego_mask_tensors,
+    #                    ref_camera_type,
+    #                    ref_intrinsics_poly_coeffs,
+    #                    ref_intrinsics_principal_point,
+    #                    ref_intrinsics_scale_factors,
+    #                    ref_intrinsics_K,
+    #                    ref_intrinsics_k,
+    #                    ref_intrinsics_p):
+    #     """
+    #     Warps a reference image to produce a reconstruction of the original one.
+    #
+    #     Parameters
+    #     ----------
+    #     inv_depths : torch.Tensor [B,1,H,W]
+    #         Inverse depth map of the original image
+    #     ref_image : torch.Tensor [B,3,H,W]
+    #         Reference RGB image
+    #     K : torch.Tensor [B,3,3]
+    #         Original camera intrinsics
+    #     ref_K : torch.Tensor [B,3,3]
+    #         Reference camera intrinsics
+    #     pose : Pose
+    #         Original -> Reference camera transformation
+    #
+    #     Returns
+    #     -------
+    #     ref_warped : torch.Tensor [B,3,H,W]
+    #         Warped reference image (reconstructing the original one)
+    #     """
+    #     B, C, H, W = ref_image.shape
+    #     device = ref_image.get_device()
+    #     # Generate cameras for all scales
+    #     # View synthesis
+    #     depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
+    #     ref_images = match_scales(ref_image, inv_depths, self.n)
+    #     cams, ref_cams = [[] for i in range(self.n)], [[] for i in range(self.n)]
+    #     world_points = []
+    #     ref_coords = []
+    #     for i in range(self.n):
+    #         _, _, DH, DW = inv_depths[i].shape
+    #         scale_factor = DW / float(W)
+    #         world_points.append(torch.zeros(B, 3, DH, DW).to(device))
+    #         ref_coords.append(torch.zeros(B, DH, DW, 2).to(device))
+    #         for b in range(B):
+    #             if camera_type[b] == 'fisheye':
+    #                 cams[i].append(
+    #                     CameraFisheye(path_to_theta_lut='',
+    #                                   path_to_ego_mask='',
+    #                                   poly_coeffs=intrinsics_poly_coeffs[b].unsqueeze(0).float(),
+    #                                   principal_point=intrinsics_principal_point[b].unsqueeze(0).float(),
+    #                                   scale_factors=intrinsics_scale_factors[b].unsqueeze(0).float())
+    #                         .scaled(scale_factor).to(device)
+    #                 )
+    #             elif camera_type[b] == 'perspective':
+    #                 cams[i].append(
+    #                     CameraDistorted(K=intrinsics_K[b].unsqueeze(0).float(),
+    #                                     k1=intrinsics_k[b, 0].unsqueeze(0),
+    #                                     k2=intrinsics_k[b, 1].unsqueeze(0),
+    #                                     k3=intrinsics_k[b, 2].unsqueeze(0),
+    #                                     p1=intrinsics_p[b, 0].unsqueeze(0),
+    #                                     p2=intrinsics_p[b, 1].unsqueeze(0))
+    #                         .scaled(scale_factor).to(device)
+    #                 )
+    #             if ref_camera_type[b] == 'fisheye':
+    #                 ref_cams[i].append(
+    #                     CameraFisheye(path_to_theta_lut='',
+    #                                   path_to_ego_mask='',
+    #                                   poly_coeffs=ref_intrinsics_poly_coeffs[b].unsqueeze(0).float(),
+    #                                   principal_point=ref_intrinsics_principal_point[b].unsqueeze(0).float(),
+    #                                   scale_factors=ref_intrinsics_scale_factors[b].unsqueeze(0).float(),
+    #                                   Tcw=Pose(ref_pose.mat[b].unsqueeze(0)))
+    #                         .scaled(scale_factor).to(device)
+    #                 )
+    #             elif ref_camera_type[b] == 'perspective':
+    #                 ref_cams[i].append(
+    #                     CameraDistorted(K=ref_intrinsics_K[b].unsqueeze(0).float(),
+    #                                     k1=ref_intrinsics_k[b, 0].unsqueeze(0),
+    #                                     k2=ref_intrinsics_k[b, 1].unsqueeze(0),
+    #                                     k3=ref_intrinsics_k[b, 2].unsqueeze(0),
+    #                                     p1=ref_intrinsics_p[b, 0].unsqueeze(0),
+    #                                     p2=ref_intrinsics_p[b, 1].unsqueeze(0),
+    #                                     Tcw=Pose(ref_pose.mat[b].unsqueeze(0)))
+    #                         .scaled(scale_factor).to(device)
+    #                 )
+    #
+    #             if ref_camera_type[b] != 'dummy':
+    #                 world_points[i][b] = cams[i][b].reconstruct(depths[i][b].unsqueeze(0), frame='w')
+    #                 ref_coords[i][b] = ref_cams[i][b].project(world_points[i][b].unsqueeze(0), frame='w')
+    #
+    #     ref_warped = [
+    #         funct.grid_sample(ref_images[i],
+    #                           ref_coords[i],
+    #                           mode='bilinear',
+    #                           padding_mode=self.padding_mode,
+    #                           align_corners=True)
+    #         for i in range(self.n)
+    #     ]
+    #     ref_ego_mask_tensors_warped = [
+    #         funct.grid_sample(ref_ego_mask_tensors[i],
+    #                           ref_coords[i],
+    #                           mode = 'nearest',
+    #                           padding_mode=self.padding_mode, align_corners=None)
+    #         for i in range(self.n)
+    #     ]
+    #
+    #     return ref_warped, ref_ego_mask_tensors_warped
 
 ########################################################################################################################
 
@@ -469,7 +567,6 @@ class MultiViewPhotometricLoss(LossBase):
                 intrinsics_k_geometric_context,
                 intrinsics_p_geometric_context,
                 path_to_ego_mask_geometric_context,
-                dummy_camera_geometric_context,
                 return_logs=False, progress=0.0):
         """
         Calculates training photometric loss.

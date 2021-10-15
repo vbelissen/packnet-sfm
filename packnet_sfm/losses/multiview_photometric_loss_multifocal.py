@@ -703,8 +703,8 @@ class MultiViewPhotometricLoss(LossBase):
                                     intrinsics_k_geometric_context[j],
                                     intrinsics_p_geometric_context[j])
             print(camera_type_geometric_context[j])
-            print(ref_warped)
-            print(ref_ego_mask_tensors_warped)
+            print(ref_warped[0])
+            print(ref_ego_mask_tensors_warped[0])
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
             for i in range(self.n):

@@ -263,7 +263,7 @@ class CameraMultifocal(nn.Module):
             return Xc
         # If in world frame of reference
         elif frame == 'w':
-            return self.Twc[mask] @ Xc
+            return self.Twc.mat[mask] @ Xc
         # If none of the above
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
@@ -291,7 +291,7 @@ class CameraMultifocal(nn.Module):
         if frame == 'c':
             Xc = X.view(B, 3, -1) # [B, 3, HW]
         elif frame == 'w':
-            Xc = (self.Tcw[mask] @ X).view(B, 3, -1) # [B, 3, HW]
+            Xc = (self.Tcw.mat[mask] @ X).view(B, 3, -1) # [B, 3, HW]
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
 
@@ -428,7 +428,7 @@ class CameraMultifocal(nn.Module):
             return Xc
         # If in world frame of reference
         elif frame == 'w':
-            return self.Twc[mask] @ Xc
+            return self.Twc.mat[mask] @ Xc
         # If none of the above
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
@@ -456,7 +456,7 @@ class CameraMultifocal(nn.Module):
         if frame == 'c':
             Xc = X.view(B, 3, -1)
         elif frame == 'w':
-            Xc = (self.Tcw[mask] @ X).view(B, 3, -1)
+            Xc = (self.Tcw.mat[mask] @ X).view(B, 3, -1)
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
 

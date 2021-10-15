@@ -6,6 +6,8 @@ import torch.nn as nn
 from packnet_sfm.utils.image import match_scales
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
 
+
+torch.autograd.set_detect_anomaly(True)
 ########################################################################################################################
 
 def mat2euler(M):

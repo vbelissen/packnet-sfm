@@ -19,6 +19,8 @@ import numpy as np
 import time
 import cv2
 
+torch.autograd.set_detect_anomaly(True)
+
 ########################################################################################################################
 
 def SSIM(x, y, C1=1e-4, C2=9e-4, kernel_size=3, stride=1):

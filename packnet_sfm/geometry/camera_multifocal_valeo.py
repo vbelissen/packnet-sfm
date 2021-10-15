@@ -122,10 +122,10 @@ class CameraMultifocal(nn.Module):
     #     return torch.where(self.mask_batch_distorted)[0]
 
     def n_batch_fisheye(self):
-        return (self.mask_batch_fisheye).sum()
+        return (self.mask_batch_fisheye()).sum()
 
     def n_batch_distorted(self):
-        return (self.mask_batch_distorted).sum()
+        return (self.mask_batch_distorted()).sum()
 
     def scaled(self, x_scale, y_scale=None):
         """

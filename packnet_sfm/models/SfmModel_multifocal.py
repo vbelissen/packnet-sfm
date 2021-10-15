@@ -148,6 +148,9 @@ class SfmModel_multifocal(nn.Module):
                                        batch['rgb_geometric_context_temporal_context'][n_t * i:n_t * (i + 1)])
                     for i in range(len(batch['rgb_geometric_context']))
                 ]
+                pose_geometric_context_temporal_context = [
+                    item for sublist in pose_geometric_context_temporal_context for item in sublist
+                ]
         # Return output dictionary
         return {
             'inv_depths': inv_depths,

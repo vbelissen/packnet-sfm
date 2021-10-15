@@ -536,6 +536,7 @@ class MultiViewPhotometricLoss(LossBase):
                 for i_geometric_context in range(n_geometric_context):
                     ref_ego_mask_tensors_geometric_context[i_geometric_context].append(
                         interpolate_image(ref_ego_mask_tensor_geometric_context[i_geometric_context],
+                                          shape=(B, 1, H, W),
                                           mode='nearest',
                                           align_corners=None)
                     )

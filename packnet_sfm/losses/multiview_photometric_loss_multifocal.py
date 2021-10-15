@@ -45,11 +45,6 @@ def SSIM(x, y, C1=1e-4, C2=9e-4, kernel_size=3, stride=1):
     pool2d = nn.AvgPool2d(kernel_size, stride=stride)
     refl = nn.ReflectionPad2d(1)
 
-    print(x)
-    print(y)
-    print(torch.isnan(x).sum())
-    print(torch.isnan(y).sum())
-
     x, y = refl(x), refl(y)
     mu_x = pool2d(x)
     mu_y = pool2d(y)
@@ -678,7 +673,7 @@ class MultiViewPhotometricLoss(LossBase):
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
             for i in range(self.n):
-                photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+                photometric_losses[i].append(torch.nan_to_num(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i]))
             # If using automask
             if self.automask_loss:
                 # Calculate and store unwarped image loss
@@ -719,6 +714,7 @@ class MultiViewPhotometricLoss(LossBase):
             #print(torch.isnan(photometric_loss[0]).sum())
             for i in range(self.n):
                 #print(i)
+                photometric_loss[i][torch.isnan(photometric_loss[i])] = 0.0
                 photometric_losses[i].append(photometric_loss[i])# * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
             # If using automask
             if self.automask_loss:

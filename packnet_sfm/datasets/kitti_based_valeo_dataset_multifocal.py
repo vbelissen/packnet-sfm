@@ -261,14 +261,14 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         poly_coeffs = np.array([float(intr['c1']),
                                 float(intr['c2']),
                                 float(intr['c3']),
-                                float(intr['c4'])])
+                                float(intr['c4'])],dtype='float32')
         principal_point = np.array([float(base_intr['cx_offset_px']),
-                                    float(base_intr['cy_offset_px'])])
-        scale_factors = np.array([1., float(intr['pixel_aspect_ratio'])])
+                                    float(base_intr['cy_offset_px'])],dtype='float32')
+        scale_factors = np.array([1., float(intr['pixel_aspect_ratio'])],dtype='float32')
         return poly_coeffs, principal_point, scale_factors
 
     def _get_null_intrinsics_fisheye(self):
-        return np.zeros(4), np.zeros(2), np.zeros(2)
+        return np.zeros(4,dtype='float32'), np.zeros(2,dtype='float32'), np.zeros(2,dtype='float32')
 
     def _get_intrinsics_distorted(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
@@ -287,11 +287,11 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         k3 = float(intr['dist_k3'])
         p1 = float(intr['dist_p1'])
         p2 = float(intr['dist_p2'])
-        K = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
-        return K, np.array([k1, k2, k3]), np.array([p1, p2])
+        K = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]],dtype='float32')
+        return K, np.array([k1, k2, k3],dtype='float32'), np.array([p1, p2],dtype='float32')
 
     def _get_null_intrinsics_distorted(self):
-        return np.zeros((3, 3)), np.zeros(3), np.zeros(2)
+        return np.zeros((3, 3),dtype='float32'), np.zeros(3,dtype='float32'), np.zeros(2,dtype='float32')
 
     def _get_full_intrinsics(self, image_file, calib_data):
         camera_type = self._get_camera_type(image_file, calib_data)

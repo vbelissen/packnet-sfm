@@ -707,11 +707,11 @@ class MultiViewPhotometricLoss(LossBase):
             print(j)
             print(camera_type_geometric_context[:, j])
             print(ref_image)
-            print(ref_warped[0])
-            print(ref_ego_mask_tensors_warped[0])
+            print(torch.isnan(ref_warped[0]).sum())
+            print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
-            print(photometric_loss[0])
+            print(torch.isnan(photometric_loss[0]).sum())
             for i in range(self.n):
                 print(i)
                 photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])

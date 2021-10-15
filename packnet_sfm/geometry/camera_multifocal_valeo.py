@@ -239,7 +239,7 @@ class CameraMultifocal(nn.Module):
 
         #get_roots_table_tensor(self.poly_coeffs, self.principal_point, self.scale_factors, H, W).to(device)
 
-        rc = depth * torch.sin(theta_tensor)
+        rc = depth[mask] * torch.sin(theta_tensor)
 
         #yi, xi = centered_2d_grid(B, H, W, depth.dtype, depth.device, self.principal_point, self.scale_factors)
 
@@ -421,7 +421,7 @@ class CameraMultifocal(nn.Module):
         # Scale rays to metric depth
         Xc = ((Xnorm_d / torch.sqrt((Xnorm_d[:, 0, :, :].pow(2)
                                     + Xnorm_d[:, 1, :, :].pow(2)
-                                    + Xnorm_d[:, 2, :, :].pow(2)).clamp(min=1e-5)).view(B, 1, H, W)) * depth).float()
+                                    + Xnorm_d[:, 2, :, :].pow(2)).clamp(min=1e-5)).view(B, 1, H, W)) * depth[mask]).float()
 
         # If in camera frame of reference
         if frame == 'c':

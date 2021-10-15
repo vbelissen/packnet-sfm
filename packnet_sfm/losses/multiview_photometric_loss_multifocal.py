@@ -644,6 +644,8 @@ class MultiViewPhotometricLoss(LossBase):
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
             for i in range(self.n):
                 for b in range(B):
+                    print(photometric_loss[i][b, 0, :, :])
+                    print(ref_ego_mask_tensors_warped[i][b, 0, :, :])
                     if dummy_camera_geometric_context[b, j_geometric] == 1:
                         photometric_loss[i][b, 0, :, :] = 0.0
                         ref_ego_mask_tensors_warped[i][b, 0, :, :] = 0.0

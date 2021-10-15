@@ -673,7 +673,7 @@ class MultiViewPhotometricLoss(LossBase):
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
             for i in range(self.n):
-                photometric_losses[i].append(torch.nan_to_num(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i]))
+                photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
             # If using automask
             if self.automask_loss:
                 # Calculate and store unwarped image loss

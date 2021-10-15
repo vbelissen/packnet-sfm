@@ -232,8 +232,8 @@ class MultiViewPhotometricLoss(LossBase):
                     )
 
                 if ref_camera_type[b] != 'dummy':
-                    world_points[i][b] = cams[i][b].reconstruct(depths[i][b], frame='w')
-                    ref_coords[i][b] = ref_cams[i][b].project(world_points[i][b], frame='w')
+                    world_points[i][b] = cams[i][b].reconstruct(depths[i][b].unsqueeze(0), frame='w')
+                    ref_coords[i][b] = ref_cams[i][b].project(world_points[i][b].unsqueeze(0), frame='w')
 
         ref_warped = [
             funct.grid_sample(ref_images[i],

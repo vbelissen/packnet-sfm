@@ -194,40 +194,40 @@ class MultiViewPhotometricLoss(LossBase):
                     cams[i].append(
                         CameraFisheye(path_to_theta_lut='',
                                       path_to_ego_mask='',
-                                      poly_coeffs=intrinsics_poly_coeffs[b].float(),
-                                      principal_point=intrinsics_principal_point[b].float(),
-                                      scale_factors=intrinsics_scale_factors[b].float())
+                                      poly_coeffs=intrinsics_poly_coeffs[b].unsqueeze(0).float(),
+                                      principal_point=intrinsics_principal_point[b].unsqueeze(0).float(),
+                                      scale_factors=intrinsics_scale_factors[b].unsqueeze(0).float())
                             .scaled(scale_factor).to(device)
                     )
                 elif camera_type[b] == 'perspective':
                     cams[i].append(
-                        CameraDistorted(K=intrinsics_K[b].float(),
-                                        k1=intrinsics_k[b, 0],
-                                        k2=intrinsics_k[b, 1],
-                                        k3=intrinsics_k[b, 2],
-                                        p1=intrinsics_p[b, 0],
-                                        p2=intrinsics_p[b, 1])
+                        CameraDistorted(K=intrinsics_K[b].unsqueeze(0).float(),
+                                        k1=intrinsics_k[b, 0].unsqueeze(0),
+                                        k2=intrinsics_k[b, 1].unsqueeze(0),
+                                        k3=intrinsics_k[b, 2].unsqueeze(0),
+                                        p1=intrinsics_p[b, 0].unsqueeze(0),
+                                        p2=intrinsics_p[b, 1].unsqueeze(0))
                             .scaled(scale_factor).to(device)
                     )
                 if ref_camera_type[b] == 'fisheye':
                     ref_cams[i].append(
                         CameraFisheye(path_to_theta_lut='',
                                       path_to_ego_mask='',
-                                      poly_coeffs=ref_intrinsics_poly_coeffs[b].float(),
-                                      principal_point=ref_intrinsics_principal_point[b].float(),
-                                      scale_factors=ref_intrinsics_scale_factors[b].float(),
-                                      Tcw=Pose(ref_pose.mat[b]))
+                                      poly_coeffs=ref_intrinsics_poly_coeffs[b].unsqueeze(0).float(),
+                                      principal_point=ref_intrinsics_principal_point[b].unsqueeze(0).float(),
+                                      scale_factors=ref_intrinsics_scale_factors[b].unsqueeze(0).float(),
+                                      Tcw=Pose(ref_pose.mat[b].unsqueeze(0)))
                             .scaled(scale_factor).to(device)
                     )
                 elif ref_camera_type[b] == 'perspective':
                     ref_cams[i].append(
                         CameraDistorted(K=ref_intrinsics_K[b].float(),
-                                        k1=ref_intrinsics_k[b, 0],
-                                        k2=ref_intrinsics_k[b, 1],
-                                        k3=ref_intrinsics_k[b, 2],
-                                        p1=ref_intrinsics_p[b, 0],
-                                        p2=ref_intrinsics_p[b, 1],
-                                        Tcw=Pose(ref_pose.mat[b]))
+                                        k1=ref_intrinsics_k[b, 0].unsqueeze(0),
+                                        k2=ref_intrinsics_k[b, 1].unsqueeze(0),
+                                        k3=ref_intrinsics_k[b, 2].unsqueeze(0),
+                                        p1=ref_intrinsics_p[b, 0].unsqueeze(0),
+                                        p2=ref_intrinsics_p[b, 1].unsqueeze(0),
+                                        Tcw=Pose(ref_pose.mat[b].unsqueeze(0)))
                             .scaled(scale_factor).to(device)
                     )
 

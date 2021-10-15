@@ -221,7 +221,7 @@ class CameraMultifocal(nn.Module):
               * self.scale_factors[mask, 1].unsqueeze(1).unsqueeze(2).repeat([1, H, W])).unsqueeze(1)
 
         N = 12
-        theta_tensor = (torch.zeros(B, 1, H, W)).float().to(device)
+        theta_tensor = (torch.zeros(B, 1, H, W)).to(device)
         ri = torch.sqrt(xi.pow(2) + yi.pow(2))
         for _ in range(N):
             t1 = theta_tensor
@@ -265,6 +265,13 @@ class CameraMultifocal(nn.Module):
         # If in world frame of reference
         elif frame == 'w':
             print(Xc.dtype)
+            print(xi.dtype)
+            print(yi.dtype)
+            print(ri.dtype)
+            print(rc.dtype)
+            print(phi.dtype)
+            print(theta_tensor.dtype)
+            print(zc.dtype)
             print(self.Twc.mat[mask].dtype)
             return Pose(self.Twc.mat[mask]) @ Xc
         # If none of the above

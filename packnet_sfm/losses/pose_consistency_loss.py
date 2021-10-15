@@ -48,11 +48,14 @@ def mat2euler(M):
     without restrictions".
     '''
     # cy: sqrt((cos(y)*cos(z))**2 + (cos(x)*cos(y))**2)
+
+    device = M.get_device()
+
     B, _, _ = M.shape
     cy = torch.sqrt(M[:, 2, 2] * M[:, 2, 2] + M[:, 1, 2] * M[:, 1, 2])
-    x = torch.zeros(B)
-    y = torch.zeros(B)
-    z = torch.zeros(B)
+    x = torch.zeros(B).to(device)
+    y = torch.zeros(B).to(device)
+    z = torch.zeros(B).to(device)
 
     mask_cy = (cy > 1e-4)
 

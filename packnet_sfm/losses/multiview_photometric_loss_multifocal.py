@@ -645,7 +645,8 @@ class MultiViewPhotometricLoss(LossBase):
             for i in range(self.n):
                 for b in range(B):
                     if dummy_camera_geometric_context[b, j_geometric] == 1:
-                        photometric_loss[b, 0, :, :] = 0.0
+                        photometric_loss[i][b, 0, :, :] = 0.0
+                        ref_ego_mask_tensors_warped[i][b, 0, :, :] = 0.0
                 photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
             # If using automask
             if self.automask_loss:

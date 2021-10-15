@@ -178,108 +178,63 @@ class MultiViewPhotometricLoss(LossBase):
         B, C, H, W = ref_image.shape
         device = ref_image.get_device()
         # Generate cameras for all scales
-        cams_fisheye, ref_cams_fisheye = [], []
-        cams_perspective, ref_cams_perspective = [], []
-        idx_batch_fisheye = [i for i, c in enumerate(camera_type) if c == 'fisheye']
-        idx_batch_ref_fisheye = [i for i, c in enumerate(ref_camera_type) if c == 'fisheye']
-        idx_batch_perspective = [i for i, c in enumerate(camera_type) if c == 'perspective']
-        idx_batch_ref_perspective = [i for i, c in enumerate(ref_camera_type) if c == 'perspective']
-        n_fisheye = len(idx_batch_fisheye)
-        n_ref_fisheye = len(idx_batch_ref_fisheye)
-        n_perspective = len(idx_batch_perspective)
-        n_ref_perspective = len(idx_batch_ref_perspective)
-        for i in range(self.n):
-            _, _, DH, DW = inv_depths[i].shape
-            scale_factor = DW / float(W)
-            if n_fisheye > 0:
-                cams_fisheye.append(
-                    CameraFisheye(path_to_theta_lut='',
-                                  path_to_ego_mask='',
-                                  poly_coeffs=intrinsics_poly_coeffs[idx_batch_fisheye].float(),
-                                  principal_point=intrinsics_principal_point[idx_batch_fisheye].float(),
-                                  scale_factors=intrinsics_scale_factors[idx_batch_fisheye].float())
-                        .scaled(scale_factor).to(device)
-                )
-            else:
-                cams_fisheye.append(0)
-            if n_perspective > 0:
-                cams_perspective.append(
-                    CameraDistorted(K=intrinsics_K[idx_batch_perspective].float(),
-                                    k1=intrinsics_k[idx_batch_perspective, 0],
-                                    k2=intrinsics_k[idx_batch_perspective, 1],
-                                    k3=intrinsics_k[idx_batch_perspective, 2],
-                                    p1=intrinsics_p[idx_batch_perspective, 0],
-                                    p2=intrinsics_p[idx_batch_perspective, 1])
-                        .scaled(scale_factor).to(device)
-                )
-            else:
-                cams_perspective.append(0)
-            if n_ref_fisheye > 0:
-                ref_cams_fisheye.append(
-                    CameraFisheye(path_to_theta_lut='',
-                                  path_to_ego_mask='',
-                                  poly_coeffs=ref_intrinsics_poly_coeffs[idx_batch_ref_fisheye].float(),
-                                  principal_point=ref_intrinsics_principal_point[idx_batch_ref_fisheye].float(),
-                                  scale_factors=ref_intrinsics_scale_factors[idx_batch_ref_fisheye].float(),
-                                  Tcw=Pose(ref_pose.mat[idx_batch_ref_fisheye]))
-                        .scaled(scale_factor).to(device)
-                )
-            else:
-                ref_cams_fisheye.append(0)
-            if n_ref_perspective > 0:
-                ref_cams_perspective.append(
-                    CameraDistorted(K=ref_intrinsics_K[idx_batch_ref_perspective].float(),
-                                    k1=ref_intrinsics_k[idx_batch_ref_perspective, 0],
-                                    k2=ref_intrinsics_k[idx_batch_ref_perspective, 1],
-                                    k3=ref_intrinsics_k[idx_batch_ref_perspective, 2],
-                                    p1=ref_intrinsics_p[idx_batch_ref_perspective, 0],
-                                    p2=ref_intrinsics_p[idx_batch_ref_perspective, 1],
-                                    Tcw=Pose(ref_pose.mat[idx_batch_ref_perspective]))
-                        .scaled(scale_factor).to(device)
-                )
-            else:
-                ref_cams_perspective.append(0)
         # View synthesis
         depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
         ref_images = match_scales(ref_image, inv_depths, self.n)
-        if n_fisheye > 0:
-            world_points_fisheye = [
-                cams_fisheye[i][idx_batch_fisheye].reconstruct(depths[i][idx_batch_fisheye], frame='w')
-                for i in range(self.n)
-            ]
-        if n_perspective > 0:
-            world_points_perspective = [
-                cams_perspective[i][idx_batch_perspective].reconstruct(depths[i][idx_batch_perspective], frame='w')
-                for i in range(self.n)
-            ]
-        if n_fisheye == 0:
-            world_points = world_points_perspective
-        elif n_perspective == 0:
-            world_points = world_points_fisheye
-        else:
-            world_points = [torch.zeros(B, 3, H, W).to(device) for i in range(self.n)]
-            for i in range(self.n):
-                world_points[i][idx_batch_fisheye] = world_points_fisheye
-                world_points[i][idx_batch_perspective] = world_points_perspective
-        if n_ref_fisheye > 0:
-            ref_coords_fisheye = [
-                ref_cams_fisheye[i][idx_batch_ref_fisheye].project(world_points[idx_batch_ref_fisheye], frame='w')
-                for i in range(self.n)
-            ]
-        if n_ref_perspective > 0:
-            ref_coords_perspective = [
-                ref_cams_perspective[i][idx_batch_ref_perspective].project(world_points[idx_batch_ref_perspective], frame='w')
-                for i in range(self.n)
-            ]
-        if n_ref_fisheye == 0:
-            ref_coords = ref_coords_perspective
-        elif n_ref_perspective == 0:
-            ref_coords = ref_coords_fisheye
-        else:
-            ref_coords = [torch.zeros(B, H, W, 2).to(device) for i in range(self.n)]
-            for i in range(self.n):
-                ref_coords[i][idx_batch_ref_fisheye] = ref_coords_fisheye
-                ref_coords[i][idx_batch_ref_perspective] = ref_coords_perspective
+        cams, ref_cams = [[] for i in range(self.n)], [[] for i in range(self.n)]
+        world_points = []
+        ref_coords = []
+        for i in range(self.n):
+            _, _, DH, DW = inv_depths[i].shape
+            scale_factor = DW / float(W)
+            world_points.append(torch.zeros(B, 3, DH, DW).to(device))
+            ref_coords.append(torch.zeros(B, DH, DW, 2).to(device))
+            for b in range(B):
+                if camera_type[b] == 'fisheye':
+                    cams[i].append(
+                        CameraFisheye(path_to_theta_lut='',
+                                      path_to_ego_mask='',
+                                      poly_coeffs=intrinsics_poly_coeffs[b].float(),
+                                      principal_point=intrinsics_principal_point[b].float(),
+                                      scale_factors=intrinsics_scale_factors[b].float())
+                            .scaled(scale_factor).to(device)
+                    )
+                elif camera_type[b] == 'perspective':
+                    cams[i].append(
+                        CameraDistorted(K=intrinsics_K[b].float(),
+                                        k1=intrinsics_k[b, 0],
+                                        k2=intrinsics_k[b, 1],
+                                        k3=intrinsics_k[b, 2],
+                                        p1=intrinsics_p[b, 0],
+                                        p2=intrinsics_p[b, 1])
+                            .scaled(scale_factor).to(device)
+                    )
+                if ref_camera_type[b] == 'fisheye':
+                    ref_cams[i].append(
+                        CameraFisheye(path_to_theta_lut='',
+                                      path_to_ego_mask='',
+                                      poly_coeffs=ref_intrinsics_poly_coeffs[b].float(),
+                                      principal_point=ref_intrinsics_principal_point[b].float(),
+                                      scale_factors=ref_intrinsics_scale_factors[b].float(),
+                                      Tcw=Pose(ref_pose.mat[b]))
+                            .scaled(scale_factor).to(device)
+                    )
+                elif ref_camera_type[b] == 'perspective':
+                    ref_cams[i].append(
+                        CameraDistorted(K=ref_intrinsics_K[b].float(),
+                                        k1=ref_intrinsics_k[b, 0],
+                                        k2=ref_intrinsics_k[b, 1],
+                                        k3=ref_intrinsics_k[b, 2],
+                                        p1=ref_intrinsics_p[b, 0],
+                                        p2=ref_intrinsics_p[b, 1],
+                                        Tcw=Pose(ref_pose.mat[b]))
+                            .scaled(scale_factor).to(device)
+                    )
+
+                if ref_camera_type[b] != 'dummy':
+                    world_points[i][b] = cams[i][b].reconstruct(depths[i][b], frame='w')
+                    ref_coords[i][b] = ref_cams[i][b].project(world_points[i][b], frame='w')
+
         ref_warped = [
             funct.grid_sample(ref_images[i],
                               ref_coords[i],

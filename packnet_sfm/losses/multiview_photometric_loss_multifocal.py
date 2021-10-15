@@ -45,6 +45,11 @@ def SSIM(x, y, C1=1e-4, C2=9e-4, kernel_size=3, stride=1):
     pool2d = nn.AvgPool2d(kernel_size, stride=stride)
     refl = nn.ReflectionPad2d(1)
 
+    print(x)
+    print(y)
+    print(torch.isnan(x).sum())
+    print(torch.isnan(y).sum())
+
     x, y = refl(x), refl(y)
     mu_x = pool2d(x)
     mu_y = pool2d(y)

@@ -221,7 +221,7 @@ class MultiViewPhotometricLoss(LossBase):
                     )
                 elif ref_camera_type[b] == 'perspective':
                     ref_cams[i].append(
-                        CameraDistorted(K=ref_intrinsics_K[b].float(),
+                        CameraDistorted(K=ref_intrinsics_K[b].unsqueeze(0).float(),
                                         k1=ref_intrinsics_k[b, 0].unsqueeze(0),
                                         k2=ref_intrinsics_k[b, 1].unsqueeze(0),
                                         k3=ref_intrinsics_k[b, 2].unsqueeze(0),

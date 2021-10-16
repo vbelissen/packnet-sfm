@@ -114,7 +114,7 @@ class KITTIBasedValeoDatasetDistorted_singleView(Dataset):
             else:
                 # Check if the depth file exists
                 depth = self._get_depth_file(path)
-                if depth is not None and os.path.exists(depth):
+                if depth is not None and os.path.exists(depth) and os.path.getsize(depth) > 20000.0:
                     self.paths.append(path)
 
         # If using context, filter file list

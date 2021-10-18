@@ -36,32 +36,32 @@ class PoseCAMResNet(nn.Module):
         self.cam_convs = CamConvMaps()
         self.decoder = PoseDecoder(self.encoder.num_ch_enc, num_input_features=1, num_frames_to_predict_for=2)
 
-        def _concat_2_features(self, enc_features, cam_features_1, cam_features_2):
-            """
-            H, W : size of input images
-            enc_features: [(B, 64, H/2, W/2), (B, 64, H/4, W/4), (B, 128, H/8, W/8), (B, 256, H/16, W/16), (B, 512, H/32, W/32)]
-            cam_features: (B, Ccam, H, W)
+    def _concat_2_features(self, enc_features, cam_features_1, cam_features_2):
+        """
+        H, W : size of input images
+        enc_features: [(B, 64, H/2, W/2), (B, 64, H/4, W/4), (B, 128, H/8, W/8), (B, 256, H/16, W/16), (B, 512, H/32, W/32)]
+        cam_features: (B, Ccam, H, W)
 
-            output size:
-            [(B, 64 + Ccam, H/2, W/2), (B, 64 + Ccam, H/4, W/4), (B, 128 + Ccam, H/8, W/8), (B, 256 + Ccam, H/16, W/16), (B, 512 + Ccam, H/32, W/32)]
-            """
-            features = []
-            n = len(enc_features)
-            Bcam, Ccam, Hcam, Wcam = cam_features_1.shape
-            for i in range(n):
-                Benc_i, Cenc_i, Henc_i, Wenc_i = enc_features[i].shape
-                assert Bcam == Benc_i
-                features.append(torch.cat([enc_features[i],
-                                           F.interpolate(cam_features_1,
-                                                         size=(Henc_i, Wenc_i),
-                                                         mode='bilinear',
-                                                         align_corners=True),
-                                           F.interpolate(cam_features_2,
-                                                         size=(Henc_i, Wenc_i),
-                                                         mode='bilinear',
-                                                         align_corners=True)
-                                           ], 1))
-            return (features)
+        output size:
+        [(B, 64 + Ccam, H/2, W/2), (B, 64 + Ccam, H/4, W/4), (B, 128 + Ccam, H/8, W/8), (B, 256 + Ccam, H/16, W/16), (B, 512 + Ccam, H/32, W/32)]
+        """
+        features = []
+        n = len(enc_features)
+        Bcam, Ccam, Hcam, Wcam = cam_features_1.shape
+        for i in range(n):
+            Benc_i, Cenc_i, Henc_i, Wenc_i = enc_features[i].shape
+            assert Bcam == Benc_i
+            features.append(torch.cat([enc_features[i],
+                                       F.interpolate(cam_features_1,
+                                                     size=(Henc_i, Wenc_i),
+                                                     mode='bilinear',
+                                                     align_corners=True),
+                                       F.interpolate(cam_features_2,
+                                                     size=(Henc_i, Wenc_i),
+                                                     mode='bilinear',
+                                                     align_corners=True)
+                                       ], 1))
+        return (features)
 
     def forward(self, target_image, ref_imgs):
         """

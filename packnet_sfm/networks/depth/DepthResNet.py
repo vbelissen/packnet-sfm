@@ -41,9 +41,6 @@ class DepthResNet(nn.Module):
         (4 scales if training and 1 if not).
         """
         x = self.encoder(x)
-        for i in range(len(x)):
-            print(i)
-            print(x[i].shape)
         x = self.decoder(x)
         disps = [x[('disp', i)] for i in range(4)]
 

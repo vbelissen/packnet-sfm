@@ -34,8 +34,14 @@ class PoseDecoder(nn.Module):
     def forward(self, input_features):
         last_features = [f[-1] for f in input_features]
 
+        print(len(input_features))
+
+        print(f.shape for f in last_features)
+
         cat_features = [self.relu(self.convs["squeeze"](f)) for f in last_features]
         cat_features = torch.cat(cat_features, 1)
+
+        print(cat_features.shape)
 
         out = cat_features
         for i in range(3):

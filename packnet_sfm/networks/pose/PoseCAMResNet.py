@@ -34,7 +34,9 @@ class PoseCAMResNet(nn.Module):
 
         self.encoder = ResnetEncoder(num_layers=num_layers, pretrained=pretrained, num_input_images=2)
         self.cam_convs = CamConvMaps()
-        self.decoder = PoseDecoder(self.encoder.num_ch_enc, num_input_features=1, num_frames_to_predict_for=2)
+        self.decoder = PoseDecoder(self.encoder.num_ch_enc + 2 * self.cam_convs.num_maps,
+                                   num_input_features=1,
+                                   num_frames_to_predict_for=2)
 
     def _concat_2_features(self, enc_features, cam_features_1, cam_features_2):
         """

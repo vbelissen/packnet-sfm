@@ -1,6 +1,9 @@
 # Copyright 2020 Toyota Research Institute.  All rights reserved.
 
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
 from functools import partial
 
 from packnet_sfm.networks.layers.resnet.resnet_encoder import ResnetEncoder
@@ -9,7 +12,7 @@ from packnet_sfm.networks.layers.resnet.layers import disp_to_depth
 
 ########################################################################################################################
 
-class DepthResNet(nn.Module):
+class DepthCAMResNet(nn.Module):
     """
     Inverse depth network based on the ResNet architecture.
 
@@ -32,8 +35,21 @@ class DepthResNet(nn.Module):
         assert num_layers in [18, 34, 50], 'ResNet version {} not available'.format(num_layers)
 
         self.encoder = ResnetEncoder(num_layers=num_layers, pretrained=pretrained)
+        self.cam_convs = CamConvs()
         self.decoder = DepthDecoder(num_ch_enc=self.encoder.num_ch_enc)
         self.scale_inv_depth = partial(disp_to_depth, min_depth=0.1, max_depth=100.0)
+
+    def _concat_features(self, enc_features, cam_features):
+        features = []
+        n = len(enc_features)
+        for i in range(n):
+            features.append(torch.cat([enc_features[i],
+                                       F.interpolate(cam_features,
+                                                     size=enc_features[i].shape, # a corriger
+                                                     mode='bilinear',
+                                                     align_corners=True)
+                                       ], 1))
+        return(features)
 
     def forward(self, x):
         """
@@ -41,10 +57,9 @@ class DepthResNet(nn.Module):
         (4 scales if training and 1 if not).
         """
         x = self.encoder(x)
-        for i in range(len(x)):
-            print(i)
-            print(x[i].shape)
-        x = self.decoder(x)
+        c = self.cam_convs(x)
+        x_c = self._concat_features(x, c)
+        x = self.decoder(x_c)
         disps = [x[('disp', i)] for i in range(4)]
 
         if self.training:

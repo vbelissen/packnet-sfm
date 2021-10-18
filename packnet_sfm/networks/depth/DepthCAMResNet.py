@@ -69,6 +69,8 @@ class DepthCAMResNet(nn.Module):
         (4 scales if training and 1 if not).
         """
         c = self.cam_convs(x) # (B, Ccam, H, W) avec C le nombre de channels des cam convs
+        # TODO :
+        # Comme les features sont concaténées en commencant à H/2, W/2, on pourrait utiliser les cam convs seulement à partir de cette résolution
         x = self.encoder(x)  # [(B, 64, H/2, W/2), (B, 64, H/4, W/4), (B, 128, H/8, W/8), (B, 256, H/16, W/16), (B, 512, H/32, W/32)]
         x_c = self._concat_features(x, c)
         x = self.decoder(x_c)

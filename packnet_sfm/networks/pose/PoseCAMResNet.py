@@ -47,6 +47,10 @@ class PoseCAMResNet(nn.Module):
         output size:
         [(B, 64 + Ccam, H/2, W/2), (B, 64 + Ccam, H/4, W/4), (B, 128 + Ccam, H/8, W/8), (B, 256 + Ccam, H/16, W/16), (B, 512 + Ccam, H/32, W/32)]
         """
+        # TODO :
+        # En réalité seule la dernière feature map est utilisée par le décodeur
+        # résolution B x 512 x H/32 x W/32
+        # => pas forcément obliger d'interpoler/concaténer sur chaque niveau
         features = []
         n = len(enc_features)
         Bcam, Ccam, Hcam, Wcam = cam_features_1.shape

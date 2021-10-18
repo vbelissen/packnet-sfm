@@ -57,7 +57,7 @@ class DepthCAMResNet(nn.Module):
             assert Bcam == Benc_i
             features.append(torch.cat([enc_features[i],
                                        F.interpolate(cam_features,
-                                                     size=(Bcam, Ccam, Henc_i, Wenc_i),
+                                                     size=(Henc_i, Wenc_i),
                                                      mode='bilinear',
                                                      align_corners=True)
                                        ], 1))

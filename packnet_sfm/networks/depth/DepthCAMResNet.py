@@ -56,8 +56,8 @@ class DepthCAMResNet(nn.Module):
         Runs the network and returns inverse depth maps
         (4 scales if training and 1 if not).
         """
-        x = self.encoder(x)
-        c = self.cam_convs(x)
+        c = self.cam_convs(x) # (B, C, H, W) avec C le nombre de channels des cam convs
+        x = self.encoder(x)  # [(B, 64, H/2, W/2), (B, 64, H/4, W/4), (B, 128, H/8, W/8), (B, 256, H/16, W/16), (B, 512, H/32, W/32)]
         x_c = self._concat_features(x, c)
         x = self.decoder(x_c)
         disps = [x[('disp', i)] for i in range(4)]

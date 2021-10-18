@@ -39,6 +39,7 @@ class PoseResNet(nn.Module):
         (1 for each reference image).
         """
         outputs = []
+        print(target_image.shape)
         for i, ref_img in enumerate(ref_imgs):
             inputs = torch.cat([target_image, ref_img], 1)
             axisangle, translation = self.decoder([self.encoder(inputs)])

@@ -12,5 +12,6 @@ class CamConvMaps(nn.Module):
 
     def forward(self, input_features):
         B, C, H, W = input_features.shape
-        output = torch.zeros(B, 7, H, W) # test
+        device = input_features.get_device()
+        output = torch.zeros(B, 7, H, W).to(device) # test
         return output

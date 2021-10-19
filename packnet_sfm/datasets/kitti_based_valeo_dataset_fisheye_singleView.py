@@ -568,14 +568,16 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 'depth': self._read_depth(self._get_depth_file(self.paths[idx])),
             })
 
-        H = 800
-        W = 1280
-        theta_tensor = torch.zeros(1, H, W).float()
-        theta_tensor[0] = torch.from_numpy(np.load(sample['path_to_theta_lut']))
-        yi, xi = centered_2d_grid_loader(H, W, torch.from_numpy(principal_point), torch.from_numpy(scale_factors))
-        sample.update({
-            'cam_features': torch.cat([theta_tensor, xi.float(), yi.float()], 0)
-        })
+        use_cam_features = False
+        if use_cam_features:
+            H = 800
+            W = 1280
+            theta_tensor = torch.zeros(1, H, W).float()
+            theta_tensor[0] = torch.from_numpy(np.load(sample['path_to_theta_lut']))
+            yi, xi = centered_2d_grid_loader(H, W, torch.from_numpy(principal_point), torch.from_numpy(scale_factors))
+            sample.update({
+                'cam_features': torch.cat([theta_tensor, xi.float(), yi.float()], 0)
+            })
 
         # Add context information if requested
         if self.with_context:
@@ -692,9 +694,18 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                     'pose_context': image_context_pose
                 })
 
-            sample.update({
-                'cam_features_context': [torch.ones(3, 800, 1280).float() for _ in range(len(image_context_paths))]
-            })
+            if use_cam_features:
+                cam_features_context = []
+                H = 800
+                W = 1280
+                for i_context in range(len(image_context_paths)):
+                    theta_tensor = torch.zeros(1, H, W).float()
+                    theta_tensor[0] = torch.from_numpy(np.load(sample['path_to_theta_lut_context'][i_context]))
+                    yi, xi = centered_2d_grid_loader(H, W, torch.from_numpy(principal_point), torch.from_numpy(scale_factors))
+                    cam_features_context.append(torch.cat([theta_tensor, xi.float(), yi.float()], 0))
+                sample.update({
+                    'cam_features_context': cam_features_context
+                })
 
         # Apply transformations
         if self.data_transform:

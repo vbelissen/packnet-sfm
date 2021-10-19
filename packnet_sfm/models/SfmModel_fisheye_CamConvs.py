@@ -218,6 +218,7 @@ class SfmModel_fisheye_CamConvs(nn.Module):
                                                [self.get_cam_conv_features(batch['path_to_theta_lut_context'][n],
                                                                            batch['intrinsics_principal_point_context'][n],
                                                                            batch['intrinsics_scale_factors_context'][n],
+                                                                           800,
                                                                            1280,
                                                                            batch['rgb'].get_device()) for n in range(n_context)]
                                                )

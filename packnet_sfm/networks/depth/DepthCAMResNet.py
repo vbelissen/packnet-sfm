@@ -50,6 +50,8 @@ class DepthCAMResNet(nn.Module):
         output size:
         [(B, 64 + Ccam, H/2, W/2), (B, 64 + Ccam, H/4, W/4), (B, 128 + Ccam, H/8, W/8), (B, 256 + Ccam, H/16, W/16), (B, 512 + Ccam, H/32, W/32)]
         """
+        # TODO :
+        # plutot que de juste interpoler, on pourrait convoler les cam_features pour obtenir un volume proportionnel aux features de chaque couche
         features = []
         n = len(enc_features)
         Bcam, Ccam, Hcam, Wcam = cam_features.shape

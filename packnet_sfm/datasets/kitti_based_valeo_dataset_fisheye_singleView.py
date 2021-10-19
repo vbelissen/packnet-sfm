@@ -12,6 +12,8 @@ from packnet_sfm.datasets.kitti_based_valeo_dataset_utils import \
 from packnet_sfm.utils.image_valeo import load_convert_image
 from packnet_sfm.geometry.pose_utils import invert_pose_numpy
 
+from packnet_sfm.utils.image_valeo import centered_2d_grid
+
 ########################################################################################################################
 
 # Cameras from the stero pair (left is the origin)
@@ -566,8 +568,13 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 'depth': self._read_depth(self._get_depth_file(self.paths[idx])),
             })
 
+        H = 800
+        W = 1280
+        theta_tensor = torch.zeros(1, H, W).float()
+        theta_tensor[0] = torch.from_numpy(np.load(sample['path_to_theta_lut']))
+        yi, xi = centered_2d_grid(1, H, W, torch.float32, theta_tensor.get_device(), principal_point, scale_factors)
         sample.update({
-            'cam_features': torch.ones(3, 800, 1280).float()
+            'cam_features': torch.cat([theta_tensor, xi.squeeze().float(), yi.squeeze().float()], 1)
         })
 
         # Add context information if requested

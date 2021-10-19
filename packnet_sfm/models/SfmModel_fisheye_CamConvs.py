@@ -165,46 +165,57 @@ class SfmModel_fisheye_CamConvs(nn.Module):
             Dictionary containing predicted inverse depth maps and poses
         """
         # Generate inverse depth predictions
-        print('before')
-        for obj in gc.get_objects():
-            try:
-                if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-                    print(type(obj), obj.size())
-            except:
-                pass
-        target_cam_conv_features = self.get_cam_conv_features(batch['path_to_theta_lut'],
-                                                              batch['intrinsics_principal_point'],
-                                                              batch['intrinsics_scale_factors'],
-                                                              800,
-                                                              1280,
-                                                              batch['rgb'].get_device())
-        print('after')
-        for obj in gc.get_objects():
-            try:
-                if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-                    if obj.dim() > 3:
-                        print(type(obj), obj.size())
-            except:
-                pass
+        # print('before')
+        # for obj in gc.get_objects():
+        #     try:
+        #         if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+        #             print(type(obj), obj.size())
+        #     except:
+        #         pass
+        # target_cam_conv_features = self.get_cam_conv_features(batch['path_to_theta_lut'],
+        #                                                       batch['intrinsics_principal_point'],
+        #                                                       batch['intrinsics_scale_factors'],
+        #                                                       800,
+        #                                                       1280,
+        #                                                       batch['rgb'].get_device())
+        # print('after')
+        # for obj in gc.get_objects():
+        #     try:
+        #         if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+        #             if obj.dim() > 3:
+        #                 print(type(obj), obj.size())
+        #     except:
+        #         pass
 
-        inv_depths = self.compute_inv_depths_with_cam(batch['rgb'], target_cam_conv_features)
+        inv_depths = self.compute_inv_depths_with_cam(batch['rgb'],
+                                                      self.get_cam_conv_features(batch['path_to_theta_lut'],
+                                                                                 batch['intrinsics_principal_point'],
+                                                                                 batch['intrinsics_scale_factors'],
+                                                                                 800,
+                                                                                 1280,
+                                                                                 batch['rgb'].get_device()))
         # Generate pose predictions if available
         pose = None
         if 'rgb_context' in batch and self.pose_net is not None:
             n_context = len(batch['rgb_context'])
-            ref_cam_conv_features = [
-                self.get_cam_conv_features(batch['path_to_theta_lut_context'][n],
-                                           batch['intrinsics_principal_point_context'][n],
-                                           batch['intrinsics_scale_factors_context'][n],
-                                           800,
-                                           1280,
-                                           batch['rgb'].get_device())
-                for n in range(n_context)
-            ]
+            # ref_cam_conv_features = [
+            #     self.get_cam_conv_features(batch['path_to_theta_lut_context'][n],
+            #                                batch['intrinsics_principal_point_context'][n],
+            #                                batch['intrinsics_scale_factors_context'][n],
+            #                                800,
+            #                                1280,
+            #                                batch['rgb'].get_device())
+            #     for n in range(n_context)
+            # ]
             pose = self.compute_poses_with_cam(batch['rgb'], 
                                                target_cam_conv_features, 
                                                batch['rgb_context'],
-                                               ref_cam_conv_features)
+                                               [self.get_cam_conv_features(batch['path_to_theta_lut_context'][n],
+                                                                           batch['intrinsics_principal_point_context'][n],
+                                                                           batch['intrinsics_scale_factors_context'][n],
+                                                                           1280,
+                                                                           batch['rgb'].get_device()) for n in range(n_context)]
+                                               )
         # Return output dictionary
         return {
             'inv_depths': inv_depths,

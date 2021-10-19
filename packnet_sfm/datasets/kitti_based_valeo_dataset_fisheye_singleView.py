@@ -567,7 +567,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
             })
 
         sample.update({
-            'cam_features': torch.ones(7, 800, 1280).float()
+            'cam_features': torch.ones(3, 800, 1280).float()
         })
 
         # Add context information if requested
@@ -686,7 +686,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 })
 
             sample.update({
-                'cam_features_context': [torch.ones(7, 800, 1280).float() for _ in range(len(image_context_paths))]
+                'cam_features_context': [torch.ones(3, 800, 1280).float() for _ in range(len(image_context_paths))]
             })
 
         # Apply transformations

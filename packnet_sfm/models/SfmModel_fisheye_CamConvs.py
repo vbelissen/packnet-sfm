@@ -161,7 +161,7 @@ class SfmModel_fisheye_CamConvs(nn.Module):
         device = batch['rgb'].get_device()
         H = 800
         W = 1280
-        theta_tensor = torch.zeros(B, 1, H, W).to(device)
+        theta_tensor = torch.zeros(B, 1, H, W).float().to(device)
         for b in range(B):
             theta_tensor[b, 0] = torch.from_numpy(np.load(batch['path_to_theta_lut'][b]))
         yi, xi = centered_2d_grid(B, H, W, batch['rgb'].dtype, device,
@@ -178,7 +178,7 @@ class SfmModel_fisheye_CamConvs(nn.Module):
             ref_yi, ref_xi = [], []
             ref_cam_conv_features = []
             for n in range(n_context):
-                ref_theta_tensor.append(torch.zeros(B, 1, H, W))
+                ref_theta_tensor.append(torch.zeros(B, 1, H, W).float().to(device))
                 for b in range(B):
                     ref_theta_tensor[n][b, 0] = torch.from_numpy(np.load(batch['path_to_theta_lut_context'][n][b]))
                 ref_yi_n, ref_xi_n = centered_2d_grid(B, H, W, batch['rgb'].dtype, device,

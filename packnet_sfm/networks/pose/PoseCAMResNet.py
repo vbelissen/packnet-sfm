@@ -33,8 +33,11 @@ class PoseCAMResNet(nn.Module):
         assert num_layers in [18, 34, 50], 'ResNet version {} not available'.format(num_layers)
 
         self.encoder = ResnetEncoder(num_layers=num_layers, pretrained=pretrained, num_input_images=2)
-        self.cam_convs = CamConvMaps()
-        self.decoder = PoseDecoder(self.encoder.num_ch_enc + 2 * self.cam_convs.num_maps,
+        #self.cam_convs = CamConvMaps()
+        # self.decoder = PoseDecoder(self.encoder.num_ch_enc + 2 * self.cam_convs.num_maps,
+        #                            num_input_features=1,
+        #                            num_frames_to_predict_for=2)
+        self.decoder = PoseDecoder(self.encoder.num_ch_enc + 2 * 3,
                                    num_input_features=1,
                                    num_frames_to_predict_for=2)
 

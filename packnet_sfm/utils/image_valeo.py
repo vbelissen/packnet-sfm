@@ -118,7 +118,7 @@ def flip_model_and_cam_features(model, image, cam_features, flip):
     if flip:
         return [flip_lr(inv_depth) for inv_depth in model(flip_lr(image), flip_lr(cam_features))]
     else:
-        return model(image)
+        return model(image, cam_features)
 ########################################################################################################################
 
 def gradient_x(image):

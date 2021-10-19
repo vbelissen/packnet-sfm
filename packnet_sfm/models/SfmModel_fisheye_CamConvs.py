@@ -9,7 +9,7 @@ from packnet_sfm.utils.misc import make_list
 
 import torch
 import numpy as np
-from packnet_sfm.utils.image_valeo import image_grid, centered_2d_grid, meshgrid
+from packnet_sfm.utils.image_valeo import centered_2d_grid
 
 class SfmModel_fisheye_CamConvs(nn.Module):
     """
@@ -103,17 +103,17 @@ class SfmModel_fisheye_CamConvs(nn.Module):
         """Add a pose network to the model"""
         self.pose_net = pose_net
 
-    def compute_inv_depths(self, image):
-        """Computes inverse depth maps from single images"""
-        # Randomly flip and estimate inverse depth maps
-        flip_lr = random.random() < self.flip_lr_prob if self.training else False
-        inv_depths = make_list(flip_model(self.depth_net, image, flip_lr))
-        # If upsampling depth maps
-        if self.upsample_depth_maps:
-            inv_depths = interpolate_scales(
-                inv_depths, mode='nearest', align_corners=None)
-        # Return inverse depth maps
-        return inv_depths
+    # def compute_inv_depths(self, image):
+    #     """Computes inverse depth maps from single images"""
+    #     # Randomly flip and estimate inverse depth maps
+    #     flip_lr = random.random() < self.flip_lr_prob if self.training else False
+    #     inv_depths = make_list(flip_model(self.depth_net, image, flip_lr))
+    #     # If upsampling depth maps
+    #     if self.upsample_depth_maps:
+    #         inv_depths = interpolate_scales(
+    #             inv_depths, mode='nearest', align_corners=None)
+    #     # Return inverse depth maps
+    #     return inv_depths
 
     def compute_inv_depths_with_cam(self, image, cam_features):
         """Computes inverse depth maps from single images"""
@@ -127,17 +127,25 @@ class SfmModel_fisheye_CamConvs(nn.Module):
         # Return inverse depth maps
         return inv_depths
 
-    def compute_poses(self, image, contexts):
-        """Compute poses from image and a sequence of context images"""
-        pose_vec = self.pose_net(image, contexts)
-        return [Pose.from_vec(pose_vec[:, i], self.rotation_mode)
-                for i in range(pose_vec.shape[1])]
+    # def compute_poses(self, image, contexts):
+    #     """Compute poses from image and a sequence of context images"""
+    #     pose_vec = self.pose_net(image, contexts)
+    #     return [Pose.from_vec(pose_vec[:, i], self.rotation_mode)
+    #             for i in range(pose_vec.shape[1])]
 
     def compute_poses_with_cam(self, image, cam_features, contexts, context_cam_features):
         """Compute poses from image and a sequence of context images"""
         pose_vec = self.pose_net(image, cam_features, contexts, context_cam_features)
         return [Pose.from_vec(pose_vec[:, i], self.rotation_mode)
                 for i in range(pose_vec.shape[1])]
+
+    def get_cam_conv_features(self, path_to_theta_lut, principal_point, scale_factors, H, W, device):
+        B = len (path_to_theta_lut)
+        theta_tensor = torch.zeros(B, 1, H, W).float().to(device)
+        for b in range(B):
+            theta_tensor[b, 0] = torch.from_numpy(np.load(path_to_theta_lut[b]))
+        yi, xi = centered_2d_grid(B, H, W, torch.float32, device, principal_point, scale_factors)
+        return torch.cat([theta_tensor, xi.float(), yi.float()], 1)
 
     def forward(self, batch, return_logs=False):
         """
@@ -156,41 +164,30 @@ class SfmModel_fisheye_CamConvs(nn.Module):
             Dictionary containing predicted inverse depth maps and poses
         """
         # Generate inverse depth predictions
-
-        B, _, _, _ = batch['rgb'].shape
-        device = batch['rgb'].get_device()
-        H = 800
-        W = 1280
-        theta_tensor = torch.zeros(B, 1, H, W).float().to(device)
-        for b in range(B):
-            theta_tensor[b, 0] = torch.from_numpy(np.load(batch['path_to_theta_lut'][b]))
-        yi, xi = centered_2d_grid(B, H, W, batch['rgb'].dtype, device,
-                                  batch['intrinsics_principal_point'],
-                                  batch['intrinsics_scale_factors'])
-        target_cam_conv_features = torch.cat([theta_tensor, xi.float(), yi.float()], 1)
+        target_cam_conv_features = self.get_cam_conv_features(batch['path_to_theta_lut'],
+                                                              batch['intrinsics_principal_point'],
+                                                              batch['intrinsics_scale_factors'],
+                                                              800,
+                                                              1280,
+                                                              batch['rgb'].get_device())
 
         inv_depths = self.compute_inv_depths_with_cam(batch['rgb'], target_cam_conv_features)
         # Generate pose predictions if available
         pose = None
         if 'rgb_context' in batch and self.pose_net is not None:
             n_context = len(batch['rgb_context'])
-            ref_theta_tensor = []
-            ref_yi, ref_xi = [], []
-            ref_cam_conv_features = []
-            for n in range(n_context):
-                ref_theta_tensor.append(torch.zeros(B, 1, H, W).float().to(device))
-                for b in range(B):
-                    ref_theta_tensor[n][b, 0] = torch.from_numpy(np.load(batch['path_to_theta_lut_context'][n][b]))
-                ref_yi_n, ref_xi_n = centered_2d_grid(B, H, W, batch['rgb'].dtype, device,
-                                                      batch['intrinsics_principal_point_context'][n],
-                                                      batch['intrinsics_scale_factors_context'][n])
-                ref_xi.append(ref_xi_n.float())
-                ref_yi.append(ref_yi_n.float())
-                ref_cam_conv_features.append(torch.cat([ref_theta_tensor[n], ref_xi[n], ref_yi[n]], 1))
-
+            ref_cam_conv_features = [
+                self.get_cam_conv_features(batch['path_to_theta_lut_context'][n],
+                                           batch['intrinsics_principal_point_context'][n],
+                                           batch['intrinsics_scale_factors_context'][n],
+                                           800,
+                                           1280,
+                                           batch['rgb'].get_device())
+                for n in range(n_context)
+            ]
             pose = self.compute_poses_with_cam(batch['rgb'], 
                                                target_cam_conv_features, 
-                                               batch['rgb_context'], 
+                                               batch['rgb_context'],
                                                ref_cam_conv_features)
         # Return output dictionary
         return {

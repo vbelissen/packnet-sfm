@@ -167,7 +167,7 @@ class SfmModel_fisheye_CamConvs(nn.Module):
         yi, xi = centered_2d_grid(B, H, W, batch['rgb'].dtype, device,
                                   batch['intrinsics_principal_point'],
                                   batch['intrinsics_scale_factors'])
-        target_cam_conv_features = torch.cat([theta_tensor, xi, yi], 1)
+        target_cam_conv_features = torch.cat([theta_tensor, xi.float(), yi.float()], 1)
 
         inv_depths = self.compute_inv_depths_with_cam(batch['rgb'], target_cam_conv_features)
         # Generate pose predictions if available
@@ -184,8 +184,8 @@ class SfmModel_fisheye_CamConvs(nn.Module):
                 ref_yi_n, ref_xi_n = centered_2d_grid(B, H, W, batch['rgb'].dtype, device,
                                                       batch['intrinsics_principal_point_context'][n],
                                                       batch['intrinsics_scale_factors_context'][n])
-                ref_xi.append(ref_xi_n)
-                ref_yi.append(ref_yi_n)
+                ref_xi.append(ref_xi_n.float())
+                ref_yi.append(ref_yi_n.float())
                 ref_cam_conv_features.append(torch.cat([ref_theta_tensor[n], ref_xi[n], ref_yi[n]], 1))
 
             pose = self.compute_poses(batch['rgb'],

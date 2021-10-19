@@ -642,35 +642,35 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 'path_to_ego_mask_context': path_to_ego_mask_context
             })
             # Add context poses
-            if self.with_geometric_context:
-                first_pose = sample['pose_matrix']
-                image_context_pose = []
+            #if self.with_geometric_context:
+            first_pose = sample['pose_matrix']
+            image_context_pose = []
 
-                for i, f in enumerate(image_context_paths):
-                    #if same_timestep_as_origin[i]:
-                    base_folder_str = self._get_base_folder(f)
-                    split_type_str  = self._get_split_type(f)
-                    seq_name_str    = self._get_sequence_name(f)
-                    camera_str      = self._get_camera_name(f)
-                    calib_identifier = base_folder_str + split_type_str + seq_name_str + camera_str
-                    # current_folder = self._get_current_folder(self.paths[idx])
-                    if calib_identifier in self.calibration_cache:
-                        c_data = self.calibration_cache[calib_identifier]
-                    else:
-                        c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
-                        self.calibration_cache[calib_identifier] = c_data
-                    context_pose = self._get_extrinsics_pose_matrix(f, c_data)
-                    image_context_pose.append(context_pose @ invert_pose_numpy(first_pose))
-                    #image_context_pose.append(invert_pose_numpy(invert_pose_numpy(context_pose) @ first_pose))
-                    #else:
-                    #    image_context_pose.append(None)
+            for i, f in enumerate(image_context_paths):
+                #if same_timestep_as_origin[i]:
+                base_folder_str = self._get_base_folder(f)
+                split_type_str  = self._get_split_type(f)
+                seq_name_str    = self._get_sequence_name(f)
+                camera_str      = self._get_camera_name(f)
+                calib_identifier = base_folder_str + split_type_str + seq_name_str + camera_str
+                # current_folder = self._get_current_folder(self.paths[idx])
+                if calib_identifier in self.calibration_cache:
+                    c_data = self.calibration_cache[calib_identifier]
+                else:
+                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
+                    self.calibration_cache[calib_identifier] = c_data
+                context_pose = self._get_extrinsics_pose_matrix(f, c_data)
+                image_context_pose.append(context_pose @ invert_pose_numpy(first_pose))
+                #image_context_pose.append(invert_pose_numpy(invert_pose_numpy(context_pose) @ first_pose))
+                #else:
+                #    image_context_pose.append(None)
 
-                sample.update({
-                    'pose_matrix_context': image_context_pose
-                })
-                sample.update({
-                    'same_timestep_as_origin_context': same_timestep_as_origin
-                })
+            sample.update({
+                'pose_matrix_context': image_context_pose
+            })
+            sample.update({
+                'same_timestep_as_origin_context': same_timestep_as_origin
+            })
             if self.with_pose:
                 first_pose = sample['pose']
                 image_context_pose = [self._get_pose(f) for f in image_context_paths]

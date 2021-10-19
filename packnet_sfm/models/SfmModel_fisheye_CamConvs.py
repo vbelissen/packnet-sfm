@@ -189,8 +189,8 @@ class SfmModel_fisheye_CamConvs(nn.Module):
                 ref_cam_conv_features.append(torch.cat([ref_theta_tensor[n], ref_xi[n], ref_yi[n]], 1))
 
             pose = self.compute_poses_with_cam(batch['rgb'], 
-                                               target_cam_conv_features,
-                                               batch['rgb_context'],
+                                               target_cam_conv_features, 
+                                               batch['rgb_context'], 
                                                ref_cam_conv_features)
         # Return output dictionary
         return {

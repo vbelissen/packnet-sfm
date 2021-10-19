@@ -365,6 +365,50 @@ def centered_2d_grid(B, H, W, dtype, device, principal_point, scale_factors):
     return v.unsqueeze(1), u.unsqueeze(1)#yi, xi
 
 @lru_cache(maxsize=None)
+def centered_2d_grid_loader(H, W, principal_point, scale_factors):
+    """
+    Create an image grid with a specific resolution
+
+    Parameters
+    ----------
+    B : int
+        Batch size
+    H : int
+        Height size
+    W : int
+        Width size
+    dtype : torch.dtype
+        Meshgrid type
+    device : torch.device
+        Meshgrid device
+    normalized : bool
+        True if grid is normalized between -1 and 1
+
+    Returns
+    -------
+    grid : torch.Tensor [B,3,H,W]
+        Image grid containing a meshgrid in x, y and 1
+    """
+
+    u = torch.linspace(0, W - 1, W)
+    v = torch.linspace(0, H - 1, H)
+
+    v, u = torch.meshgrid([v, u])
+    v = v.repeat([1, 1])
+    u = u.repeat([1, 1])
+
+    principal_point_u = principal_point[0].unsqueeze(1).repeat([H, W])
+    principal_point_v = principal_point[1].unsqueeze(1).repeat([H, W])
+
+    scale_factors_u = scale_factors[0].unsqueeze(1).repeat([H, W])
+    scale_factors_v = scale_factors[1].unsqueeze(1).repeat([H, W])
+
+    u = (u - (W - 1) / 2 - principal_point_u) * scale_factors_u
+    v = (v - (H - 1) / 2 - principal_point_v) * scale_factors_v
+    #yi, xi = torch.meshgrid([v, u])
+    return v.unsqueeze(0), u.unsqueeze(0)#yi, xi
+
+@lru_cache(maxsize=None)
 def centered_2d_grid_woodscape(B, H, W, dtype, device, principal_point, scale_factor_y):
     """
     Create an image grid with a specific resolution

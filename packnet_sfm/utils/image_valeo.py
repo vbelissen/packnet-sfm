@@ -397,11 +397,11 @@ def centered_2d_grid_loader(H, W, principal_point, scale_factors):
     v = v.repeat([1, 1])
     u = u.repeat([1, 1])
 
-    principal_point_u = principal_point[0].unsqueeze(1).repeat([H, W])
-    principal_point_v = principal_point[1].unsqueeze(1).repeat([H, W])
+    principal_point_u = principal_point[0].view(1, 1).repeat([H, W])
+    principal_point_v = principal_point[1].view(1, 1).repeat([H, W])
 
-    scale_factors_u = scale_factors[0].unsqueeze(1).repeat([H, W])
-    scale_factors_v = scale_factors[1].unsqueeze(1).repeat([H, W])
+    scale_factors_u = scale_factors[0].view(1, 1).repeat([H, W])
+    scale_factors_v = scale_factors[1].view(1, 1).repeat([H, W])
 
     u = (u - (W - 1) / 2 - principal_point_u) * scale_factors_u
     v = (v - (H - 1) / 2 - principal_point_v) * scale_factors_v

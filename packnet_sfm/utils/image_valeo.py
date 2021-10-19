@@ -97,6 +97,28 @@ def flip_model(model, image, flip):
     else:
         return model(image)
 
+def flip_model_and_cam_features(model, image, cam_features, flip):
+    """
+    Flip input image and flip output inverse depth map
+
+    Parameters
+    ----------
+    model : nn.Module
+        Module to be used
+    image : torch.Tensor [B,3,H,W]
+        Input image
+    flip : bool
+        True if the flip is happening
+
+    Returns
+    -------
+    inv_depths : list of torch.Tensor [B,1,H,W]
+        List of predicted inverse depth maps
+    """
+    if flip:
+        return [flip_lr(inv_depth) for inv_depth in model(flip_lr(image), flip_lr(cam_features))]
+    else:
+        return model(image)
 ########################################################################################################################
 
 def gradient_x(image):

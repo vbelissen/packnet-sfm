@@ -69,17 +69,17 @@ class PoseCAMResNet(nn.Module):
                                        ], 1))
         return (features)
 
-    def forward(self, target_image, ref_imgs):
+    def forward(self, target_image, cam_features, ref_imgs, ref_cam_features):
         """
         Runs the network and returns predicted poses
         (1 for each reference image).
         """
         outputs = []
-        target_cam_conv = self.cam_convs(target_image)
-        ref_cam_convs = [self.cam_convs(ref_img) for ref_img in ref_imgs]
+        #target_cam_conv = self.cam_convs(target_image)
+        #ref_cam_convs = [self.cam_convs(ref_img) for ref_img in ref_imgs]
         for i, ref_img in enumerate(ref_imgs):
             inputs = torch.cat([target_image, ref_img], 1)
-            axisangle, translation = self.decoder([self._concat_2_features(self.encoder(inputs), target_cam_conv, ref_cam_convs[i])])
+            axisangle, translation = self.decoder([self._concat_2_features(self.encoder(inputs), cam_features, ref_cam_features[i])])
             outputs.append(torch.cat([translation[:, 0], axisangle[:, 0]], 2))
         pose = torch.cat(outputs, 1)
         return pose

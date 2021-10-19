@@ -549,10 +549,10 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         sample.update({
             'path_to_ego_mask': self._get_path_to_ego_mask(self.paths[idx]),
         })
-        if self.with_geometric_context:
-            sample.update({
-                'pose_matrix': self._get_extrinsics_pose_matrix(self.paths[idx], c_data),
-            })
+        #f self.with_geometric_context:
+        sample.update({
+            'pose_matrix': self._get_extrinsics_pose_matrix(self.paths[idx], c_data),
+        })
         # Add pose information if requested
         if self.with_pose:
             sample.update({

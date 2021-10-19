@@ -3,6 +3,7 @@
 import glob
 import numpy as np
 import os
+import torch
 
 from torch.utils.data import Dataset
 
@@ -565,6 +566,10 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 'depth': self._read_depth(self._get_depth_file(self.paths[idx])),
             })
 
+        sample.update({
+            'cam_features': torch.ones(7, 800, 1280).float()
+        })
+
         # Add context information if requested
         if self.with_context:
             # Add context images
@@ -679,6 +684,10 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 sample.update({
                     'pose_context': image_context_pose
                 })
+
+            sample.update({
+                'cam_features_context': [torch.ones(7, 800, 1280).float() for _ in range(len(image_context_paths))]
+            })
 
         # Apply transformations
         if self.data_transform:

@@ -188,12 +188,13 @@ class SfmModel_fisheye_CamConvs(nn.Module):
         #         pass
 
         inv_depths = self.compute_inv_depths_with_cam(batch['rgb'],
-                                                      self.get_cam_conv_features(batch['path_to_theta_lut'],
-                                                                                 batch['intrinsics_principal_point'],
-                                                                                 batch['intrinsics_scale_factors'],
-                                                                                 800,
-                                                                                 1280,
-                                                                                 batch['rgb'].get_device()))
+                                                      batch['cam_features'])
+                                                      # self.get_cam_conv_features(batch['path_to_theta_lut'],
+                                                      #                            batch['intrinsics_principal_point'],
+                                                      #                            batch['intrinsics_scale_factors'],
+                                                      #                            800,
+                                                      #                            1280,
+                                                      #                            batch['rgb'].get_device()))
         # Generate pose predictions if available
         pose = None
         if 'rgb_context' in batch and self.pose_net is not None:
@@ -208,19 +209,21 @@ class SfmModel_fisheye_CamConvs(nn.Module):
             #     for n in range(n_context)
             # ]
             pose = self.compute_poses_with_cam(batch['rgb'],
-                                               self.get_cam_conv_features(batch['path_to_theta_lut'],
-                                                                          batch['intrinsics_principal_point'],
-                                                                          batch['intrinsics_scale_factors'],
-                                                                          800,
-                                                                          1280,
-                                                                          batch['rgb'].get_device()),
+                                               batch['cam_features'],
+                                               # self.get_cam_conv_features(batch['path_to_theta_lut'],
+                                               #                            batch['intrinsics_principal_point'],
+                                               #                            batch['intrinsics_scale_factors'],
+                                               #                            800,
+                                               #                            1280,
+                                               #                            batch['rgb'].get_device()),
                                                batch['rgb_context'],
-                                               [self.get_cam_conv_features(batch['path_to_theta_lut_context'][n],
-                                                                           batch['intrinsics_principal_point_context'][n],
-                                                                           batch['intrinsics_scale_factors_context'][n],
-                                                                           800,
-                                                                           1280,
-                                                                           batch['rgb'].get_device()) for n in range(n_context)]
+                                               batch['cam_features_context']
+                                               # [self.get_cam_conv_features(batch['path_to_theta_lut_context'][n],
+                                               #                             batch['intrinsics_principal_point_context'][n],
+                                               #                             batch['intrinsics_scale_factors_context'][n],
+                                               #                             800,
+                                               #                             1280,
+                                               #                             batch['rgb'].get_device()) for n in range(n_context)]
                                                )
         # Return output dictionary
         return {

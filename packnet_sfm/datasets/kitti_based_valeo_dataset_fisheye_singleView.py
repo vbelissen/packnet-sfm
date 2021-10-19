@@ -572,7 +572,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         W = 1280
         theta_tensor = torch.zeros(1, H, W).float()
         theta_tensor[0] = torch.from_numpy(np.load(sample['path_to_theta_lut']))
-        yi, xi = centered_2d_grid(1, H, W, torch.float32, theta_tensor.get_device(), principal_point, scale_factors)
+        yi, xi = centered_2d_grid(1, H, W, torch.float32, theta_tensor.get_device(),
+                                  torch.from_numpy(principal_point),
+                                  torch.from_numpy(scale_factors))
         sample.update({
             'cam_features': torch.cat([theta_tensor, xi.squeeze().float(), yi.squeeze().float()], 1)
         })

@@ -52,14 +52,8 @@ def view_synthesis(ref_image, depth, ref_cam, cam,
     assert depth.size(1) == 1
     # Reconstruct world points from target_camera
     world_points = cam.reconstruct(depth, frame='w')
-    if torch.isnan(world_points).sum() > 0:
-        print('world_points')
-        print(world_points)
     # Project world points onto reference camera
     ref_coords = ref_cam.project(world_points, frame='w')
-    if torch.isnan(ref_coords).sum() > 0:
-        print('ref_coords')
-        print(ref_coords)
     # View-synthesis given the projected reference points
     return funct.grid_sample(ref_image, ref_coords, mode=mode,
                              padding_mode=padding_mode, align_corners=True)

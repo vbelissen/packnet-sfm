@@ -515,18 +515,39 @@ class DistortedMultiViewPhotometricLoss(LossBase):
                     print(torch.isnan(ref_warped[0]).sum())
                     print(path_to_ego_mask)
                     print(torch.isnan(ref_warped[0]).sum(dim=0))
-                if torch.isnan(ref_ego_mask_tensors_warped[0]).sum() > 0:
-                    print('ref_ego_mask_tensors_warped')
-                    print(ref_ego_mask_tensors_warped[0])
-                    print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
-                    print(path_to_ego_mask)
-                    print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum(dim=0))
-                if torch.isnan(ref_ego_mask_tensor[j]).sum() > 0:
-                    print('ref_ego_mask_tensor[j]')
-                    print(ref_ego_mask_tensor[j])
-                    print(torch.isnan(ref_ego_mask_tensor[j]).sum())
-                    print(path_to_ego_mask)
-                    print(torch.isnan(ref_ego_mask_tensor[j]).sum(dim=0))
+                    B, _, H, W = ref_image.shape
+                    device = ref_image.get_device()
+                    # Generate cameras for all scales
+                    cams, ref_cams = [], []
+                    for i in range(self.n):
+                        _, _, DH, DW = inv_depths[i].shape
+                        scale_factor = DW / float(W)
+                        cams.append(CameraDistorted(K=K.float(), k1=k[:, 0], k2=k[:, 1], k3=k[:, 2], p1=p[:, 0],
+                                                    p2=p[:, 1]).scaled(scale_factor).to(device))
+                        ref_cams.append(CameraDistorted(K=ref_K.float(), k1=ref_k[:, 0], k2=ref_k[:, 1], k3=ref_k[:, 2],
+                                                        p1=ref_p[:, 0], p2=ref_p[:, 1], Tcw=pose).scaled(
+                            scale_factor).to(device))
+                    # View synthesis
+                    depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
+                    ref_images = match_scales(ref_image, inv_depths, self.n)
+                    ref_warped = [view_synthesis(
+                        ref_images[i], depths[i], ref_cams[i], cams[i],
+                        padding_mode=self.padding_mode) for i in range(self.n)]
+
+                    for i in range(self.n):
+                        world_points = cams[i].reconstruct(depths[i], frame='w')
+                        ref_coords = ref_cams[i].project(world_points, frame='w')
+                        print(i)
+                        print('world_points')
+                        print('min')
+                        print(torch.min(world_points))
+                        print('max')
+                        print(torch.max(world_points))
+                        print('ref_coords')
+                        print('min')
+                        print(torch.min(ref_coords))
+                        print('max')
+                        print(torch.max(ref_coords))
 
             else:
                 ref_warped = self.warp_ref_image(inv_depths, ref_image,
@@ -537,31 +558,6 @@ class DistortedMultiViewPhotometricLoss(LossBase):
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
             if self.mask_ego:
                 for i in range(self.n):
-                    if torch.isnan(photometric_loss[i]).sum() > 0:
-                        print('photometric_loss[i]')
-                        print(photometric_loss[i])
-                        print(torch.isnan(photometric_loss[i]).sum())
-                        print(pose.mat)
-                        print(K)
-                        print(k)
-                        print(p)
-                        print(ref_K)
-                        print(ref_k)
-                        print(ref_p)
-                        for b in range(B):
-                            print('b')
-                            print(b)
-                            print(path_to_ego_mask[b])
-                            print(torch.isnan(photometric_loss[i][b]).sum())
-                            print(torch.isnan(ref_warped[i][b]).sum())
-                            print(ref_warped[i][b])
-                            print(torch.isnan(ref_image[b]).sum())
-                            print(ref_image[b])
-                            print(torch.isnan(inv_depths[i][b]).sum())
-                            print(inv_depths[i][b])
-                            print(ref_ego_mask_tensor[j][b])
-                            print(torch.isnan(ref_ego_mask_tensor[j][b]).sum())
-                            print(path_to_ego_mask_context[j][b])
                     photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
             else:
                 for i in range(self.n):

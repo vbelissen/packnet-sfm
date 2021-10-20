@@ -12,6 +12,8 @@ import numpy as np
 
 ########################################################################################################################
 
+torch.autograd.set_detect_anomaly(True)
+
 class CameraDistorted(nn.Module):
     """
     Differentiable camera class implementing reconstruction and projection

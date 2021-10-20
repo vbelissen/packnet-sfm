@@ -513,10 +513,14 @@ class DistortedMultiViewPhotometricLoss(LossBase):
                     print('ref_warped')
                     print(ref_warped)
                     print(torch.isnan(ref_warped).sum())
+                    print(path_to_ego_mask)
+                    print(torch.isnan(ref_warped).sum(dim=0))
                 if torch.isnan(ref_ego_mask_tensors_warped).sum() > 0:
                     print('ref_ego_mask_tensors_warped')
                     print(ref_ego_mask_tensors_warped)
                     print(torch.isnan(ref_ego_mask_tensors_warped).sum())
+                    print(path_to_ego_mask)
+                    print(torch.isnan(ref_ego_mask_tensors_warped).sum(dim=0))
 
             else:
                 ref_warped = self.warp_ref_image(inv_depths, ref_image,
@@ -531,6 +535,8 @@ class DistortedMultiViewPhotometricLoss(LossBase):
                         print('photometric_loss[i]')
                         print(photometric_loss[i])
                         print(torch.isnan(photometric_loss[i]).sum())
+                        print(path_to_ego_mask)
+                        print(torch.isnan(photometric_loss[i]).sum(dim=0))
                     photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
             else:
                 for i in range(self.n):

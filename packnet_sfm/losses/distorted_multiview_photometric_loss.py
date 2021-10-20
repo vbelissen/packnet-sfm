@@ -509,51 +509,51 @@ class DistortedMultiViewPhotometricLoss(LossBase):
                                                  K, k, p,
                                                  ref_K, ref_k, ref_p, ref_ego_mask_tensor[j],
                                                  pose)
-                if torch.isnan(ref_warped[0]).sum() > 0:
-                    print('ref_warped')
-                    print(ref_warped[0])
-                    print(torch.isnan(ref_warped[0]).sum())
-                    print(path_to_ego_mask)
-                    print(torch.isnan(ref_warped[0]).sum(dim=0))
-                    B, _, H, W = ref_image.shape
-                    device = ref_image.get_device()
-                    # Generate cameras for all scales
-                    cams, ref_cams = [], []
-                    for i in range(self.n):
-                        _, _, DH, DW = inv_depths[i].shape
-                        scale_factor = DW / float(W)
-                        cams.append(CameraDistorted(K=K.float(), k1=k[:, 0], k2=k[:, 1], k3=k[:, 2], p1=p[:, 0],
-                                                    p2=p[:, 1]).scaled(scale_factor).to(device))
-                        ref_cams.append(CameraDistorted(K=ref_K.float(), k1=ref_k[:, 0], k2=ref_k[:, 1], k3=ref_k[:, 2],
-                                                        p1=ref_p[:, 0], p2=ref_p[:, 1], Tcw=pose).scaled(
-                            scale_factor).to(device))
-                    # View synthesis
-                    depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
-                    ref_images = match_scales(ref_image, inv_depths, self.n)
-                    ref_warped = [view_synthesis(
-                        ref_images[i], depths[i], ref_cams[i], cams[i],
-                        padding_mode=self.padding_mode) for i in range(self.n)]
-
-                    for i in range(self.n):
-                        world_points = cams[i].reconstruct(depths[i], frame='w')
-                        ref_coords = ref_cams[i].project(world_points, frame='w')
-                        print(i)
-                        print('world_points')
-                        print('min')
-                        print(torch.min(world_points[:, 0, :, :]))
-                        print(torch.min(world_points[:, 1, :, :]))
-                        print(torch.min(world_points[:, 2, :, :]))
-                        print('max')
-                        print(torch.max(world_points[:, 0, :, :]))
-                        print(torch.max(world_points[:, 1, :, :]))
-                        print(torch.max(world_points[:, 2, :, :]))
-                        print('ref_coords')
-                        print('min')
-                        print(torch.min(ref_coords[:, :, :, 0]))
-                        print(torch.min(ref_coords[:, :, :, 1]))
-                        print('max')
-                        print(torch.max(ref_coords[:, :, :, 0]))
-                        print(torch.max(ref_coords[:, :, :, 1]))
+                # if torch.isnan(ref_warped[0]).sum() > 0:
+                #     print('ref_warped')
+                #     print(ref_warped[0])
+                #     print(torch.isnan(ref_warped[0]).sum())
+                #     print(path_to_ego_mask)
+                #     print(torch.isnan(ref_warped[0]).sum(dim=0))
+                #     B, _, H, W = ref_image.shape
+                #     device = ref_image.get_device()
+                #     # Generate cameras for all scales
+                #     cams, ref_cams = [], []
+                #     for i in range(self.n):
+                #         _, _, DH, DW = inv_depths[i].shape
+                #         scale_factor = DW / float(W)
+                #         cams.append(CameraDistorted(K=K.float(), k1=k[:, 0], k2=k[:, 1], k3=k[:, 2], p1=p[:, 0],
+                #                                     p2=p[:, 1]).scaled(scale_factor).to(device))
+                #         ref_cams.append(CameraDistorted(K=ref_K.float(), k1=ref_k[:, 0], k2=ref_k[:, 1], k3=ref_k[:, 2],
+                #                                         p1=ref_p[:, 0], p2=ref_p[:, 1], Tcw=pose).scaled(
+                #             scale_factor).to(device))
+                #     # View synthesis
+                #     depths = [inv2depth(inv_depths[i]) for i in range(self.n)]
+                #     ref_images = match_scales(ref_image, inv_depths, self.n)
+                #     ref_warped = [view_synthesis(
+                #         ref_images[i], depths[i], ref_cams[i], cams[i],
+                #         padding_mode=self.padding_mode) for i in range(self.n)]
+                #
+                #     for i in range(self.n):
+                #         world_points = cams[i].reconstruct(depths[i], frame='w')
+                #         ref_coords = ref_cams[i].project(world_points, frame='w')
+                #         print(i)
+                #         print('world_points')
+                #         print('min')
+                #         print(torch.min(world_points[:, 0, :, :]))
+                #         print(torch.min(world_points[:, 1, :, :]))
+                #         print(torch.min(world_points[:, 2, :, :]))
+                #         print('max')
+                #         print(torch.max(world_points[:, 0, :, :]))
+                #         print(torch.max(world_points[:, 1, :, :]))
+                #         print(torch.max(world_points[:, 2, :, :]))
+                #         print('ref_coords')
+                #         print('min')
+                #         print(torch.min(ref_coords[:, :, :, 0]))
+                #         print(torch.min(ref_coords[:, :, :, 1]))
+                #         print('max')
+                #         print(torch.max(ref_coords[:, :, :, 0]))
+                #         print(torch.max(ref_coords[:, :, :, 1]))
 
             else:
                 ref_warped = self.warp_ref_image(inv_depths, ref_image,

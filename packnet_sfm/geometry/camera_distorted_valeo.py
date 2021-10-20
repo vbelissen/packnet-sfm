@@ -272,5 +272,11 @@ class CameraDistorted(nn.Module):
         uNorm = 2 * u / (W - 1) - 1.
         vNorm = 2 * v / (H - 1) - 1.
 
+        # Clamp out-of-bounds pixels
+        Xmask = ((uNorm > 1) + (uNorm < -1)).detach()
+        uNorm[Xmask] = 2.
+        Ymask = ((vNorm > 1) + (vNorm < -1)).detach()
+        vNorm[Ymask] = 2.
+
         # Return pixel coordinates
         return torch.stack([uNorm, vNorm], dim=-1).view(B, H, W, 2).float()

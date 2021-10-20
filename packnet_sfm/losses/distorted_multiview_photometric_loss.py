@@ -541,7 +541,7 @@ class DistortedMultiViewPhotometricLoss(LossBase):
                         print('photometric_loss[i]')
                         print(photometric_loss[i])
                         print(torch.isnan(photometric_loss[i]).sum())
-                        print(pose)
+                        print(pose.mat)
                         print(K)
                         print(k)
                         print(p)

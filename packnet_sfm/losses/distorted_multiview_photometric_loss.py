@@ -509,18 +509,24 @@ class DistortedMultiViewPhotometricLoss(LossBase):
                                                  K, k, p,
                                                  ref_K, ref_k, ref_p, ref_ego_mask_tensor[j],
                                                  pose)
-                if torch.isnan(ref_warped).sum() > 0:
+                if torch.isnan(ref_warped[0]).sum() > 0:
                     print('ref_warped')
-                    print(ref_warped)
-                    print(torch.isnan(ref_warped).sum())
+                    print(ref_warped[0])
+                    print(torch.isnan(ref_warped[0]).sum())
                     print(path_to_ego_mask)
-                    print(torch.isnan(ref_warped).sum(dim=0))
-                if torch.isnan(ref_ego_mask_tensors_warped).sum() > 0:
+                    print(torch.isnan(ref_warped[0]).sum(dim=0))
+                if torch.isnan(ref_ego_mask_tensors_warped[0]).sum() > 0:
                     print('ref_ego_mask_tensors_warped')
-                    print(ref_ego_mask_tensors_warped)
-                    print(torch.isnan(ref_ego_mask_tensors_warped).sum())
+                    print(ref_ego_mask_tensors_warped[0])
+                    print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
                     print(path_to_ego_mask)
-                    print(torch.isnan(ref_ego_mask_tensors_warped).sum(dim=0))
+                    print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum(dim=0))
+                if torch.isnan(ref_ego_mask_tensor[j]).sum() > 0:
+                    print('ref_ego_mask_tensor[j]')
+                    print(ref_ego_mask_tensor[j])
+                    print(torch.isnan(ref_ego_mask_tensor[j]).sum())
+                    print(path_to_ego_mask)
+                    print(torch.isnan(ref_ego_mask_tensor[j]).sum(dim=0))
 
             else:
                 ref_warped = self.warp_ref_image(inv_depths, ref_image,

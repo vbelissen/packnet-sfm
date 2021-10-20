@@ -12,7 +12,7 @@ from packnet_sfm.utils.image import interpolate_image
 
 import numpy as np
 
-
+torch.autograd.set_detect_anomaly(True)
 ########################################################################################################################
 
 def SSIM(x, y, C1=1e-4, C2=9e-4, kernel_size=3, stride=1):

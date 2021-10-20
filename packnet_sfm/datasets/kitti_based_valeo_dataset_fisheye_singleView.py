@@ -572,11 +572,23 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         if use_cam_features:
             H = 800
             W = 1280
-            theta_tensor = torch.zeros(1, H, W).float()
-            theta_tensor[0] = torch.from_numpy(np.load(sample['path_to_theta_lut']))
-            yi, xi = centered_2d_grid_loader(H, W, torch.from_numpy(principal_point), torch.from_numpy(scale_factors))
+            #theta_tensor_numpy = np.load(sample['path_to_theta_lut'])
+            u = np.linspace(0, W - 1, int(W))
+            v = np.linspace(0, H - 1, int(H))
+            xu, yu = np.meshgrid(u, v)
+            xu = (xu - (W - 1) / 2 - principal_point[0]) * scale_factors[0]
+            yu = (yu - (H - 1) / 2 - principal_point[1]) * scale_factors[1]
+            u_nc = np.linspace(-1, 1, int(W))
+            v_nc = np.linspace(-1, 1, int(H))
+            x_nc, y_nc = np.meshgrid(u_nc, v_nc)
+            ray_surface = np.zeros((3, H, W)) # = np.load(sample['path_to_ray_surface'])
             sample.update({
-                'cam_features': torch.cat([theta_tensor, xi.float(), yi.float()], 0)
+                'cam_features': np.concatenate([#np.expand_dims(theta_tensor_numpy, axis=0),
+                                                np.expand_dims(xu, axis=0),
+                                                np.expand_dims(yu, axis=0),
+                                                np.expand_dims(x_nc, axis=0),
+                                                np.expand_dims(y_nc, axis=0),
+                                                ray_surface], axis=0)
             })
 
         # Add context information if requested
@@ -698,11 +710,23 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 cam_features_context = []
                 H = 800
                 W = 1280
+                u_nc = np.linspace(-1, 1, int(W))
+                v_nc = np.linspace(-1, 1, int(H))
+                x_nc, y_nc = np.meshgrid(u_nc, v_nc)
                 for i_context in range(len(image_context_paths)):
-                    theta_tensor = torch.zeros(1, H, W).float()
-                    theta_tensor[0] = torch.from_numpy(np.load(sample['path_to_theta_lut_context'][i_context]))
-                    yi, xi = centered_2d_grid_loader(H, W, torch.from_numpy(principal_point), torch.from_numpy(scale_factors))
-                    cam_features_context.append(torch.cat([theta_tensor, xi.float(), yi.float()], 0))
+                    theta_tensor_numpy = np.load(sample['path_to_theta_lut_context'][i_context])
+                    u = np.linspace(0, W - 1, int(W))
+                    v = np.linspace(0, H - 1, int(H))
+                    xu, yu = np.meshgrid(u, v)
+                    xu = (xu - (W - 1) / 2 - principal_point[0]) * scale_factors[0]
+                    yu = (yu - (H - 1) / 2 - principal_point[1]) * scale_factors[1]
+                    ray_surface = np.zeros((3, H, W))  # = np.load(sample['path_to_ray_surface_context'][i_context])
+                    cam_features_context.append(np.concatenate([#np.expand_dims(theta_tensor_numpy, axis=0),
+                                                                np.expand_dims(xu, axis=0),
+                                                                np.expand_dims(yu, axis=0),
+                                                                np.expand_dims(x_nc, axis=0),
+                                                                np.expand_dims(y_nc, axis=0),
+                                                                ray_surface], axis=0))
                 sample.update({
                     'cam_features_context': cam_features_context
                 })

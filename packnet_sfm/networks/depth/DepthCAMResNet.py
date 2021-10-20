@@ -38,7 +38,7 @@ class DepthCAMResNet(nn.Module):
         self.encoder = ResnetEncoder(num_layers=num_layers, pretrained=pretrained)
         #self.cam_convs = CamConvMaps()
         #self.decoder = DepthDecoder(num_ch_enc=self.encoder.num_ch_enc + self.cam_convs.num_maps) # pour l'instant, test
-        self.decoder = DepthDecoder(num_ch_enc=self.encoder.num_ch_enc + 3) # pour l'instant, test
+        self.decoder = DepthDecoder(num_ch_enc=self.encoder.num_ch_enc + 7) # pour l'instant, test
         self.scale_inv_depth = partial(disp_to_depth, min_depth=0.1, max_depth=100.0)
 
     def _concat_features(self, enc_features, cam_features):

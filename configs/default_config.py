@@ -161,7 +161,7 @@ cfg.datasets.train.repeat = [1]                     # Number of times training d
 cfg.datasets.train.num_logs = 5                     # Number of training images to log
 cfg.datasets.train.with_geometric_context = False   #
 cfg.datasets.train.with_spatiotemp_context = False
-cfg.datasets.train.calibrations_suffix = None
+cfg.datasets.train.calibrations_suffix = ''
 ########################################################################################################################
 ### DATASETS.VALIDATION
 ########################################################################################################################
@@ -178,7 +178,7 @@ cfg.datasets.validation.cameras = [[]]              # Validation cameras (double
 cfg.datasets.validation.num_logs = 5                # Number of validation images to log
 cfg.datasets.validation.with_geometric_context = False   #
 cfg.datasets.validation.with_spatiotemp_context = False
-cfg.datasets.validation.calibrations_suffix = None
+cfg.datasets.validation.calibrations_suffix = ''
 ########################################################################################################################
 ### DATASETS.TEST
 ########################################################################################################################
@@ -195,7 +195,7 @@ cfg.datasets.test.cameras = [[]]                    # Test cameras (double list,
 cfg.datasets.test.num_logs = 5                      # Number of test images to log
 cfg.datasets.test.with_geometric_context = False    #
 cfg.datasets.test.with_spatiotemp_context = False
-cfg.datasets.test.calibrations_suffix = None
+cfg.datasets.test.calibrations_suffix = ''
 ########################################################################################################################
 ### THESE SHOULD NOT BE CHANGED
 ########################################################################################################################

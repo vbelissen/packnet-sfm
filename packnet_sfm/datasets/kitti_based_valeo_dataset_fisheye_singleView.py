@@ -73,7 +73,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                  data_transform=None, depth_type=None, with_pose=False, with_geometric_context=False,
                  with_spatiotemp_context=False,
                  back_context=0, forward_context=0, strides=(1,), cameras=None,
-                 calibrations_suffix=None):
+                 calibrations_suffix=''):
         # Assertions
         backward_context = back_context
         assert backward_context >= 0 and forward_context >= 0, 'Invalid contexts'
@@ -555,7 +555,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         else:
             c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
             self.calibration_cache[calib_identifier] = c_data
-        if self.calibrations_suffix is not None:
+        if self.calibrations_suffix != '':
             if calib_identifier in self.calibration_extra_rot_cache:
                 c_extra_rot = self.calibration_extra_rot_cache[calib_identifier]
             else:
@@ -712,7 +712,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 else:
                     c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
                     self.calibration_cache[calib_identifier] = c_data
-                if self.calibrations_suffix is not None:
+                if self.calibrations_suffix != '':
                     if calib_identifier in self.calibration_extra_rot_cache:
                         c_extra_rot = self.calibration_extra_rot_cache[calib_identifier]
                     else:

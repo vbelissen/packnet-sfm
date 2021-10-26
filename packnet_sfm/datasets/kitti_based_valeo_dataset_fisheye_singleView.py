@@ -248,9 +248,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
         t = np.array([float(extr['pos_x_m']), float(extr['pos_y_m']), float(extr['pos_z_m'])])
 
-        x_rad  = np.pi / 180. * (float(extr['rot_x_deg'])  + extra_rot[0])
-        z1_rad = np.pi / 180. * (float(extr['rot_z1_deg']) + extra_rot[1])
-        z2_rad = np.pi / 180. * (float(extr['rot_z2_deg']) + extra_rot[2])
+        x_rad  = np.pi / 180. * (float(extr['rot_x_deg'])  + extra_rot[cam][0])
+        z1_rad = np.pi / 180. * (float(extr['rot_z1_deg']) + extra_rot[cam][1])
+        z2_rad = np.pi / 180. * (float(extr['rot_z2_deg']) + extra_rot[cam][2])
         x_rad += np.pi  # gcam
         cosx  = np.cos(x_rad)
         sinx  = np.sin(x_rad)

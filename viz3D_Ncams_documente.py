@@ -555,11 +555,15 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
                 pcl_full[i_cam].colors = o3d.utility.Vector3dVector(color_vector)
 
             pcl = pcl_full[i_cam]  # .select_by_index(ind)
-
+            # if i_cam == 4:
+            #     for i_c in range(colors_tmp.shape[0]):
+            #         colors_tmp[i_c] = np.array([1.0, 0, 0])
+            #     pcl.colors=o3d.utility.Vector3dVector(colors_tmp)
             pcl = pcl.select_by_index(np.where(mask)[0])
             cl, ind = pcl.remove_statistical_outlier(nb_neighbors=7, std_ratio=1.2)
             pcl = pcl.select_by_index(ind)
             pcl = pcl.voxel_down_sample(voxel_size=0.02)
+
             pcl_only_inliers.append(pcl)
             if has_gt_depth[i_cam]:
                 pcl_gt.append(o3d.geometry.PointCloud())

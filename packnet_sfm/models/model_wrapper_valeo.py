@@ -528,7 +528,8 @@ def setup_dataset(config, mode, requirements, **kwargs):
             dataset_args_i = {
                 'depth_type': config.depth_type[i] if requirements['gt_depth'] else None,
                 'with_pose': requirements['gt_pose'],
-                'data_transform': get_transforms_fisheye(mode, **kwargs)
+                'data_transform': get_transforms_fisheye(mode, **kwargs),
+                'calibrations_suffix': config.calibrations_suffix,
             }
         elif config.dataset[i] == 'KITTIValeoDistorted':
             dataset_args_i = {

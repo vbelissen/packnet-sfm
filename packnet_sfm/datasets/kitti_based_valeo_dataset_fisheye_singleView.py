@@ -101,7 +101,6 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         self.oxts_cache = {}
         self.calibration_cache = {}
         self.calibrations_suffix = calibrations_suffix
-        self.calibration_extra_rot_cache = {}
         self.imu2velo_calib_cache = {}
         self.sequence_origin_cache = {}
 
@@ -248,9 +247,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
         t = np.array([float(extr['pos_x_m']), float(extr['pos_y_m']), float(extr['pos_z_m'])])
 
-        x_rad  = np.pi / 180. * (float(extr['rot_x_deg'])  + extra_rot[cam][0])
-        z1_rad = np.pi / 180. * (float(extr['rot_z1_deg']) + extra_rot[cam][1])
-        z2_rad = np.pi / 180. * (float(extr['rot_z2_deg']) + extra_rot[cam][2])
+        x_rad  = np.pi / 180. * (float(extr['rot_x_deg'])  + extra_rot[0])
+        z1_rad = np.pi / 180. * (float(extr['rot_z1_deg']) + extra_rot[1])
+        z2_rad = np.pi / 180. * (float(extr['rot_z2_deg']) + extra_rot[2])
         x_rad += np.pi  # gcam
         cosx  = np.cos(x_rad)
         sinx  = np.sin(x_rad)
@@ -293,7 +292,6 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
     def _read_extra_rot(self, base_folder, split_type, seq_name, cameras, calib_suffix):
         """Read raw calibration files from folder."""
-        data = {}
         camera = cameras[0]
         text_file = open(os.path.join(base_folder,
                                       'calibrations' + calib_suffix,
@@ -302,8 +300,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                                       seq_name,
                                       camera + '.txt'), 'r')
         all_rotations = text_file.read()
-        data[camera] = np.array([float(x) for x in all_rotations.split(',')])
-        return data
+        return np.array([float(x) for x in all_rotations.split(',')])
 
     def _get_path_to_theta_lut(self, image_file):
         """Get the current folder from image_file."""
@@ -556,11 +553,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
             c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
             self.calibration_cache[calib_identifier] = c_data
         if self.calibrations_suffix != '':
-            if calib_identifier in self.calibration_extra_rot_cache:
-                c_extra_rot = self.calibration_extra_rot_cache[calib_identifier]
-            else:
-                c_extra_rot = self._read_extra_rot(base_folder_str, split_type_str, seq_name_str, [camera_str], self.calibrations_suffix)
-                self.calibration_extra_rot_cache[calib_identifier] = c_extra_rot
+            c_extra_rot = self._read_extra_rot(base_folder_str, split_type_str, seq_name_str, [camera_str], self.calibrations_suffix)
         else:
             c_extra_rot = np.zeros(3)
 
@@ -713,11 +706,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                     c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
                     self.calibration_cache[calib_identifier] = c_data
                 if self.calibrations_suffix != '':
-                    if calib_identifier in self.calibration_extra_rot_cache:
-                        c_extra_rot = self.calibration_extra_rot_cache[calib_identifier]
-                    else:
-                        c_extra_rot = self._read_extra_rot(base_folder_str, split_type_str, seq_name_str, [camera_str], self.calibrations_suffix)
-                        self.calibration_extra_rot_cache[calib_identifier] = c_extra_rot
+                    c_extra_rot = self._read_extra_rot(base_folder_str, split_type_str, seq_name_str, [camera_str], self.calibrations_suffix)
                 else:
                     c_extra_rot = np.zeros(3)
                 context_pose = self._get_extrinsics_pose_matrix_with_rot(f, c_data, c_extra_rot)

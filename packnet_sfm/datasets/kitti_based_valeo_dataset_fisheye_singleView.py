@@ -574,7 +574,6 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         sample.update({
             'intrinsics_scale_factors': scale_factors,
         })
-
         sample.update({
             'path_to_theta_lut': self._get_path_to_theta_lut(self.paths[idx]),
         })

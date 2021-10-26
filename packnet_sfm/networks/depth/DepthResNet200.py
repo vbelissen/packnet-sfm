@@ -9,7 +9,7 @@ from packnet_sfm.networks.layers.resnet.layers import disp_to_depth
 
 ########################################################################################################################
 
-class DepthResNet(nn.Module):
+class DepthResNet200(nn.Module):
     """
     Inverse depth network based on the ResNet architecture.
 

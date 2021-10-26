@@ -10,6 +10,7 @@ from packnet_sfm.geometry.camera_fisheye_valeo import CameraFisheye
 from packnet_sfm.geometry.camera_fisheye_valeo_utils import view_synthesis, view_depth_synthesis2
 from packnet_sfm.utils.depth import calc_smoothness, inv2depth, depth2inv
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
+from packnet_sfm.utils.image import interpolate_image
 
 import cv2
 import time
@@ -460,9 +461,18 @@ class MultiViewPhotometricLoss(LossBase):
             B, C, H, W = images[i].shape
             if W < W_full:
                 inv_scale_factor = int(W_full / W)
-                ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor))
+                ego_mask_tensors.append(
+                    interpolate_image(ego_mask_tensor, shape=(B, 1, H, W), mode='nearest', align_corners=None)
+                    #-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor)
+                )
                 for i_context in range(n_context):
-                    ref_ego_mask_tensors[i_context].append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context]))
+                    ref_ego_mask_tensors[i_context].append(
+                        interpolate_image(ref_ego_mask_tensor[i_context],
+                                          shape=(B, 1, H, W),
+                                          mode='nearest',
+                                          align_corners=None)
+                        #-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
+                    )
             else:
                 ego_mask_tensors.append(ego_mask_tensor)
                 for i_context in range(n_context):
@@ -471,7 +481,11 @@ class MultiViewPhotometricLoss(LossBase):
             B, C, H, W = context[i_context].shape
             if W < W_full:
                 inv_scale_factor = int(W_full / W)
-                ref_ego_mask_tensor[i_context] = -nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
+                ref_ego_mask_tensor[i_context] = interpolate_image(ref_ego_mask_tensor[i_context],
+                                                                   shape=(B, 1, H, W),
+                                                                   mode='nearest',
+                                                                   align_corners=None)
+                #-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ref_ego_mask_tensor[i_context])
 
         B = len(path_to_ego_mask)
 

@@ -237,7 +237,7 @@ optional arguments:
   --frozen_cams_trans FROZEN_CAMS_TRANS [FROZEN_CAMS_TRANS ...]
                         List of frozen cameras in translation
   --frozen_cams_rot FROZEN_CAMS_ROT [FROZEN_CAMS_ROT ...]
-                        List of frozen cameras  in rotation 
+                        List of frozen cameras in rotation 
 
 ```
 

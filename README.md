@@ -1,132 +1,43 @@
-## PackNet-SfM: 3D Packing for Self-Supervised Monocular Depth Estimation
+## Self/Semi-supervised depth estimation code, CEA-Valeo
 
-[Install](#install) // [Datasets](#datasets) // [Training](#training) // [Evaluation](#evaluation) // [Models](#models) // [License](#license) // [References](#references)
+Mostly based on PackNet-Sfm code ([**3D Packing for Self-Supervised Monocular Depth Estimation (CVPR 2020 oral)**](https://arxiv.org/abs/1905.02693), *Vitor Guizilini, Rares Ambrus, Sudeep Pillai, Allan Raventos and Adrien Gaidon*).
 
-<a href="https://www.tri.global/" target="_blank">
- <img align="right" src="/media/figs/tri-logo.png" width="20%"/>
-</a>
+### Install
 
-<a href="https://www.youtube.com/watch?v=b62iDkLgGSI" target="_blank">
-<img width="60%" src="/media/figs/packnet-ddad.gif"/>
-</a>
-
-Official [PyTorch](https://pytorch.org/) implementation of _self-supervised_ monocular depth estimation methods invented by the ML Team at [Toyota Research Institute (TRI)](https://www.tri.global/), in particular for _PackNet_: [**3D Packing for Self-Supervised Monocular Depth Estimation (CVPR 2020 oral)**](https://arxiv.org/abs/1905.02693),
-*Vitor Guizilini, Rares Ambrus, Sudeep Pillai, Allan Raventos and Adrien Gaidon*.
-Although self-supervised (i.e. trained only on monocular videos), PackNet outperforms other self, semi, and fully supervised methods. Furthermore, it gets better with input resolution and number of parameters, generalizes better, and can run in real-time (with TensorRT). See [References](#references) for more info on our models.
-
-This is also the official implementation of [**Neural Ray Surfaces for Self-Supervised Learning of Depth and Ego-motion (3DV 2020 oral)**](https://arxiv.org/abs/2008.06630), *Igor Vasiljevic, Vitor Guizilini, Rares Ambrus, Sudeep Pillai, Wolfram Burgard, Greg Shakhnarovich and Adrien Gaidon*.  Neural Ray Surfaces (NRS) generalize self-supervised depth and pose estimation beyond the pinhole model to all central cameras, allowing the learning of meaningful depth and pose on non-pinhole cameras such as fisheye and catadioptric.
-
-## Install
-
-You need a machine with recent Nvidia drivers and a GPU with at least 6GB of memory (more for the bigger models at higher resolution). We recommend using docker (see [nvidia-docker2](https://github.com/NVIDIA/nvidia-docker) instructions) to have a reproducible environment. To setup your environment, type in a terminal (only tested in Ubuntu 18.04):
-
+Tested with PyTorch 1.4.0, Cuda 10.1, OpenMPI 4.0.0, Ubuntu 20.04.
 ```bash
-git clone https://github.com/TRI-ML/packnet-sfm.git
-cd packnet-sfm
-# if you want to use docker (recommended)
-make docker-build
+conda create --name packnet-env
+source activate packnet-env
+conda install pytorch==1.4.0 torchvision==0.5.0 cudatoolkit=10.1 -c pytorch
+conda install -c conda-forge yacs
+pip install pycuda
+pip install onnxruntime awscli onnx opencv-python-headless pillow-simd
+pip install mpi4py
+pip install future typing numpy pandas matplotlib jupyter h5py boto3 tqdm termcolor path.py
+conda install cython
+git clone https://github.com/NVIDIA/apex
+cd apex
+pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+cd ..
+pip install --no-cache-dir git+https://github.com/horovod/horovod.git@65de4c961d1e5ad2828f2f6c4329072834f27661
+pip install wandb==0.8.21
+export PYTHONPATH="${PYTHONPATH}:/path/to/packnet-sfm/"
+conda install scipy=1.6.2
+
+# If you want to visualize 3D reconstructed point clouds:
+pip install Pillow
+conda install -c open3d-admin open3d=0.10.0
 ```
 
-We will list below all commands as if run directly inside our container. To run any of the commands in a container, you can either start the container in interactive mode with `make docker-start-interactive` to land in a shell where you can type those commands, or you can do it in one step:
+### Datasets
 
-```bash
-# single GPU
-make docker-run COMMAND="some-command"
-# multi-GPU
-make docker-run-mpi COMMAND="some-command"
-```
+This code is mainly intented to be used with the Valeo synced multiview dataset.
 
-For instance, to verify that the environment is setup correctly, you can run a simple overfitting test:
-
-```bash
-# download a tiny subset of KITTI
-curl -s https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/datasets/KITTI_tiny.tar | tar xv -C /data/datasets/
-# in docker
-make docker-run COMMAND="python3 scripts/train.py configs/overfit_kitti.yaml"
-```
-
-If you want to use features related to [AWS](https://aws.amazon.com/) (for dataset access)
-and [Weights & Biases (WANDB)](https://www.wandb.com/) (for experiment management/visualization), then you should create associated accounts and configure your shell with the following environment variables:
-
-```bash
-export AWS_SECRET_ACCESS_KEY="something"
-export AWS_ACCESS_KEY_ID="something"
-export AWS_DEFAULT_REGION="something"
-export WANDB_ENTITY="something"
-export WANDB_API_KEY="something"
-```
-
-To enable WANDB logging and AWS checkpoint syncing, you can then set the corresponding configuration parameters in `configs/<your config>.yaml` (cf. [configs/default_config.py](./configs/default_config.py) for defaults and docs):
-
-```yaml
-wandb:
-    dry_run: True                                 # Wandb dry-run (not logging)
-    name: ''                                      # Wandb run name
-    project: os.environ.get("WANDB_PROJECT", "")  # Wandb project
-    entity: os.environ.get("WANDB_ENTITY", "")    # Wandb entity
-    tags: []                                      # Wandb tags
-    dir: ''                                       # Wandb save folder
-checkpoint:
-    s3_path: ''       # s3 path for AWS model syncing
-    s3_frequency: 1   # How often to s3 sync
-```
-
-If you encounter out of memory issues, try a lower `batch_size` parameter in the config file.
-
-NB: if you would rather not use docker, you could create a [conda](https://docs.conda.io/en/latest/) environment via following the steps in the Dockerfile and mixing `conda` and `pip` at your own risks...
-
-## Datasets
-
-Datasets are assumed to be downloaded in `/data/datasets/<dataset-name>` (can be a symbolic link).
-
-### Dense Depth for Autonomous Driving (DDAD)
-
-Together with PackNet, we introduce **Dense Depth for Automated Driving** ([DDAD](https://github.com/TRI-ML/DDAD)): a new dataset that leverages diverse logs from TRI's fleet of well-calibrated self-driving cars equipped with cameras and high-accuracy long-range LiDARs.  Compared to existing benchmarks, DDAD enables much more accurate 360 degree depth evaluation at range, see the official [DDAD repository](https://github.com/TRI-ML/DDAD) for more info and instructions. You can also download DDAD directly via:
-
-```bash
-curl -s https://tri-ml-public.s3.amazonaws.com/github/DDAD/datasets/DDAD.tar | tar -xv -C /data/datasets/
-```
-
-### KITTI
-
-The KITTI (raw) dataset used in our experiments can be downloaded from the [KITTI website](http://www.cvlibs.net/datasets/kitti/raw_data.php).
-For convenience, we provide the standard splits used for training and evaluation: [eigen_zhou](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/splits/KITTI/eigen_zhou_files.txt), [eigen_train](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/splits/KITTI/eigen_train_files.txt), [eigen_val](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/splits/KITTI/eigen_val_files.txt) and [eigen_test](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/splits/KITTI/eigen_test_files.txt), as well as pre-computed ground-truth depth maps: [original](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw_velodyne.tar.gz) and [improved](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw_groundtruth.tar.gz).
-The full KITTI_raw dataset, as used in our experiments, can be directly downloaded [here](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/datasets/KITTI_raw.tar.gz) or with the following command:
-
-```bash
-# KITTI_raw
-curl -s https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/datasets/KITTI_raw.tar | tar -xv -C /data/datasets/
-```
-
-### Tiny DDAD/KITTI
-
-For simple tests, we also provide a "tiny" version of [DDAD](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/datasets/DDAD_tiny.tar) and [KITTI](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/datasets/KITTI_tiny.tar):
-
-```bash
-# DDAD_tiny
-curl -s https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/datasets/DDAD_tiny.tar | tar -xv -C /data/datasets/
-# KITTI_tiny
-curl -s https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/datasets/KITTI_tiny.tar | tar -xv -C /data/datasets/
-```
-### OmniCam
-
-The raw data for the catadioptric OmniCam dataset can be downloaded from the [Omnicam website](http://www.cvlibs.net/projects/omnicam/).  For convenience, we provide the dataset for testing the Neural Ray Surfaces (NRS) model.  The dataset can be downloaded with the following command:
-
-```bash
-# omnicam
-curl -s https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/datasets/OmniCam.tar | tar -xv -C /data/datasets/
-```
-
-The ray surface template we used for training on OmniCam can be found [here](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/templates/omnicam_ray_template.npy). 
-
-## Training
-
-PackNet can be trained from scratch in a fully self-supervised way (from video only, cf. [CVPR'20](#cvpr-packnet)), in a semi-supervised way (with sparse lidar using our reprojected 3D loss, cf. [CoRL'19](#corl-ssl)), and it can also use a fixed pre-trained semantic segmentation network to guide the representation learning further (cf. [ICLR'20](#iclr-semguided)).
-
+### Training
 Any training, including fine-tuning, can be done by passing either a `.yaml` config file or a `.ckpt` model checkpoint to [scripts/train.py](./scripts/train.py):
 
 ```bash
-python3 scripts/train.py <config.yaml or checkpoint.ckpt>
+python3 scripts/train_valeo.py <config.yaml or checkpoint.ckpt>
 ```
 
 If you pass a config file, training will start from scratch using the parameters in that config file. Example config files are in [configs](./configs).
@@ -151,158 +62,186 @@ model:
 
 Every aspect of the training configuration can be controlled by modifying the yaml config file. This include the model configuration (self-supervised, semi-supervised, loss parameters, etc), depth and pose networks configuration (choice of architecture and different parameters), optimizers and schedulers (learning rates, weight decay, etc), datasets (name, splits, depth types, etc) and much more. For a comprehensive list please refer to [configs/default_config.py](./configs/default_config.py).
 
-## Evaluation
+A few examples of configuration files are given in `configs/`.
 
-Similar to the training case, to evaluate a trained model (cf. above or our [pre-trained models](#models)) you need to provide a `.ckpt` checkpoint, followed optionally by a `.yaml` config file that overrides the configuration stored in the checkpoint.
+### Evaluation
+
+Similar to the training case, to evaluate a trained model you need to provide a `.ckpt` checkpoint, followed optionally by a `.yaml` config file that overrides the configuration stored in the checkpoint.
 
 ```bash
-python3 scripts/eval.py --checkpoint <checkpoint.ckpt> [--config <config.yaml>]
+python3 scripts/eval_valeo.py --checkpoint <checkpoint.ckpt> [--config <config.yaml>]
 ```
 
 You can also directly run inference on a single image or folder:
 
 ```bash
-python3 scripts/infer.py --checkpoint <checkpoint.ckpt> --input <image or folder> --output <image or folder> [--image_shape <input shape (h,w)>]
+python3 scripts/infer_valeo.py --checkpoint <checkpoint.ckpt> --input <image or folder> --output <image or folder> [--image_shape <input shape (h,w)>]
 ```
 
-## Models
-
-### DDAD
-
-| Model | Abs.Rel. | Sqr.Rel | RMSE | RMSElog | d < 1.25 |
-| :--- | :---: | :---: | :---: |  :---: |  :---: |
-| _ResNet18, Self-Supervised, 384x640, ImageNet &rightarrow; DDAD (D)_ | _0.213_ | _4.975_ | _18.051_ | _0.340_ | _0.761_ |
-| _PackNet,  Self-Supervised, 384x640, DDAD (D)_ | _0.162_ | _3.917_ | _13.452_ | _0.269_ | _0.823_ |
-| [ResNet18, Self-Supervised, 384x640, ImageNet &rightarrow; DDAD (D)](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/ResNet18_MR_selfsup_D.ckpt)* | 0.227 | 11.293 | 17.368 | 0.303 | 0.758 |
-| [PackNet,  Self-Supervised, 384x640, DDAD (D)](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/PackNet01_MR_selfsup_D.ckpt)* | 0.173 | 7.164 | 14.363 | 0.249 | 0.835 |
-
-*: Note that this repository's results differ slightly from the ones reported in our [CVPR'20 paper](https://arxiv.org/abs/1905.02693) (first two rows), although conclusions are the same. Since CVPR'20, we have officially released an updated [DDAD dataset](https://github.com/TRI-ML/DDAD) to account for privacy constraints and improve scene distribution. Please use the latest numbers when comparing to the official DDAD release.
-
-### KITTI
-
-| Model | Abs.Rel. | Sqr.Rel | RMSE | RMSElog | d < 1.25 |
-| :--- | :---: | :---: | :---: |  :---: |  :---: |
-| [ResNet18, Self-Supervised, 192x640, ImageNet &rightarrow; KITTI (K)](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/ResNet18_MR_selfsup_K.ckpt) | 0.116 | 0.811 | 4.902 | 0.198 | 0.865 |
-| [PackNet, Self-Supervised, 192x640, KITTI (K)](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/PackNet01_MR_selfsup_K.ckpt) | 0.111 | 0.800 | 4.576 | 0.189 | 0.880 |
-| [PackNet, Self-Supervised Scale-Aware, 192x640, CS &rightarrow; K](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/PackNet01_MR_velsup_CStoK.ckpt) | 0.108 | 0.758 | 4.506 | 0.185 | 0.887 |
-| [PackNet, Self-Supervised Scale-Aware, 384x1280, CS &rightarrow; K](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/PackNet01_HR_velsup_CStoK.ckpt) | 0.106 | 0.838 | 4.545 | 0.186 | 0.895 |
-| [PackNet, Semi-Supervised (densified GT), 192x640, CS &rightarrow; K](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/PackNet01_MR_semisup_CStoK.ckpt) | 0.072 | 0.335 | 3.220 | 0.115 | 0.934 |
-
-All experiments followed the [Eigen et al.](https://arxiv.org/abs/1406.2283) protocol for [training](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/splits/KITTI/eigen_zhou_files.txt) and [evaluation](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/splits/KITTI/eigen_test_files.txt), with [Zhou et al](https://people.eecs.berkeley.edu/~tinghuiz/projects/SfMLearner/)'s preprocessing to remove static training frames. The PackNet model pre-trained on Cityscapes  used for fine-tuning on KITTI can be found [here](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/PackNet01_MR_selfsup_CS.ckpt).
-
-### OmniCam
-
-Our NRS model for OmniCam can be found [here](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/nrs/omnicam_pretrained.tar.gz).
-
-### Precomputed Depth Maps
-
-For convenience, we also provide pre-computed depth maps for supervised training and evaluation:
-
-- PackNet, Self-Supervised Scale-Aware, 192x640, CS &rightarrow; K |
-[eigen_train_files](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw/eigen_train_files/KITTI_raw-eigen_train_files-PackNet01_MR_velsup_CStoK.tar.gz) |
-[eigen_zhou_files](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw/eigen_zhou_files/KITTI_raw-eigen_zhou_files-PackNet01_MR_velsup_CStoK.tar.gz) |
-[eigen_val_files](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw/eigen_val_files/KITTI_raw-eigen_val_files-PackNet01_MR_velsup_CStoK.tar.gz) |
-[eigen_test_files](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw/eigen_test_files/KITTI_raw-eigen_test_files-PackNet01_MR_velsup_CStoK.tar.gz) |
-
-- PackNet, Semi-Supervised (densified GT), 192x640, CS &rightarrow; K |
-[eigen_train_files](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw/eigen_train_files/KITTI_raw-eigen_train_files-PackNet01_MR_semisup_CStoK.tar.gz) |
-[eigen_zhou_files](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw/eigen_zhou_files/KITTI_raw-eigen_zhou_files-PackNet01_MR_semisup_CStoK.tar.gz) |
-[eigen_val_files](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw/eigen_val_files/KITTI_raw-eigen_val_files-PackNet01_MR_semisup_CStoK.tar.gz) |
-[eigen_test_files](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/depth_maps/KITTI_raw/eigen_test_files/KITTI_raw-eigen_test_files-PackNet01_MR_semisup_CStoK.tar.gz) |
-
-## License
+### License
 
 The source code is released under the [MIT license](LICENSE.md).
 
-## References
+## 3D pointcloud reconstruction and visualization
 
-[**PackNet**](#cvpr-packnet) relies on symmetric packing and unpacking blocks to jointly learn to compress and decompress detail-preserving representations using 3D convolutions. It also uses depth superresolution, which we introduce in [SuperDepth (ICRA 2019)](#icra-superdepth). Our network can also output metrically scaled depth thanks to our weak velocity supervision ([CVPR 2020](#cvpr-packnet)).
+This script is made to visualize reconstructed 3D pointclouds, along with lidar data.
 
-We also experimented with sparse supervision from as few as 4-beam LiDAR sensors, using a novel reprojection loss that minimizes distance errors in the image plane ([CoRL 2019](#corl-ssl)). By enforcing a sparsity-inducing data augmentation policy for ego-motion learning, we were also able to effectively regularize the pose network and enable stronger generalization performance ([CoRL 2019](#corl-pose)). In a follow-up work, we propose the injection of semantic information directly into the decoder layers of the depth networks, using pixel-adaptive convolutions to create semantic-aware features and further improve performance ([ICLR 2020](#iclr-semguided)).
-
-Depending on the application, please use the following citations when referencing our work:
-
-<a id="cvpr-packnet"> </a>
-**3D Packing for Self-Supervised Monocular Depth Estimation (CVPR 2020 oral)** \
-*Vitor Guizilini, Rares Ambrus, Sudeep Pillai, Allan Raventos and Adrien Gaidon*, [**[paper]**](https://arxiv.org/abs/1905.02693), [**[video]**](https://www.youtube.com/watch?v=b62iDkLgGSI)
+## Usage
 
 ```
-@inproceedings{packnet,
-  author = {Vitor Guizilini and Rares Ambrus and Sudeep Pillai and Allan Raventos and Adrien Gaidon},
-  title = {3D Packing for Self-Supervised Monocular Depth Estimation},
-  booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-  primaryClass = {cs.CV}
-  year = {2020},
-}
+usage: python3 scripts/viz3D.py [-h] 
+                                [--checkpoints CHECKPOINTS [CHECKPOINTS ...]] 
+                                [--input_folders INPUT_FOLDERS [INPUT_FOLDERS ...]]
+                                [--input_imgs INPUT_IMGS [INPUT_IMGS ...]] 
+                                [--output OUTPUT] 
+                                [--image_shape IMAGE_SHAPE [IMAGE_SHAPE ...]] 
+                                [--stop]
+                                [--load_pred_masks] 
+                                [--alpha_mask_semantic ALPHA_MASK_SEMANTIC] 
+                                [--remove_close_points_lidar_semantic] 
+                                [--print_lidar]
+                                [--plot_pov_sequence_first_pic]
+                                [--mix_depths] 
+                                [--save_visualization]
+                                [--clean_with_laplacian] 
+                                [--lap_threshold LAP_THRESHOLD]
+                                [--remove_neighbors_outliers] 
+                                [--remove_neighbors_outliers_std REMOVE_NEIGHBORS_OUTLIERS_STD] 
+                                [--voxel_downsample]
+                                [--voxel_size_downsampling VOXEL_SIZE_DOWNSAMPLING] 
+                                [--colorize_cameras] 
+                                [--alpha_colorize_cameras ALPHA_COLORIZE_CAMERAS]
+
+
+
+Recalibration tool, for a specific sequence from the Valeo dataset
+
+optional arguments:
+  -h, --help            
+                        show this help message and exit
+  --checkpoints CHECKPOINTS [CHECKPOINTS ...]
+                        Checkpoint files (.ckpt), one file per camera
+  --input_folders INPUT_FOLDERS [INPUT_FOLDERS ...]
+                        Input base folders, one folder per camera
+  --input_imgs INPUT_IMGS [INPUT_IMGS ...]
+                        Input images, one image per camera
+  --output OUTPUT
+                        Where to save output
+  --image_shape IMAGE_SHAPE [IMAGE_SHAPE ...]
+                        Input and output image shape (default: checkpoint's config.datasets.augmentation.image_shape)
+  --stop                
+                        Whether to stop for visualization
+  --load_pred_masks 
+                        Display predicted semantic masks (need pre-computation)
+  --alpha_mask_semantic ALPHA_MASK_SEMANTIC 
+                        Weighting for semantic colors
+  --remove_close_points_lidar_semantic 
+                        Remove points that are not semantized and close to other semantized points, or points close to lidar
+  --print_lidar
+                        Display lidar points
+  --plot_pov_sequence_first_pic
+                        Plot a sequence of moving point of view for the first picture
+  --mix_depths 
+                        Mixing data into a unified depth map
+  --save_visualization
+                        Save visualization
+  --clean_with_laplacian 
+                        Clean data based on laplacian
+  --lap_threshold LAP_THRESHOLD
+                        Threshold on laplacian
+  --remove_neighbors_outliers 
+                        Cleaning outliers based on number of neighbors
+  --remove_neighbors_outliers_std REMOVE_NEIGHBORS_OUTLIERS_STD 
+                        How much standard deviation to keep in neighbors inliers
+  --voxel_downsample
+                        Downsample voxels
+  --voxel_size_downsampling VOXEL_SIZE_DOWNSAMPLING 
+                        Voxel size for downsampling (making very dense regions less dense)
+  --colorize_cameras 
+                        Colorizing each camera with a different color
+  --alpha_colorize_cameras ALPHA_COLORIZE_CAMERAS
+                        Weighting for colorizing cameras
 ```
 
-<a id="3dv-nrs"> </a>
-**Neural Ray Surfaces for Self-Supervised Learning of Depth and Ego-motion (3DV 2020 oral)** \
-*Igor Vasiljevic, Vitor Guizilini, Rares Ambrus, Sudeep Pillai, Wolfram Burgard, Greg Shakhnarovich, Adrien Gaidon*, [**[paper]**](https://arxiv.org/abs/2008.06630), [**[video]**](https://www.youtube.com/watch?v=4TLJG6WJ7MA&feature=youtu.be)
-
+Example:
 ```
-@inproceedings{vasiljevic2020neural,
-  title={Neural Ray Surfaces for Self-Supervised Learning of Depth and Ego-motion},
-  author={Vasiljevic, Igor and Guizilini, Vitor and Ambrus, Rares and Pillai, Sudeep and Burgard, Wolfram and Shakhnarovich, Greg and Gaidon, Adrien},
-  booktitle = {International Conference on 3D Vision},
-  primaryClass = {cs.CV},
-  year={2020}
-}
-
+python3 scripts/viz3D.py --checkpoints /home/vbelissen/Downloads/test/config50.ckpt /home/vbelissen/Downloads/test/config50.ckpt /home/vbelissen/Downloads/test/config50.ckpt /home/vbelissen/Downloads/test/config50.ckpt /home/vbelissen/Downloads/test/LR-A-semisup200-ep26.ckpt --input_folders /home/vbelissen/Downloads/test/images_multiview/fisheye/test_sync/20180716_192137/cam_0 /home/vbelissen/Downloads/test/images_multiview/fisheye/test_sync/20180716_192137/cam_1 /home/vbelissen/Downloads/test/images_multiview/fisheye/test_sync/20180716_192137/cam_2 /home/vbelissen/Downloads/test/images_multiview/fisheye/test_sync/20180716_192137/cam_3 /home/vbelissen/Downloads/test/images_multiview/fisheye/test_sync/20180716_192137/cam_4 --output /home/vbelissen/Downloads/test/results --stop --colorize_cameras --clean_with_laplacian
 ```
 
-<a id="iclr-semguided"> </a>
-**Semantically-Guided Representation Learning for Self-Supervised Monocular Depth (ICLR 2020)** \
-*Vitor Guizilini, Rui Hou, Jie Li, Rares Ambrus and Adrien Gaidon*, [**[paper]**](https://arxiv.org/abs/2002.12319)
+
+## Photometric recalibration algorithm
+
+This script is made to recalibrate cameras, especially in the case of Valeo data. It should not be too difficult to adapt it to other datasets.
+
+### Usage
 
 ```
-@inproceedings{packnet-semguided,
-  author = {Vitor Guizilini and Rui Hou and Jie Li and Rares Ambrus and Adrien Gaidon},
-  title = {Semantically-Guided Representation Learning for Self-Supervised Monocular Depth},
-  booktitle = {International Conference on Learning Representations (ICLR)}
-  month = {April},
-  year = {2020},
-}
+usage: python3 scripts/recalib.py [-h] 
+                                  [--checkpoint CHECKPOINT] 
+                                  [--input_folder INPUT_FOLDER] 
+                                  [--input_imgs INPUT_IMGS [INPUT_IMGS ...]]
+                                  [--image_shape IMAGE_SHAPE [IMAGE_SHAPE ...]] 
+                                  [--n_epochs N_EPOCHS] 
+                                  [--every_n_files EVERY_N_FILES] 
+                                  [--lr LR]
+                                  [--scheduler_step_size SCHEDULER_STEP_SIZE] 
+                                  [--scheduler_gamma SCHEDULER_GAMMA] 
+                                  [--regul_weight_trans REGUL_WEIGHT_TRANS]
+                                  [--regul_weight_rot REGUL_WEIGHT_ROT] 
+                                  [--regul_weight_overlap REGUL_WEIGHT_OVERLAP] 
+                                  [--save_pictures] 
+                                  [--save_plots]
+                                  [--save_rot_tab] 
+                                  [--show_plots] 
+                                  [--save_folder SAVE_FOLDER] 
+                                  [--frozen_cams_trans FROZEN_CAMS_TRANS [FROZEN_CAMS_TRANS ...]]
+                                  [--frozen_cams_rot FROZEN_CAMS_ROT [FROZEN_CAMS_ROT ...]]
+
+
+Recalibration tool, for a specific sequence from the Valeo dataset
+
+optional arguments:
+  -h, --help            
+                        show this help message and exit
+  --checkpoint CHECKPOINT
+                        Checkpoint file (.ckpt)
+  --input_folder INPUT_FOLDER [INPUT_FOLDER ...]
+                        Input base folder
+  --input_imgs INPUT_IMGS [INPUT_IMGS ...]
+                        Input images
+  --image_shape IMAGE_SHAPE [IMAGE_SHAPE ...]
+                        Input and output image shape (default: checkpoint's config.datasets.augmentation.image_shape)
+  --n_epochs N_EPOCHS   
+                        Number of epochs
+  --every_n_files EVERY_N_FILES
+                        Step in files if folders are used
+  --lr LR               Learning rate
+  --scheduler_step_size SCHEDULER_STEP_SIZE
+  --scheduler_gamma SCHEDULER_GAMMA
+  --regul_weight_trans REGUL_WEIGHT_TRANS
+                        Regularization weight for position correction
+  --regul_weight_rot REGUL_WEIGHT_ROT
+                        Regularization weight for rotation correction
+  --regul_weight_overlap REGUL_WEIGHT_OVERLAP
+                        Regularization weight for the overlap between cameras
+  --save_pictures
+                        Whether to save original and reprojected pictures during optimization
+  --save_plots
+                        Whether to save plots showing evolution of loss and calibration correction
+  --save_rot_tab
+                        Whether to save rotation correction values in a numpy array
+  --show_plots
+                        Whether to display plots
+  --save_folder SAVE_FOLDER
+                        Where to save files
+  --frozen_cams_trans FROZEN_CAMS_TRANS [FROZEN_CAMS_TRANS ...]
+                        List of frozen cameras in translation
+  --frozen_cams_rot FROZEN_CAMS_ROT [FROZEN_CAMS_ROT ...]
+                        List of frozen cameras in rotation
+
 ```
 
-<a id="corl-ssl"> </a>
-**Robust Semi-Supervised Monocular Depth Estimation with Reprojected Distances (CoRL 2019 spotlight)** \
-*Vitor Guizilini, Jie Li, Rares Ambrus, Sudeep Pillai and Adrien Gaidon*, [**[paper]**](https://arxiv.org/abs/1910.01765),[**[video]**](https://www.youtube.com/watch?v=cSwuF-XA4sg)
-
+Example:
 ```
-@inproceedings{packnet-semisup,
-  author = {Vitor Guizilini and Jie Li and Rares Ambrus and Sudeep Pillai and Adrien Gaidon},
-  title = {Robust Semi-Supervised Monocular Depth Estimation with Reprojected Distances},
-  booktitle = {Conference on Robot Learning (CoRL)}
-  month = {October},
-  year = {2019},
-}
-```
-
-<a id="corl-pose"> </a>
-**Two Stream Networks for Self-Supervised Ego-Motion Estimation (CoRL 2019 spotlight)** \
-*Rares Ambrus, Vitor Guizilini, Jie Li, Sudeep Pillai and Adrien Gaidon*, [**[paper]**](https://arxiv.org/abs/1910.01764)
-
-```
-@inproceedings{packnet-twostream,
-  author = {Rares Ambrus and Vitor Guizilini and Jie Li and Sudeep Pillai and Adrien Gaidon},
-  title = {{Two Stream Networks for Self-Supervised Ego-Motion Estimation}},
-  booktitle = {Conference on Robot Learning (CoRL)}
-  month = {October},
-  year = {2019},
-}
-```
-
-<a id="icra-superdepth"> </a>
-**SuperDepth: Self-Supervised, Super-Resolved Monocular Depth Estimation (ICRA 2019)** \
-*Sudeep Pillai, Rares Ambrus and Adrien Gaidon*, [**[paper]**](https://arxiv.org/abs/1810.01849), [**[video]**](https://www.youtube.com/watch?v=jKNgBeBMx0I&t=33s)
-
-```
-@inproceedings{superdepth,
-  author = {Sudeep Pillai and Rares Ambrus and Adrien Gaidon},
-  title = {SuperDepth: Self-Supervised, Super-Resolved Monocular Depth Estimation},
-  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)}
-  month = {May},
-  year = {2019},
-}
+python3 scripts/recalib.py --checkpoint /home/vbelissen/Downloads/test/config50.ckpt --input_folder /home/vbelissen/Downloads/test/images_multiview/fisheye/test/20170320_163113 --n_epochs 100 --every_n_files 20 --frozen_cams_trans 0 1 2 3 --save_pictures --regul_weight_rot 0.001
 ```

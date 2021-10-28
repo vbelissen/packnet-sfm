@@ -71,9 +71,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
     """
     def __init__(self, root_dir, file_list, train=True,
                  data_transform=None, depth_type=None, with_pose=False, with_geometric_context=False,
-                 with_spatiotemp_context=False,
                  back_context=0, forward_context=0, strides=(1,), cameras=None,
-                 calibrations_suffix=''):
+                 calibrations_suffix='',
+                 cam_convs=False):
         # Assertions
         backward_context = back_context
         assert backward_context >= 0 and forward_context >= 0, 'Invalid contexts'
@@ -95,6 +95,8 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         self.with_pose = with_pose
 
         self.with_geometric_context = with_geometric_context
+
+        self.cam_convs = cam_convs
 
         self._cache = {}
         self.pose_cache = {}
@@ -319,6 +321,47 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                             self._get_split_type(image_file),
                             self._get_sequence_name(image_file),
                             self._get_sequence_name(image_file) + '_' + self._get_camera_name(image_file) + '.npy')
+
+    def _get_cam_features(self, pp0, pp1, s0, s1, c0, c1, c2, c3):
+        H = 800
+        W = 1280
+        M = 12
+        u = np.linspace(0, W - 1, int(W))
+        v = np.linspace(0, H - 1, int(H))
+        xu, yu = np.meshgrid(u, v)
+        xi = (xu - (W - 1) / 2 - pp0) * s0
+        yi = (yu - (H - 1) / 2 - pp1) * s1
+        u_nc = np.linspace(-1, 1, int(W))
+        v_nc = np.linspace(-1, 1, int(H))
+        x_nc, y_nc = np.meshgrid(u_nc, v_nc)
+        ray_surface = np.zeros((3, H, W))
+
+        def fun_rho(theta):
+            return c0 * theta + c1 * theta ** 2 + c2 * theta ** 3 + c3 * theta ** 4
+
+        def fun_rho_jac(theta):
+            return c0 + 2 * c1 * theta + 3 * c2 * theta ** 2 + 4 * c3 * theta ** 3
+
+        theta_lut = np.zeros((H, W))
+        for i in range(M):
+            theta_lut = theta_lut + .5 * ((xi ** 2 + yi ** 2) ** .5 - fun_rho(theta_lut)) / fun_rho_jac(theta_lut)
+
+        rc = np.sin(theta_lut)
+        phi = np.arctan2(yi, xi)
+        xc = rc * np.cos(phi)
+        yc = rc * np.sin(phi)
+        zc = np.cos(theta_lut)
+
+        ray_surface[0, :, :] = xc
+        ray_surface[1, :, :] = yc
+        ray_surface[2, :, :] = zc
+
+        return np.concatenate([np.expand_dims(xi, axis=0),
+                               np.expand_dims(yi, axis=0),
+                               np.expand_dims(x_nc, axis=0),
+                               np.expand_dims(y_nc, axis=0),
+                               ray_surface], axis=0)
+
 ########################################################################################################################
 #### DEPTH
 ########################################################################################################################
@@ -453,78 +496,6 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
             return image_context_paths, None
 
 ########################################################################################################################
-#### POSE
-########################################################################################################################
-
-    # def _get_imu2cam_transform(self, image_file):
-    #     """Gets the transformation between IMU an camera from an image file"""
-    #     parent_folder = self._get_parent_folder(image_file)
-    #     if image_file in self.imu2velo_calib_cache:
-    #         return self.imu2velo_calib_cache[image_file]
-    #
-    #     cam2cam = read_calib_file(os.path.join(parent_folder, CALIB_FILE['cam2cam']))
-    #     imu2velo = read_calib_file(os.path.join(parent_folder, CALIB_FILE['imu2velo']))
-    #     velo2cam = read_calib_file(os.path.join(parent_folder, CALIB_FILE['velo2cam']))
-    #
-    #     velo2cam_mat = transform_from_rot_trans(velo2cam['R'], velo2cam['T'])
-    #     imu2velo_mat = transform_from_rot_trans(imu2velo['R'], imu2velo['T'])
-    #     cam_2rect_mat = transform_from_rot_trans(cam2cam['R_rect_00'], np.zeros(3))
-    #
-    #     imu2cam = cam_2rect_mat @ velo2cam_mat @ imu2velo_mat
-    #     self.imu2velo_calib_cache[image_file] = imu2cam
-    #     return imu2cam
-
-    # @staticmethod
-    # def _get_oxts_file(image_file):
-    #     """Gets the oxts file from an image file."""
-    #     # find oxts pose file
-    #     for cam in ['left', 'right']:
-    #         # Check for both cameras, if found replace and return file name
-    #         if IMAGE_FOLDER[cam] in image_file:
-    #             return image_file.replace(IMAGE_FOLDER[cam], OXTS_POSE_DATA).replace('.png', '.txt')
-    #     # Something went wrong (invalid image file)
-    #     raise ValueError('Invalid KITTI path for pose supervision.')
-
-    # def _get_oxts_data(self, image_file):
-    #     """Gets the oxts data from an image file."""
-    #     oxts_file = self._get_oxts_file(image_file)
-    #     if oxts_file in self.oxts_cache:
-    #         oxts_data = self.oxts_cache[oxts_file]
-    #     else:
-    #         oxts_data = np.loadtxt(oxts_file, delimiter=' ', skiprows=0)
-    #         self.oxts_cache[oxts_file] = oxts_data
-    #     return oxts_data
-
-    # def _get_pose(self, image_file):
-    #     """Gets the pose information from an image file."""
-    #     if image_file in self.pose_cache:
-    #         return self.pose_cache[image_file]
-    #     # Find origin frame in this sequence to determine scale & origin translation
-    #     base, ext = os.path.splitext(os.path.basename(image_file))
-    #     base_splitted = base.split('_')
-    #     base_number = base_splitted[-1]
-    #     base_camera = base_splitted[1][6:]
-    #     origin_frame = os.path.join(os.path.dirname(image_file), '_'.join(base_splitted[:-1]) + '_' + str(0).zfill(len(base_number)) + ext)
-    #     # Get origin data
-    #     origin_oxts_data = self._get_oxts_data(origin_frame)
-    #     lat = origin_oxts_data[0]
-    #     scale = np.cos(lat * np.pi / 180.)
-    #     # Get origin pose
-    #     origin_R, origin_t = pose_from_oxts_packet(origin_oxts_data, scale)
-    #     origin_pose = transform_from_rot_trans(origin_R, origin_t)
-    #     # Compute current pose
-    #     oxts_data = self._get_oxts_data(image_file)
-    #     R, t = pose_from_oxts_packet(oxts_data, scale)
-    #     pose = transform_from_rot_trans(R, t)
-    #     # Compute odometry pose
-    #     imu2cam = self._get_imu2cam_transform(image_file)
-    #     odo_pose = (imu2cam @ np.linalg.inv(origin_pose) @
-    #                 pose @ np.linalg.inv(imu2cam)).astype(np.float32)
-    #     # Cache and return pose
-    #     self.pose_cache[image_file] = odo_pose
-    #     return odo_pose
-
-########################################################################################################################
 
     def __len__(self):
         """Dataset length."""
@@ -588,27 +559,16 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 'depth': self._read_depth(self._get_depth_file(self.paths[idx])),
             })
 
-        use_cam_features = False
-        if use_cam_features:
-            H = 800
-            W = 1280
-            #theta_tensor_numpy = np.load(sample['path_to_theta_lut'])
-            u = np.linspace(0, W - 1, int(W))
-            v = np.linspace(0, H - 1, int(H))
-            xu, yu = np.meshgrid(u, v)
-            xu = (xu - (W - 1) / 2 - principal_point[0]) * scale_factors[0]
-            yu = (yu - (H - 1) / 2 - principal_point[1]) * scale_factors[1]
-            u_nc = np.linspace(-1, 1, int(W))
-            v_nc = np.linspace(-1, 1, int(H))
-            x_nc, y_nc = np.meshgrid(u_nc, v_nc)
-            ray_surface = np.zeros((3, H, W)) # = np.load(sample['path_to_ray_surface'])
+        if self.cam_convs:
             sample.update({
-                'cam_features': np.concatenate([#np.expand_dims(theta_tensor_numpy, axis=0),
-                                                np.expand_dims(xu, axis=0),
-                                                np.expand_dims(yu, axis=0),
-                                                np.expand_dims(x_nc, axis=0),
-                                                np.expand_dims(y_nc, axis=0),
-                                                ray_surface], axis=0)
+                'cam_features': self._get_cam_features(principal_point[0],
+                                                       principal_point[1],
+                                                       scale_factors[0],
+                                                       scale_factors[1],
+                                                       poly_coeffs[0],
+                                                       poly_coeffs[1],
+                                                       poly_coeffs[2],
+                                                       poly_coeffs[3])
             })
 
         # Add context information if requested
@@ -618,18 +578,12 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                                self.forward_context_paths[idx]
             image_context_paths, _ = \
                 self._get_context_files(self.paths[idx], all_context_idxs)
-            same_timestep_as_origin   = [False] \
-                                        * len(image_context_paths)
-            poly_coeffs_context       = [poly_coeffs] \
-                                        * len(image_context_paths)
-            principal_point_context   = [principal_point] \
-                                        * len(image_context_paths)
-            scale_factors_context     = [scale_factors] \
-                                        * len(image_context_paths)
-            path_to_theta_lut_context = [sample['path_to_theta_lut']] \
-                                        * len(image_context_paths)
-            path_to_ego_mask_context  = [sample['path_to_ego_mask']] \
-                                        * len(image_context_paths)
+            same_timestep_as_origin   = [False] * len(image_context_paths)
+            poly_coeffs_context       = [poly_coeffs] * len(image_context_paths)
+            principal_point_context   = [principal_point] * len(image_context_paths)
+            scale_factors_context     = [scale_factors] * len(image_context_paths)
+            path_to_theta_lut_context = [sample['path_to_theta_lut']] * len(image_context_paths)
+            path_to_ego_mask_context  = [sample['path_to_ego_mask']] * len(image_context_paths)
             if self.with_geometric_context:
                 base_folder_str = self._get_base_folder(self.paths_left[idx])
                 split_type_str  = self._get_split_type(self.paths_left[idx])
@@ -730,27 +684,19 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                     'pose_context': image_context_pose
                 })
 
-            if use_cam_features:
+            if self.cam_convs:
                 cam_features_context = []
-                H = 800
-                W = 1280
-                u_nc = np.linspace(-1, 1, int(W))
-                v_nc = np.linspace(-1, 1, int(H))
-                x_nc, y_nc = np.meshgrid(u_nc, v_nc)
                 for i_context in range(len(image_context_paths)):
-                    theta_tensor_numpy = np.load(sample['path_to_theta_lut_context'][i_context])
-                    u = np.linspace(0, W - 1, int(W))
-                    v = np.linspace(0, H - 1, int(H))
-                    xu, yu = np.meshgrid(u, v)
-                    xu = (xu - (W - 1) / 2 - principal_point[0]) * scale_factors[0]
-                    yu = (yu - (H - 1) / 2 - principal_point[1]) * scale_factors[1]
-                    ray_surface = np.zeros((3, H, W))  # = np.load(sample['path_to_ray_surface_context'][i_context])
-                    cam_features_context.append(np.concatenate([#np.expand_dims(theta_tensor_numpy, axis=0),
-                                                                np.expand_dims(xu, axis=0),
-                                                                np.expand_dims(yu, axis=0),
-                                                                np.expand_dims(x_nc, axis=0),
-                                                                np.expand_dims(y_nc, axis=0),
-                                                                ray_surface], axis=0))
+                    cam_features_context.append(
+                        self._get_cam_features(principal_point[i_context][0],
+                                               principal_point[i_context][1],
+                                               scale_factors[i_context][0],
+                                               scale_factors[i_context][1],
+                                               poly_coeffs[i_context][0],
+                                               poly_coeffs[i_context][1],
+                                               poly_coeffs[i_context][2],
+                                               poly_coeffs[i_context][3])
+                    )
                 sample.update({
                     'cam_features_context': cam_features_context
                 })

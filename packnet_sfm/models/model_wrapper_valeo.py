@@ -509,7 +509,6 @@ def setup_dataset(config, mode, requirements, **kwargs):
         'back_context': config.back_context,
         'forward_context': config.forward_context,
         'with_geometric_context': config.with_geometric_context,
-        'with_spatiotemp_context': config.with_spatiotemp_context,
     }
 
     # Loop over all datasets
@@ -522,7 +521,8 @@ def setup_dataset(config, mode, requirements, **kwargs):
             dataset_args_i = {
                 'depth_type': config.depth_type[i] if requirements['gt_depth'] else None,
                 'with_pose': requirements['gt_pose'],
-                'data_transform': get_transforms_multifocal(mode, **kwargs)
+                'data_transform': get_transforms_multifocal(mode, **kwargs),
+                'with_spatiotemp_context': config.with_spatiotemp_context,
             }
         elif config.dataset[i] == 'KITTIValeoFisheye':
             dataset_args_i = {
@@ -530,6 +530,7 @@ def setup_dataset(config, mode, requirements, **kwargs):
                 'with_pose': requirements['gt_pose'],
                 'data_transform': get_transforms_fisheye(mode, **kwargs),
                 'calibrations_suffix': config.calibrations_suffix,
+                'cam_convs': config.cam_convs
             }
         elif config.dataset[i] == 'KITTIValeoDistorted':
             dataset_args_i = {

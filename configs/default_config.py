@@ -162,23 +162,25 @@ cfg.datasets.train.num_logs = 5                     # Number of training images 
 cfg.datasets.train.with_geometric_context = False   #
 cfg.datasets.train.with_spatiotemp_context = False
 cfg.datasets.train.calibrations_suffix = ''
+cfg.datasets.train.cam_convs = False
 ########################################################################################################################
 ### DATASETS.VALIDATION
 ########################################################################################################################
 cfg.datasets.validation = CN()
-cfg.datasets.validation.batch_size = 1              # Validation batch size
-cfg.datasets.validation.num_workers = 8             # Validation number of workers
-cfg.datasets.validation.back_context = 0            # Validation backward context
-cfg.datasets.validation.forward_context = 0         # Validation forward contxt
-cfg.datasets.validation.dataset = []                # Validation dataset
-cfg.datasets.validation.path = []                   # Validation data path
-cfg.datasets.validation.split = []                  # Validation split
-cfg.datasets.validation.depth_type = ['']           # Validation depth type
-cfg.datasets.validation.cameras = [[]]              # Validation cameras (double list, one for each dataset)
-cfg.datasets.validation.num_logs = 5                # Number of validation images to log
+cfg.datasets.validation.batch_size = 1                   # Validation batch size
+cfg.datasets.validation.num_workers = 8                  # Validation number of workers
+cfg.datasets.validation.back_context = 0                 # Validation backward context
+cfg.datasets.validation.forward_context = 0              # Validation forward contxt
+cfg.datasets.validation.dataset = []                     # Validation dataset
+cfg.datasets.validation.path = []                        # Validation data path
+cfg.datasets.validation.split = []                       # Validation split
+cfg.datasets.validation.depth_type = ['']                # Validation depth type
+cfg.datasets.validation.cameras = [[]]                   # Validation cameras (double list, one for each dataset)
+cfg.datasets.validation.num_logs = 5                     # Number of validation images to log
 cfg.datasets.validation.with_geometric_context = False   #
 cfg.datasets.validation.with_spatiotemp_context = False
 cfg.datasets.validation.calibrations_suffix = ''
+cfg.datasets.validation.cam_convs = False
 ########################################################################################################################
 ### DATASETS.TEST
 ########################################################################################################################
@@ -196,6 +198,7 @@ cfg.datasets.test.num_logs = 5                      # Number of test images to l
 cfg.datasets.test.with_geometric_context = False    #
 cfg.datasets.test.with_spatiotemp_context = False
 cfg.datasets.test.calibrations_suffix = ''
+cfg.datasets.test.cam_convs = False
 ########################################################################################################################
 ### THESE SHOULD NOT BE CHANGED
 ########################################################################################################################

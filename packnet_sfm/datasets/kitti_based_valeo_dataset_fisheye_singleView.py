@@ -360,7 +360,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                                np.expand_dims(yi, axis=0),
                                np.expand_dims(x_nc, axis=0),
                                np.expand_dims(y_nc, axis=0),
-                               ray_surface], axis=0)
+                               ray_surface], axis=0).float()
 
 ########################################################################################################################
 #### DEPTH

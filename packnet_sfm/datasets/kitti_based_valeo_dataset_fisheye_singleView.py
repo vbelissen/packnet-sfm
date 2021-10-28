@@ -688,14 +688,14 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 cam_features_context = []
                 for i_context in range(len(image_context_paths)):
                     cam_features_context.append(
-                        self._get_cam_features(principal_point[i_context][0],
-                                               principal_point[i_context][1],
-                                               scale_factors[i_context][0],
-                                               scale_factors[i_context][1],
-                                               poly_coeffs[i_context][0],
-                                               poly_coeffs[i_context][1],
-                                               poly_coeffs[i_context][2],
-                                               poly_coeffs[i_context][3])
+                        self._get_cam_features(principal_point_context[i_context][0],
+                                               principal_point_context[i_context][1],
+                                               scale_factors_context[i_context][0],
+                                               scale_factors_context[i_context][1],
+                                               poly_coeffs_context[i_context][0],
+                                               poly_coeffs_context[i_context][1],
+                                               poly_coeffs_context[i_context][2],
+                                               poly_coeffs_context[i_context][3])
                     )
                 sample.update({
                     'cam_features_context': cam_features_context

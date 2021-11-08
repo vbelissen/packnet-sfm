@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import Dataset
 
 from packnet_sfm.datasets.kitti_based_valeo_dataset_utils import \
-    pose_from_oxts_packet, read_calib_file, read_raw_calib_files_camera_valeo, transform_from_rot_trans
+    pose_from_oxts_packet, read_calib_file, read_raw_calib_files_camera_valeo, transform_from_rot_trans, read_raw_calib_files_camera_valeo_with_suffix
 from packnet_sfm.utils.image_valeo import load_convert_image
 from packnet_sfm.geometry.pose_utils import invert_pose_numpy
 
@@ -73,6 +73,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                  data_transform=None, depth_type=None, with_pose=False, with_geometric_context=False,
                  back_context=0, forward_context=0, strides=(1,), cameras=None,
                  calibrations_suffix='',
+                 depth_suffix='',
                  cam_convs=False):
         # Assertions
         backward_context = back_context
@@ -103,6 +104,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         self.oxts_cache = {}
         self.calibration_cache = {}
         self.calibrations_suffix = calibrations_suffix
+        self.depth_suffix = depth_suffix
         self.imu2velo_calib_cache = {}
         self.sequence_origin_cache = {}
 
@@ -144,7 +146,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                     self.paths_right.append(path_right)
             else:
                 # Check if the depth file exists
-                depth = self._get_depth_file(path)
+                depth = self._get_depth_file(path, self.depth_suffix)
                 #print(depth)
                 if depth is not None and os.path.exists(depth) and os.path.getsize(depth) > 20000.0:
                     self.paths.append(path)
@@ -237,10 +239,6 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
     def _get_extrinsics_pose_matrix(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
-        return self._get_extrinsics_pose_matrix_with_rot(image_file, calib_data, np.zeros(3))
-
-    def _get_extrinsics_pose_matrix_with_rot(self, image_file, calib_data, extra_rot):
-        """Get intrinsics from the calib_data dictionary."""
         cam = self._get_camera_name(image_file)
         if image_file in self.pose_cache:
             return self.pose_cache[image_file]
@@ -249,9 +247,9 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
 
         t = np.array([float(extr['pos_x_m']), float(extr['pos_y_m']), float(extr['pos_z_m'])])
 
-        x_rad  = np.pi / 180. * (float(extr['rot_x_deg'])  + extra_rot[0])
-        z1_rad = np.pi / 180. * (float(extr['rot_z1_deg']) + extra_rot[1])
-        z2_rad = np.pi / 180. * (float(extr['rot_z2_deg']) + extra_rot[2])
+        x_rad  = np.pi / 180. * (float(extr['rot_x_deg']))
+        z1_rad = np.pi / 180. * (float(extr['rot_z1_deg']))
+        z2_rad = np.pi / 180. * (float(extr['rot_z2_deg']))
         x_rad += np.pi  # gcam
         cosx  = np.cos(x_rad)
         sinx  = np.sin(x_rad)
@@ -285,24 +283,28 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
     #     """Read raw calibration files from folder."""
     #     return read_calib_file(os.path.join(folder, CALIB_FILE['cam2cam']))
 
-    def _read_raw_calib_files(self, base_folder, split_type, seq_name, cameras):
+    def _read_raw_calib_files(self, base_folder, split_type, seq_name, cameras, calib_suffix):
         """Read raw calibration files from folder."""
         data = {}
         camera = cameras[0]
-        data[camera] = read_raw_calib_files_camera_valeo(base_folder, split_type, seq_name, camera)
+        data[camera] = read_raw_calib_files_camera_valeo_with_suffix(base_folder,
+                                                                     split_type,
+                                                                     seq_name,
+                                                                     camera,
+                                                                     calib_suffix)
         return data
 
-    def _read_extra_rot(self, base_folder, split_type, seq_name, cameras, calib_suffix):
-        """Read raw calibration files from folder."""
-        camera = cameras[0]
-        text_file = open(os.path.join(base_folder,
-                                      'calibrations' + calib_suffix,
-                                      'fisheye',
-                                      split_type,
-                                      seq_name,
-                                      camera + '.txt'), 'r')
-        all_rotations = text_file.read()
-        return np.array([float(x) for x in all_rotations.split(',')])
+    # def _read_extra_rot(self, base_folder, split_type, seq_name, cameras, calib_suffix):
+    #     """Read raw calibration files from folder."""
+    #     camera = cameras[0]
+    #     text_file = open(os.path.join(base_folder,
+    #                                   'calibrations' + calib_suffix,
+    #                                   'fisheye',
+    #                                   split_type,
+    #                                   seq_name,
+    #                                   camera + '.txt'), 'r')
+    #     all_rotations = text_file.read()
+    #     return np.array([float(x) for x in all_rotations.split(',')])
 
     def _get_path_to_theta_lut(self, image_file):
         """Get the current folder from image_file."""
@@ -376,11 +378,11 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
             raise NotImplementedError(
                 'Depth type {} not implemented'.format(self.depth_type))
 
-    def _get_depth_file(self, image_file):
+    def _get_depth_file(self, image_file, depth_suffix):
         """Get the corresponding depth file from an image file."""
         base, ext = os.path.splitext(os.path.basename(image_file))
         return os.path.join(self._get_base_folder(image_file),
-                            'depth_maps',
+                            'depth_maps' + depth_suffix,
                             'fisheye',
                             self._get_split_type(image_file),
                             self._get_sequence_name(image_file),
@@ -490,7 +492,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         """
         image_context_paths = [self._get_next_file(i, sample_name) for i in idxs]
         if self.with_depth:
-            depth_context_paths = [self._get_depth_file(f) for f in image_context_paths]
+            depth_context_paths = [self._get_depth_file(f, self.depth_suffix) for f in image_context_paths]
             return image_context_paths, depth_context_paths
         else:
             return image_context_paths, None
@@ -521,13 +523,12 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         if calib_identifier in self.calibration_cache:
             c_data = self.calibration_cache[calib_identifier]
         else:
-            c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
+            c_data = self._read_raw_calib_files(base_folder_str,
+                                                split_type_str,
+                                                seq_name_str,
+                                                [camera_str],
+                                                self.calibrations_suffix)
             self.calibration_cache[calib_identifier] = c_data
-        if self.calibrations_suffix != '':
-            c_extra_rot = self._read_extra_rot(base_folder_str, split_type_str, seq_name_str, [camera_str], self.calibrations_suffix)
-        else:
-            c_extra_rot = np.zeros(3)
-
         poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths[idx], c_data)
         sample.update({
             'intrinsics_poly_coeffs': poly_coeffs,
@@ -545,7 +546,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
             'path_to_ego_mask': self._get_path_to_ego_mask(self.paths[idx]),
         })
         sample.update({
-            'pose_matrix': self._get_extrinsics_pose_matrix_with_rot(self.paths[idx], c_data, c_extra_rot),
+            'pose_matrix': self._get_extrinsics_pose_matrix(self.paths[idx], c_data),
         })
         # Add pose information if requested
         if self.with_pose:
@@ -556,7 +557,7 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
         # Add depth information if requested
         if self.with_depth:
             sample.update({
-                'depth': self._read_depth(self._get_depth_file(self.paths[idx])),
+                'depth': self._read_depth(self._get_depth_file(self.paths[idx], self.depth_suffix)),
             })
 
         if self.cam_convs:
@@ -593,7 +594,11 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 if calib_identifier in self.calibration_cache:
                     c_data = self.calibration_cache[calib_identifier]
                 else:
-                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
+                    c_data = self._read_raw_calib_files(base_folder_str,
+                                                        split_type_str,
+                                                        seq_name_str,
+                                                        [camera_str],
+                                                        self.calibrations_suffix)
                     self.calibration_cache[calib_identifier] = c_data
                 poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths_left[idx], c_data)
                 image_context_paths.append(self.paths_left[idx])
@@ -612,7 +617,11 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 if calib_identifier in self.calibration_cache:
                     c_data = self.calibration_cache[calib_identifier]
                 else:
-                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
+                    c_data = self._read_raw_calib_files(base_folder_str,
+                                                        split_type_str,
+                                                        seq_name_str,
+                                                        [camera_str],
+                                                        self.calibrations_suffix)
                     self.calibration_cache[calib_identifier] = c_data
                 poly_coeffs, principal_point, scale_factors = self._get_intrinsics(self.paths_right[idx], c_data)
                 image_context_paths.append(self.paths_right[idx])
@@ -657,13 +666,13 @@ class KITTIBasedValeoDatasetFisheye_singleView(Dataset):
                 if calib_identifier in self.calibration_cache:
                     c_data = self.calibration_cache[calib_identifier]
                 else:
-                    c_data = self._read_raw_calib_files(base_folder_str, split_type_str, seq_name_str, [camera_str])
+                    c_data = self._read_raw_calib_files(base_folder_str,
+                                                        split_type_str,
+                                                        seq_name_str,
+                                                        [camera_str],
+                                                        self.calibrations_suffix)
                     self.calibration_cache[calib_identifier] = c_data
-                if self.calibrations_suffix != '':
-                    c_extra_rot = self._read_extra_rot(base_folder_str, split_type_str, seq_name_str, [camera_str], self.calibrations_suffix)
-                else:
-                    c_extra_rot = np.zeros(3)
-                context_pose = self._get_extrinsics_pose_matrix_with_rot(f, c_data, c_extra_rot)
+                context_pose = self._get_extrinsics_pose_matrix(f, c_data)
                 image_context_pose.append(context_pose @ invert_pose_numpy(first_pose))
                 #image_context_pose.append(invert_pose_numpy(invert_pose_numpy(context_pose) @ first_pose))
                 #else:

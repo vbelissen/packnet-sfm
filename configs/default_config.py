@@ -162,6 +162,7 @@ cfg.datasets.train.num_logs = 5                     # Number of training images 
 cfg.datasets.train.with_geometric_context = False   #
 cfg.datasets.train.with_spatiotemp_context = False
 cfg.datasets.train.calibrations_suffix = ''
+cfg.datasets.train.depth_suffix = ''
 cfg.datasets.train.cam_convs = False
 ########################################################################################################################
 ### DATASETS.VALIDATION
@@ -180,6 +181,7 @@ cfg.datasets.validation.num_logs = 5                     # Number of validation 
 cfg.datasets.validation.with_geometric_context = False   #
 cfg.datasets.validation.with_spatiotemp_context = False
 cfg.datasets.validation.calibrations_suffix = ''
+cfg.datasets.validation.depth_suffix = ''
 cfg.datasets.validation.cam_convs = False
 ########################################################################################################################
 ### DATASETS.TEST
@@ -198,6 +200,7 @@ cfg.datasets.test.num_logs = 5                      # Number of test images to l
 cfg.datasets.test.with_geometric_context = False    #
 cfg.datasets.test.with_spatiotemp_context = False
 cfg.datasets.test.calibrations_suffix = ''
+cfg.datasets.test.depth_suffix = ''
 cfg.datasets.test.cam_convs = False
 ########################################################################################################################
 ### THESE SHOULD NOT BE CHANGED

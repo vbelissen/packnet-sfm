@@ -148,6 +148,15 @@ def read_raw_calib_files_camera_valeo(base_folder, split_type, seq_name, camera)
         data = yaml.load(fisheye_cam_file, Loader=yaml.FullLoader)
     return data
 
+def read_raw_calib_files_camera_valeo_with_suffix(base_folder, split_type, seq_name, camera, calib_suffix):
+    with open(os.path.join(base_folder,
+                           'calibrations' + calib_suffix,
+                           'fisheye',
+                           split_type,
+                           seq_name,
+                           seq_name + '_' + camera + '.yml')) as fisheye_cam_file:
+        data = yaml.load(fisheye_cam_file, Loader=yaml.FullLoader)
+    return data
 
 def pose_from_oxts_packet(raw_data, scale):
     """

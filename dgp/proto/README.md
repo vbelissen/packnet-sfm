@@ -26,7 +26,7 @@ corresponding `proto` files.
 * Remote Storage: [`remote.proto`](./remote.proto)
 
 ### SceneDataset schema graph
-![SceneDataset schema](../../docs/scene-dataset-schema.jpg?raw=true "SceneDataset schema")
+![SceneDataset schema](../../archive/docs/scene-dataset-schema.jpg?raw=true "SceneDataset schema")
 
 ## DGP SceneDataset Structure
 Scenes are stored in the DGP under the following structure:

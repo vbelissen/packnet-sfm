@@ -255,7 +255,6 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
     def _get_intrinsics_fisheye(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
         cam = self._get_camera_name(image_file)
-        #intr = calib_data[cam]['intrinsics']
         base_intr = calib_data[cam]['base_intrinsics']
         intr = calib_data[cam]['intrinsics']
         poly_coeffs = np.array([float(intr['c1']),
@@ -273,20 +272,12 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
     def _get_intrinsics_distorted(self, image_file, calib_data):
         """Get intrinsics from the calib_data dictionary."""
         cam = self._get_camera_name(image_file)
-        #intr = calib_data[cam]['intrinsics']
         base_intr = calib_data[cam]['base_intrinsics']
         intr = calib_data[cam]['intrinsics']
-        cx = float(base_intr['cx_px'])
-        cy = float(base_intr['cy_px'])
-        img_height_px = float(base_intr['img_height_px'])
-        img_width_px = float(base_intr['img_width_px'])
-        fx = float(intr['f_x_px'])
-        fy = float(intr['f_y_px'])
-        k1 = float(intr['dist_k1'])
-        k2 = float(intr['dist_k2'])
-        k3 = float(intr['dist_k3'])
-        p1 = float(intr['dist_p1'])
-        p2 = float(intr['dist_p2'])
+        cx, cy = float(base_intr['cx_px']), float(base_intr['cy_px'])
+        fx, fy = float(intr['f_x_px']), float(intr['f_y_px'])
+        k1, k2, k3 = float(intr['dist_k1']), float(intr['dist_k2']), float(intr['dist_k3'])
+        p1, p2 = float(intr['dist_p1']), float(intr['dist_p2'])
         K = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]],dtype='float32')
         return K, np.array([k1, k2, k3],dtype='float32'), np.array([p1, p2],dtype='float32')
 
@@ -328,12 +319,9 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
         z1_rad = np.pi / 180. * float(extr['rot_z1_deg'])
         z2_rad = np.pi / 180. * float(extr['rot_z2_deg'])
         x_rad += np.pi  # gcam
-        cosx  = np.cos(x_rad)
-        sinx  = np.sin(x_rad)
-        cosz1 = np.cos(z1_rad)
-        sinz1 = np.sin(z1_rad)
-        cosz2 = np.cos(z2_rad)
-        sinz2 = np.sin(z2_rad)
+        cosx, sinx = np.cos(x_rad), np.sin(x_rad)
+        cosz1, sinz1 = np.cos(z1_rad), np.sin(z1_rad)
+        cosz2, sinz2 = np.cos(z2_rad), np.sin(z2_rad)
 
         Rx  = np.array([[     1,     0,    0],
                         [     0,  cosx, sinx],

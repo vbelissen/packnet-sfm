@@ -101,6 +101,7 @@ def get_path_to_ego_mask(image_file):
                         get_sequence_name(image_file) + '_' + get_camera_name(image_file) + '.npy')
 
 def get_camera_type(image_file, calib_data):
+    """Returns the camera type."""
     cam = get_camera_name(image_file)
     camera_type = calib_data[cam]['type']
     assert camera_type == 'fisheye' or camera_type == 'perspective', \
@@ -108,6 +109,7 @@ def get_camera_type(image_file, calib_data):
     return camera_type
 
 def get_camera_type_int(camera_type):
+    """Returns an int based on the camera type."""
     if camera_type == 'fisheye':
         return 0
     elif camera_type == 'perspective':
@@ -115,9 +117,8 @@ def get_camera_type_int(camera_type):
     else:
         return 2
 
-
 def get_intrinsics_fisheye(image_file, calib_data):
-    """Get intrinsics from the calib_data dictionary."""
+    """Get intrinsics from the calib_data dictionary (fisheye cam)."""
     cam = get_camera_name(image_file)
     #intr = calib_data[cam]['intrinsics']
     base_intr = calib_data[cam]['base_intrinsics']
@@ -132,32 +133,29 @@ def get_intrinsics_fisheye(image_file, calib_data):
     return poly_coeffs, principal_point, scale_factors
 
 def get_null_intrinsics_fisheye():
+    """Get null intrinsics (fisheye cam)."""
     return np.zeros(4,dtype='float32'), np.zeros(2,dtype='float32'), np.zeros(2,dtype='float32')
 
 def get_intrinsics_distorted(image_file, calib_data):
-    """Get intrinsics from the calib_data dictionary."""
+    """Get intrinsics from the calib_data dictionary (distorted perspective cam)."""
     cam = get_camera_name(image_file)
-    #intr = calib_data[cam]['intrinsics']
     base_intr = calib_data[cam]['base_intrinsics']
     intr = calib_data[cam]['intrinsics']
-    cx = float(base_intr['cx_px'])
-    cy = float(base_intr['cy_px'])
-    img_height_px = float(base_intr['img_height_px'])
-    img_width_px = float(base_intr['img_width_px'])
-    fx = float(intr['f_x_px'])
-    fy = float(intr['f_y_px'])
-    k1 = float(intr['dist_k1'])
-    k2 = float(intr['dist_k2'])
-    k3 = float(intr['dist_k3'])
-    p1 = float(intr['dist_p1'])
-    p2 = float(intr['dist_p2'])
-    K = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]],dtype='float32')
+    cx, cy = float(base_intr['cx_px']), float(base_intr['cy_px'])
+    fx, fy = float(intr['f_x_px']), float(intr['f_y_px'])
+    k1, k2, k3 = float(intr['dist_k1']), float(intr['dist_k2']), float(intr['dist_k3'])
+    p1, p2 = float(intr['dist_p1']), float(intr['dist_p2'])
+    K = np.array([[fx,  0, cx],
+                  [ 0, fy, cy],
+                  [ 0,  0,  1]],dtype='float32')
     return K, np.array([k1, k2, k3],dtype='float32'), np.array([p1, p2],dtype='float32')
 
 def get_null_intrinsics_distorted():
+    """Get null intrinsics (distorted perspective cam)."""
     return np.zeros((3, 3),dtype='float32'), np.zeros(3,dtype='float32'), np.zeros(2,dtype='float32')
 
 def get_full_intrinsics(image_file, calib_data):
+    """Get intrinsics from the calib_data dictionary (fisheye or distorted perspective cam)."""
     camera_type = get_camera_type(image_file, calib_data)
     if camera_type == 'fisheye':
         poly_coeffs, principal_point, scale_factors = get_intrinsics_fisheye(image_file, calib_data)
@@ -191,6 +189,7 @@ def transform_from_rot_trans_torch(R, t):
     return torch.cat([torch.cat([R, t], dim=1), torch.tensor([0, 0, 0, 1]).view(1, 4).float().cuda()], dim=0)
 
 def get_extrinsics_pose_matrix(image_file, calib_data):
+    """Get extrinsics from the calib_data dictionary (fisheye or distorted perspective cam)."""
     camera_type = get_camera_type(image_file, calib_data)
     if camera_type == 'fisheye':
         return get_extrinsics_pose_matrix_fisheye(image_file, calib_data)
@@ -200,7 +199,7 @@ def get_extrinsics_pose_matrix(image_file, calib_data):
         sys.exit('Wrong camera type')
 
 def get_extrinsics_pose_matrix_fisheye(image_file, calib_data):
-    """Get intrinsics from the calib_data dictionary."""
+    """Get extrinsics from the calib_data dictionary (fisheye cam)."""
     cam = get_camera_name(image_file)
     extr = calib_data[cam]['extrinsics']
     t = np.array([float(extr['pos_x_m']), float(extr['pos_y_m']), float(extr['pos_z_m'])])
@@ -208,12 +207,9 @@ def get_extrinsics_pose_matrix_fisheye(image_file, calib_data):
     z1_rad = np.pi / 180. * float(extr['rot_z1_deg'])
     z2_rad = np.pi / 180. * float(extr['rot_z2_deg'])
     x_rad += np.pi  # gcam
-    cosx  = np.cos(x_rad)
-    sinx  = np.sin(x_rad)
-    cosz1 = np.cos(z1_rad)
-    sinz1 = np.sin(z1_rad)
-    cosz2 = np.cos(z2_rad)
-    sinz2 = np.sin(z2_rad)
+    cosx, sinx = np.cos(x_rad), np.sin(x_rad)
+    cosz1, sinz1 = np.cos(z1_rad), np.sin(z1_rad)
+    cosz2, sinz2 = np.cos(z2_rad), np.sin(z2_rad)
 
     Rx  = np.array([[     1,     0,    0],
                     [     0,  cosx, sinx],
@@ -232,7 +228,7 @@ def get_extrinsics_pose_matrix_fisheye(image_file, calib_data):
     return pose_matrix
 
 def get_extrinsics_pose_matrix_distorted(image_file, calib_data):
-    """Get intrinsics from the calib_data dictionary."""
+    """Get extrinsics from the calib_data dictionary (distorted perspective cam)."""
     cam = get_camera_name(image_file)
     extr = calib_data[cam]['extrinsics']
     T_other_convention = np.array([float(extr['t_x_m']), float(extr['t_y_m']), float(extr['t_z_m'])])
@@ -242,10 +238,14 @@ def get_extrinsics_pose_matrix_distorted(image_file, calib_data):
     return pose_matrix
 
 def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, extra_xyz_m, extra_xyz_deg):
-    """Get intrinsics from the calib_data dictionary."""
+    """Get extrinsics from the calib_data dictionary, with extra translation and rotation."""
     cam = get_camera_name(image_file)
     extr = calib_data[cam]['extrinsics']
     camera_type = get_camera_type(image_file, calib_data)
+    # May be subject to modifications:
+    # At the time of coding,
+    #       fisheye cams are encoded with 3 rotation values and the position of COP
+    #       perspective cams are encoded with a rotation matrix and the position of the origin in the cam reference
     if camera_type == 'perspective':
         T_other_convention = torch.from_numpy(np.array([float(extr['t_x_m']),
                                                         float(extr['t_y_m']),
@@ -271,24 +271,13 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
     cosz2 = torch.cos(z2_rad)
     sinz2 = torch.sin(z2_rad)
 
-    Rx = torch.zeros((3, 3), dtype=cosx.dtype).cuda()
-    Rx[0, 0] = 1
-    Rx[1, 1] = cosx
-    Rx[2, 2] = cosx
-    Rx[1, 2] = sinx
-    Rx[2, 1] = -sinx
+    Rx  = torch.zeros((3, 3), dtype=cosx.dtype).cuda()
     Rz1 = torch.zeros((3, 3), dtype=cosx.dtype).cuda()
-    Rz1[0, 0] = cosz1
-    Rz1[1, 1] = cosz1
-    Rz1[0, 1] = sinz1
-    Rz1[1, 0] = -sinz1
-    Rz1[2, 2] = 1
     Rz2 = torch.zeros((3, 3), dtype=cosx.dtype).cuda()
-    Rz2[0, 0] = cosz2
-    Rz2[1, 1] = cosz2
-    Rz2[0, 1] = -sinz2
-    Rz2[1, 0] = sinz2
-    Rz2[2, 2] = 1
+
+    Rx[0, 0],  Rx[1, 1],  Rx[2, 2],  Rx[1, 2],  Rx[2, 1]  =     1,  cosx,  cosx,    sinx, -sinx
+    Rz1[0, 0], Rz1[1, 1], Rz1[0, 1], Rz1[1, 0], Rz1[2, 2] = cosz1, cosz1,  sinz1, -sinz1,     1
+    Rz2[0, 0], Rz2[1, 1], Rz2[0, 1], Rz2[1, 0], Rz2[2, 2] = cosz2, cosz2, -sinz2,  sinz2,     1
 
     if camera_type == 'fisheye':
         R = Rz2 @ (Rx @ Rz1)
@@ -301,20 +290,18 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
 
 def infer_optimal_calib(input_files, model_wrapper, image_shape):
     """
-    Process a single input file to produce and save visualization
+    Process a list of input files to infer correction in extrinsic calibration.
+    Files should all correspond to the same car.
+    Number of cameras is assumed to be 4.
 
     Parameters
     ----------
     input_file : list (number of cameras) of lists (number of files) of str
         Image file
-    output_file : str
-        Output file, or folder where the output will be saved
     model_wrapper : nn.Module
         Model wrapper used for inference
     image_shape : Image shape
         Input image shape
-    save: str
-        Save format (npz or png)
     """
     N_files = len(input_files[0])
     N_cams = 4
@@ -331,8 +318,8 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
     cams = []
     not_masked = []
 
+    # Assume all images are from the same sequence (thus same cameras)
     for i_cam in range(N_cams):
-        #path_to_theta_lut = get_path_to_theta_lut(input_files[i_cam][0])
         path_to_ego_mask = get_path_to_ego_mask(input_files[i_cam][0])
         poly_coeffs, principal_point, scale_factors, K, k, p = get_full_intrinsics(input_files[i_cam][0], calib_data)
 
@@ -364,53 +351,65 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
         ego_mask = np.load(path_to_ego_mask)
         not_masked.append(torch.from_numpy(ego_mask.astype(float)).cuda().float())
 
+    # Learning variables
     extra_trans_m = [torch.autograd.Variable(torch.zeros(3).cuda(), requires_grad=True) for _ in range(4)]
     extra_rot_deg = [torch.autograd.Variable(torch.zeros(3).cuda(), requires_grad=True) for _ in range(4)]
 
-    # constraints
+    # Constraints: translation
     frozen_cams_trans = args.frozen_cams_trans
     if frozen_cams_trans is not None:
         for i_cam in frozen_cams_trans:
             extra_trans_m[i_cam].requires_grad = False
+    # Constraints: rotation
     frozen_cams_rot = args.frozen_cams_rot
     if frozen_cams_rot is not None:
         for i_cam in frozen_cams_rot:
             extra_rot_deg[i_cam].requires_grad = False
 
-
+    # Parameters from argument parser
     save_pictures = args.save_pictures
-
     n_epochs = args.n_epochs
     learning_rate = args.lr
     step_size = args.scheduler_step_size
     gamma = args.scheduler_gamma
-    loss_tab = np.zeros(n_epochs)
-    extra_rot_values_tab = np.zeros((12, N_files*n_epochs))
 
+    # Table of loss
+    loss_tab = np.zeros(n_epochs)
+
+    # Table of extra rotation values
+    extra_rot_values_tab = np.zeros((12, N_files * n_epochs))
+
+    # Optimizer
     optimizer = optim.Adam(extra_trans_m + extra_rot_deg, lr=learning_rate)
+
+    # Scheduler
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
 
-    count = 0
-
+    # Regularization weights
     regul_weight_trans = torch.tensor(args.regul_weight_trans).cuda()
     regul_weight_rot = torch.tensor(args.regul_weight_rot).cuda()
     regul_weight_overlap = torch.tensor(args.regul_weight_overlap).cuda()
 
-
+    # Loop on the number of epochs
+    count = 0
     for epoch in range(n_epochs):
-
         print('Epoch ' + str(epoch) + '/' + str(n_epochs))
 
+        # Initialize loss
         loss_sum = 0
 
+        # Loop on the number of files
         for i_file in range(N_files):
 
+            # Filename for camera 0
             base_0, ext_0 = os.path.splitext(os.path.basename(input_files[0][i_file]))
             print(base_0)
 
+            # Initialize list of tensors: images, predicted inverse depths and predicted depths
             images          = []
             pred_inv_depths = []
             pred_depths     = []
+            # Loop on cams and predict depth
             for i_cam in range(N_cams):
                 images.append(load_image(input_files[i_cam][i_file]).convert('RGB'))
                 images[i_cam] = resize_image(images[i_cam], image_shape)
@@ -421,59 +420,86 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
                     pred_inv_depths.append(model_wrapper.depth(images[i_cam]))
                     pred_depths.append(inv2depth(pred_inv_depths[i_cam]))
 
+            # Define a loss function between 2 images
             def photo_loss_2imgs(i_cam1, i_cam2, extra_trans_list, extra_rot_list, save_pictures):
-
                 # Computes the photometric loss between 2 images of adjacent cameras
-                # It reconstructs each image from the adjacent one, using calibration data,
-                # depth prediction model and correction angles alpha, beta, gamma
+                # It reconstructs each image from the adjacent one, applying correction in rotation and translation
 
+                # Apply correction on two cams
                 for i, i_cam in enumerate([i_cam1, i_cam2]):
-                    pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file], calib_data, extra_trans_list[i], extra_rot_list[i]).unsqueeze(0)
+                    pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file],
+                                                                                   calib_data,
+                                                                                   extra_trans_list[i],
+                                                                                   extra_rot_list[i]).unsqueeze(0)
                     pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()))
                     CameraMultifocal.Twc.fget.cache_clear()
                     cams[i_cam].Tcw = pose_tensor
 
+                # Reconstruct 3D points for each cam
                 world_points1 = cams[i_cam1].reconstruct(pred_depths[i_cam1], frame='w')
                 world_points2 = cams[i_cam2].reconstruct(pred_depths[i_cam2], frame='w')
 
+                # Get coordinates of projected points on other cam
                 ref_coords1to2 = cams[i_cam2].project(world_points1, frame='w')
                 ref_coords2to1 = cams[i_cam1].project(world_points2, frame='w')
 
-                reconstructedImg2to1 = funct.grid_sample(images[i_cam2]*not_masked[i_cam2], ref_coords1to2, mode='bilinear', padding_mode='zeros', align_corners=True)
-                reconstructedImg1to2 = funct.grid_sample(images[i_cam1]*not_masked[i_cam1], ref_coords2to1, mode='bilinear', padding_mode='zeros', align_corners=True)
+                # Reconstruct each image from the adjacent camera
+                reconstructedImg2to1 = funct.grid_sample(images[i_cam2]*not_masked[i_cam2],
+                                                         ref_coords1to2,
+                                                         mode='bilinear', padding_mode='zeros', align_corners=True)
+                reconstructedImg1to2 = funct.grid_sample(images[i_cam1]*not_masked[i_cam1],
+                                                         ref_coords2to1,
+                                                         mode='bilinear', padding_mode='zeros', align_corners=True)
 
+                # Save pictures if requested
                 if save_pictures:
+                    # Save original files if first epoch
                     if epoch == 0:
-                        cv2.imwrite(args.save_folder + '/cam_' + str(i_cam1) + '_file_' + str(i_file) + '_orig.png', (images[i_cam1][0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
-                        cv2.imwrite(args.save_folder + '/cam_' + str(i_cam2) + '_file_' + str(i_file) + '_orig.png', (images[i_cam2][0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
-                    cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam1) + '_recons_from_' + str(i_cam2) + '.png', ((reconstructedImg2to1*not_masked[i_cam1])[0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
-                    cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam2) + '_recons_from_' + str(i_cam1) + '.png', ((reconstructedImg1to2*not_masked[i_cam2])[0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
+                        cv2.imwrite(args.save_folder + '/cam_' + str(i_cam1) + '_file_' + str(i_file) + '_orig.png',
+                                    (images[i_cam1][0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
+                        cv2.imwrite(args.save_folder + '/cam_' + str(i_cam2) + '_file_' + str(i_file) + '_orig.png',
+                                    (images[i_cam2][0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
+                    # Save reconstructed images
+                    cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam1) + '_recons_from_' + str(i_cam2) + '.png',
+                                ((reconstructedImg2to1*not_masked[i_cam1])[0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
+                    cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam2) + '_recons_from_' + str(i_cam1) + '.png',
+                                ((reconstructedImg1to2*not_masked[i_cam2])[0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
 
+                # L1 loss
                 l1_loss_1 = torch.abs(images[i_cam1]*not_masked[i_cam1] - reconstructedImg2to1*not_masked[i_cam1])
                 l1_loss_2 = torch.abs(images[i_cam2]*not_masked[i_cam2] - reconstructedImg1to2*not_masked[i_cam2])
 
                 # SSIM loss
                 ssim_loss_weight = 0.85
-                ssim_loss_1 = SSIM(images[i_cam1]*not_masked[i_cam1], reconstructedImg2to1*not_masked[i_cam1], C1=1e-4, C2=9e-4, kernel_size=3)
-                ssim_loss_2 = SSIM(images[i_cam2]*not_masked[i_cam2], reconstructedImg1to2*not_masked[i_cam2], C1=1e-4, C2=9e-4, kernel_size=3)
+                ssim_loss_1 = SSIM(images[i_cam1]*not_masked[i_cam1],
+                                   reconstructedImg2to1*not_masked[i_cam1],
+                                   C1=1e-4, C2=9e-4, kernel_size=3)
+                ssim_loss_2 = SSIM(images[i_cam2]*not_masked[i_cam2],
+                                   reconstructedImg1to2*not_masked[i_cam2],
+                                   C1=1e-4, C2=9e-4, kernel_size=3)
 
                 ssim_loss_1 = torch.clamp((1. - ssim_loss_1) / 2., 0., 1.)
                 ssim_loss_2 = torch.clamp((1. - ssim_loss_2) / 2., 0., 1.)
 
-                # Weighted Sum: alpha * ssim + (1 - alpha) * l1
+                # Photometric loss: alpha * ssim + (1 - alpha) * l1
                 photometric_loss_1 = ssim_loss_weight * ssim_loss_1.mean(1, True) + (1 - ssim_loss_weight) * l1_loss_1.mean(1, True)
                 photometric_loss_2 = ssim_loss_weight * ssim_loss_2.mean(1, True) + (1 - ssim_loss_weight) * l1_loss_2.mean(1, True)
 
+                # Compute the number of valid pixels
                 mask1 = (reconstructedImg2to1 * not_masked[i_cam1]).sum(axis=1, keepdim=True) != 0
                 s1 = mask1.sum().float()
-                loss_1 = (photometric_loss_1 * mask1).sum() / s1 if s1 > 0 else 0
-
                 mask2 = (reconstructedImg1to2 * not_masked[i_cam2]).sum(axis=1, keepdim=True) != 0
                 s2 = mask2.sum().float()
+
+                # Compute the photometric losses weighed by the number of valid pixels
+                loss_1 = (photometric_loss_1 * mask1).sum() / s1 if s1 > 0 else 0
                 loss_2 = (photometric_loss_2 * mask2).sum() / s2 if s2 > 0 else 0
 
+                # The final loss can be regularized to encourage a similar overlap between images
                 return loss_1 + loss_2 + regul_weight_overlap * image_area * (1/s1 + 1/s2)
 
+            # The final loss consists of summing the photometric loss of all pairs of adjacent cameras
+            # and is regularized to prevent weights from exploding
             loss = sum([photo_loss_2imgs(i, (i + 1) % 4,
                                          [extra_trans_m[i], extra_trans_m[(i + 1) % 4]],
                                          [extra_rot_deg[i],   extra_rot_deg[(i + 1) % 4]],
@@ -482,10 +508,12 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
             + regul_weight_rot * sum([(extra_rot_deg[i]**2).sum() for i in range(4)]) \
             + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(4)])
 
+            # Optimization steps
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
+            # Save correction values and print loss
             with torch.no_grad():
                 loss_sum += loss.item()
                 for i_cam in range(4):
@@ -496,6 +524,7 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
 
             count += 1
 
+        # Update scheduler
         print('Epoch:', epoch, 'LR:', scheduler.get_lr())
         scheduler.step()
         with torch.no_grad():
@@ -505,6 +534,7 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
 
         loss_tab[epoch] = loss_sum/N_files
 
+    # Plot/save loss if requested
     plt.figure()
     plt.plot(loss_tab)
     if args.show_plots:
@@ -512,6 +542,7 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
     if args.save_plots:
         plt.savefig(os.path.join(args.save_folder, get_sequence_name(input_files[0][0]) + '_loss.png'))
 
+    # Plot/save correction values if requested
     plt.figure()
     for j in range(12):
         plt.plot(extra_rot_values_tab[j])
@@ -520,8 +551,10 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
     if args.save_plots:
         plt.savefig(os.path.join(args.save_folder, get_sequence_name(input_files[0][0]) + '_extra_rot.png'))
 
+    # Save correction values table if requested
     if args.save_rot_tab:
-        np.save(os.path.join(args.save_folder, get_sequence_name(input_files[0][0]) + '_rot_tab.npy'), extra_rot_values_tab)
+        np.save(os.path.join(args.save_folder, get_sequence_name(input_files[0][0]) + '_rot_tab.npy'),
+                extra_rot_values_tab)
 
 def main(args):
 

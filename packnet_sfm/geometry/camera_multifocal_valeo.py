@@ -469,16 +469,10 @@ class CameraMultifocal(nn.Module):
         r4 = r2.pow(2)
         r6 = r2 * r4
 
+        print(r6)
+
         # Distorted normalized points
         rad_dist = (1 + self.k1[mask].view(B,1) * r2 + self.k2[mask].view(B,1) * r4 + self.k3[mask].view(B,1) * r6)
-
-        print(torch.isnan(Xn).sum())
-        print(torch.isnan(Yn).sum())
-        print(torch.isnan(rad_dist).sum())
-        print(torch.isnan(self.p1[mask]).sum())
-        print(torch.isnan(self.p2[mask]).sum())
-        print(torch.isnan(r2).sum())
-
         Xd = Xn * rad_dist + 2 * self.p1[mask].view(B,1) * Xn * Yn + self.p2[mask].view(B,1) * (r2 + 2 * Xn.pow(2))
         Yd = Yn * rad_dist + 2 * self.p2[mask].view(B,1) * Xn * Yn + self.p1[mask].view(B,1) * (r2 + 2 * Yn.pow(2))
 

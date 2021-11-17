@@ -465,15 +465,13 @@ class CameraMultifocal(nn.Module):
         Xn = Xc[:, 0] / Z
         Yn = Xc[:, 1] / Z
 
-        veryFarMask = ((Xn > 10) + (Xn < -10) + (Yn > 10) + (Yn < -10)).detach()
+        veryFarMask = ((Xn > 5) + (Xn < -5) + (Yn > 5) + (Yn < -5)).detach()
         Xn[veryFarMask] = 0.
         Yn[veryFarMask] = 0.
 
         r2 = Xn.pow(2) + Yn.pow(2)
         r4 = r2.pow(2)
         r6 = r2 * r4
-
-        print((r6 > 100).sum())
 
         # Distorted normalized points
         rad_dist = (1 + self.k1[mask].view(B,1) * r2 + self.k2[mask].view(B,1) * r4 + self.k3[mask].view(B,1) * r6)

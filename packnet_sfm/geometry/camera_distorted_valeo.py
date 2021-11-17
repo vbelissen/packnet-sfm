@@ -255,6 +255,10 @@ class CameraDistorted(nn.Module):
         Xn = Xc[:, 0] / Z
         Yn = Xc[:, 1] / Z
 
+        veryFarMask = ((Xn > 5) + (Xn < -5) + (Yn > 5) + (Yn < -5)).detach()
+        Xn[veryFarMask] = 0.
+        Yn[veryFarMask] = 0.
+
         r2 = Xn.pow(2) + Yn.pow(2)
         r4 = r2.pow(2)
         r6 = r2 * r4
@@ -277,6 +281,10 @@ class CameraDistorted(nn.Module):
         uNorm[Xmask] = 2.
         Ymask = ((vNorm > 1) + (vNorm < -1)).detach()
         vNorm[Ymask] = 2.
+
+        # Clamp very far out-of-bounds pixels
+        uNorm[veryFarMask] = 2.
+        vNorm[veryFarMask] = 2.
 
         # Return pixel coordinates
         return torch.stack([uNorm, vNorm], dim=-1).view(B, H, W, 2).float()

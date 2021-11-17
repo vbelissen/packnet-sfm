@@ -20,7 +20,7 @@ import numpy as np
 import time
 import cv2
 
-#torch.autograd.set_detect_anomaly(True)
+torch.autograd.set_detect_anomaly(True)
 
 ########################################################################################################################
 
@@ -716,7 +716,7 @@ class MultiViewPhotometricLoss(LossBase):
                 #print(i)
                 # A CORRIGER
                 # COMPRENDRE POURQUOI DES NANS DANS REF_WARPED !
-                photometric_loss[i][torch.isnan(photometric_loss[i])] = 0.0
+                #photometric_loss[i][torch.isnan(photometric_loss[i])] = 0.0
                 photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
             # If using automask
             if self.automask_loss:

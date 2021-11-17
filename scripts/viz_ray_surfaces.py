@@ -114,6 +114,10 @@ for _ in range(M):
     x = (x_src - tang_dist_x) * rad_dist
     y = (y_src - tang_dist_y) * rad_dist
 
+print(np.max(r2))
+print(np.min(rad_dist))
+print(np.max(rad_dist))
+
 rays_z = np.stack([x, y, np.ones((H, W))], axis=0).reshape(3,-1)
 rays_norm =  rays_z / np.linalg.norm(rays_z, axis=0)
 

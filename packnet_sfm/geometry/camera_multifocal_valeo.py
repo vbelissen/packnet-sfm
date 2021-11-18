@@ -323,8 +323,8 @@ class CameraMultifocal(nn.Module):
         v = rho * torch.sin(phi) / self.scale_factors[mask, 1].unsqueeze(1) + self.principal_point[mask, 1].unsqueeze(1) # [B, HW]
         print('v')
         print(torch.isnan(v).sum())
-        print(self.scale_factors[mask, 0].unsqueeze(1))
-        print(self.principal_point[mask, 0].unsqueeze(1))
+        print(self.scale_factors[mask, 1].unsqueeze(1))
+        print(self.principal_point[mask, 1].unsqueeze(1))
 
         # Normalize points
         Xnorm = 2 * u / (W - 1)# - 1.

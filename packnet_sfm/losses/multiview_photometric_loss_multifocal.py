@@ -532,7 +532,6 @@ class MultiViewPhotometricLoss(LossBase):
 
         # Dummy camera mask (B x n_geometric_context)
         Cmask = (camera_type_geometric_context == 2)
-        print(Cmask.shape)
 
         # temporal context
         for j, (ref_image, pose) in enumerate(zip(ref_images_temporal_context, poses_temporal_context)):
@@ -570,106 +569,108 @@ class MultiViewPhotometricLoss(LossBase):
 
         # geometric context
         for j, (ref_image, pose) in enumerate(zip(ref_images_geometric_context, poses_geometric_context)):
-            # Calculate warped images
-            ref_warped, ref_ego_mask_tensors_warped = \
-                self.warp_ref_image(inv_depths,
-                                    camera_type,
-                                    intrinsics_poly_coeffs,
-                                    intrinsics_principal_point,
-                                    intrinsics_scale_factors,
-                                    intrinsics_K,
-                                    intrinsics_k,
-                                    intrinsics_p,
-                                    ref_image,
-                                    Pose(pose),
-                                    ref_ego_mask_tensors_geometric_context[j],
-                                    camera_type_geometric_context[:, j],
-                                    intrinsics_poly_coeffs_geometric_context[j],
-                                    intrinsics_principal_point_geometric_context[j],
-                                    intrinsics_scale_factors_geometric_context[j],
-                                    intrinsics_K_geometric_context[j],
-                                    intrinsics_k_geometric_context[j],
-                                    intrinsics_p_geometric_context[j])
-            #print(j)
-            #print(camera_type_geometric_context[:, j])
-            #print(ref_image)
-            #print(torch.isnan(ref_warped[0]).sum())
-            #print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
-            # Calculate and store image loss
-            photometric_loss = self.calc_photometric_loss(ref_warped, images)
-            #print(torch.isnan(photometric_loss[0]).sum())
-            for i in range(self.n):
-                photometric_loss[i][Cmask[:, j]] = 0.0
-                #print(i)
-                # A CORRIGER
-                # COMPRENDRE POURQUOI DES NANS DANS REF_WARPED !
-                #photometric_loss[i][torch.isnan(photometric_loss[i])] = 0.0
-                photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
-            # If using automask
-            if self.automask_loss:
-                # Calculate and store unwarped image loss
-                ref_images = match_scales(ref_image, inv_depths, self.n)
-                unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
+            if Cmask[:, j].sum() < B:
+                # Calculate warped images
+                ref_warped, ref_ego_mask_tensors_warped = \
+                    self.warp_ref_image(inv_depths,
+                                        camera_type,
+                                        intrinsics_poly_coeffs,
+                                        intrinsics_principal_point,
+                                        intrinsics_scale_factors,
+                                        intrinsics_K,
+                                        intrinsics_k,
+                                        intrinsics_p,
+                                        ref_image,
+                                        Pose(pose),
+                                        ref_ego_mask_tensors_geometric_context[j],
+                                        camera_type_geometric_context[:, j],
+                                        intrinsics_poly_coeffs_geometric_context[j],
+                                        intrinsics_principal_point_geometric_context[j],
+                                        intrinsics_scale_factors_geometric_context[j],
+                                        intrinsics_K_geometric_context[j],
+                                        intrinsics_k_geometric_context[j],
+                                        intrinsics_p_geometric_context[j])
+                #print(j)
+                #print(camera_type_geometric_context[:, j])
+                #print(ref_image)
+                #print(torch.isnan(ref_warped[0]).sum())
+                #print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
+                # Calculate and store image loss
+                photometric_loss = self.calc_photometric_loss(ref_warped, images)
+                #print(torch.isnan(photometric_loss[0]).sum())
                 for i in range(self.n):
-                    unwarped_image_loss[i][Cmask[:, j]] = 0.0
-                    photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j][i])
+                    photometric_loss[i][Cmask[:, j]] = 0.0
+                    #print(i)
+                    # A CORRIGER
+                    # COMPRENDRE POURQUOI DES NANS DANS REF_WARPED !
+                    #photometric_loss[i][torch.isnan(photometric_loss[i])] = 0.0
+                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+                # If using automask
+                if self.automask_loss:
+                    # Calculate and store unwarped image loss
+                    ref_images = match_scales(ref_image, inv_depths, self.n)
+                    unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
+                    for i in range(self.n):
+                        unwarped_image_loss[i][Cmask[:, j]] = 0.0
+                        photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j][i])
 
         # geometric-temporal context
         for j, (ref_image, pose) in enumerate(zip(ref_images_geometric_context_temporal_context, poses_geometric_context_temporal_context)):
-            # Calculate warped images
             j_geometric = j // n_temporal_context
-            print(j)
-            print(j_geometric)
-            print(intrinsics_principal_point_geometric_context)
-            print(intrinsics_scale_factors_geometric_context)
-            print(camera_type_geometric_context)
-            print(camera_type_geometric_context[:, j_geometric])
-            ref_warped, ref_ego_mask_tensors_warped = \
-                self.warp_ref_image(inv_depths,
-                                    camera_type,
-                                    intrinsics_poly_coeffs,
-                                    intrinsics_principal_point,
-                                    intrinsics_scale_factors,
-                                    intrinsics_K,
-                                    intrinsics_k,
-                                    intrinsics_p,
-                                    ref_image,
-                                    pose, # ATTENTION A CORRIGER (changement de repere !)
-                                    ref_ego_mask_tensors_geometric_context[j_geometric],
-                                    camera_type_geometric_context[:, j_geometric],
-                                    intrinsics_poly_coeffs_geometric_context[j_geometric],
-                                    intrinsics_principal_point_geometric_context[j_geometric],
-                                    intrinsics_scale_factors_geometric_context[j_geometric],
-                                    intrinsics_K_geometric_context[j_geometric],
-                                    intrinsics_k_geometric_context[j_geometric],
-                                    intrinsics_p_geometric_context[j_geometric])
-            print(torch.isnan(ref_warped[0]).sum())
-            print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
-            # Calculate and store image loss
-            photometric_loss = self.calc_photometric_loss(ref_warped, images)
-            for i in range(self.n):
-                photometric_loss[i][Cmask[:, j_geometric]] = 0.0
-                # for i in range(self.n):
-                #     for b in range(B):
-                #         print(dummy_camera_geometric_context)
-                #         print(ref_images_geometric_context)
-                #         print(j)
-                #         print(j_geometric)
-                #         print(dummy_camera_geometric_context[b, j_geometric])
-                #         print(photometric_loss[i][b, 0, :, :])
-                #         print(ref_ego_mask_tensors_warped[i][b, 0, :, :])
-                #         if dummy_camera_geometric_context[b, j_geometric] == 1:
-                #             photometric_loss[i][b, 0, :, :] = 0.0
-                #             ref_ego_mask_tensors_warped[i][b, 0, :, :] = 0.0
-                photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
-            # If using automask
-            if self.automask_loss:
-                # Calculate and store unwarped image loss
-                ref_images = match_scales(ref_image, inv_depths, self.n)
-                unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
+            if Cmask[:, j_geometric].sum() < B:
+                # Calculate warped images
+                print(j)
+                print(j_geometric)
+                print(intrinsics_principal_point_geometric_context)
+                print(intrinsics_scale_factors_geometric_context)
+                print(camera_type_geometric_context)
+                print(camera_type_geometric_context[:, j_geometric])
+                ref_warped, ref_ego_mask_tensors_warped = \
+                    self.warp_ref_image(inv_depths,
+                                        camera_type,
+                                        intrinsics_poly_coeffs,
+                                        intrinsics_principal_point,
+                                        intrinsics_scale_factors,
+                                        intrinsics_K,
+                                        intrinsics_k,
+                                        intrinsics_p,
+                                        ref_image,
+                                        pose, # ATTENTION A CORRIGER (changement de repere !)
+                                        ref_ego_mask_tensors_geometric_context[j_geometric],
+                                        camera_type_geometric_context[:, j_geometric],
+                                        intrinsics_poly_coeffs_geometric_context[j_geometric],
+                                        intrinsics_principal_point_geometric_context[j_geometric],
+                                        intrinsics_scale_factors_geometric_context[j_geometric],
+                                        intrinsics_K_geometric_context[j_geometric],
+                                        intrinsics_k_geometric_context[j_geometric],
+                                        intrinsics_p_geometric_context[j_geometric])
+                print(torch.isnan(ref_warped[0]).sum())
+                print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
+                # Calculate and store image loss
+                photometric_loss = self.calc_photometric_loss(ref_warped, images)
                 for i in range(self.n):
-                    unwarped_image_loss[i][Cmask[:, j_geometric]] = 0.0
-                    photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j_geometric][i])
+                    photometric_loss[i][Cmask[:, j_geometric]] = 0.0
+                    # for i in range(self.n):
+                    #     for b in range(B):
+                    #         print(dummy_camera_geometric_context)
+                    #         print(ref_images_geometric_context)
+                    #         print(j)
+                    #         print(j_geometric)
+                    #         print(dummy_camera_geometric_context[b, j_geometric])
+                    #         print(photometric_loss[i][b, 0, :, :])
+                    #         print(ref_ego_mask_tensors_warped[i][b, 0, :, :])
+                    #         if dummy_camera_geometric_context[b, j_geometric] == 1:
+                    #             photometric_loss[i][b, 0, :, :] = 0.0
+                    #             ref_ego_mask_tensors_warped[i][b, 0, :, :] = 0.0
+                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+                # If using automask
+                if self.automask_loss:
+                    # Calculate and store unwarped image loss
+                    ref_images = match_scales(ref_image, inv_depths, self.n)
+                    unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
+                    for i in range(self.n):
+                        unwarped_image_loss[i][Cmask[:, j_geometric]] = 0.0
+                        photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j_geometric][i])
 
         # Calculate reduced photometric loss
         loss = self.nonzero_reduce_photometric_loss(photometric_losses)

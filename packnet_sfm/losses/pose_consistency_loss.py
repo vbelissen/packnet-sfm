@@ -118,12 +118,6 @@ class PoseConsistencyLoss(LossBase):
         trans_loss_final = trans_loss[mask].mean()
         rot_loss_final = rot_loss[mask].mean()
 
-        print(mask)
-        print(trans_loss)
-        print(rot_loss)
-        print(trans_loss_final)
-        print(rot_loss_final)
-
         return self.pose_consistency_translation_loss_weight * trans_loss_final \
                + self.pose_consistency_rotation_loss_weight * rot_loss_final
 
@@ -154,12 +148,17 @@ class PoseConsistencyLoss(LossBase):
         n_t = len(poses_temporal_context)
         n_g = len(poses_geometric_context_temporal_context) // n_t
         losses = []
+
+        trueCamMask = (camera_type_geometric_context < 2).detach()
+
         for i_g in range(n_g):
-            for i_t in range(n_t):
-                losses.append(self.calculate_loss(poses_temporal_context[i_t],
-                                                  poses_geometric_context_temporal_context[i_g * n_t + i_t],
-                                                  camera_type_geometric_context[:, i_g]))
-        loss = sum(losses) / len(losses)
+            if trueCamMask[:, i_g].sum() > 0:
+                for i_t in range(n_t):
+                    losses.append(self.calculate_loss(poses_temporal_context[i_t],
+                                                      poses_geometric_context_temporal_context[i_g * n_t + i_t],
+                                                      camera_type_geometric_context[:, i_g]))
+
+        loss = sum(losses) / len(losses) if len(losses) > 0 else 0.
 
         self.add_metric('pose_consistency_loss', loss)
         # Return losses and metrics

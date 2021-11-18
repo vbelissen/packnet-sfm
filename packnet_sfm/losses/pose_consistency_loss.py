@@ -7,7 +7,7 @@ from packnet_sfm.utils.image import match_scales
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
 
 
-#torch.autograd.set_detect_anomaly(True)
+torch.autograd.set_detect_anomaly(True)
 ########################################################################################################################
 
 def mat2euler(M):
@@ -114,7 +114,7 @@ class PoseConsistencyLoss(LossBase):
         trans_loss = (pose1.mat[:, :3, 3] - pose2.mat[:, :3, 3]).norm(dim=-1)
         rot_loss = (mat2euler(pose1.mat[:, :3, :3]) - mat2euler(pose2.mat[:, :3, :3])).norm(dim=-1)
 
-        mask = (camera_type < 2)
+        mask = (camera_type < 2).detach()
         trans_loss_final = trans_loss[mask].mean()
         rot_loss_final = rot_loss[mask].mean()
 

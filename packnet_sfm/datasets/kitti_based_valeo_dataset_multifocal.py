@@ -692,6 +692,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     p_geometric_context.append(p_tmp)
                     path_to_ego_mask_geometric_context.append('')
                     relative_pose_matrix_geometric_context.append(np.eye(4).astype(np.float32))
+                    absolute_pose_matrix_geometric_context.append(np.eye(4).astype(np.float32))
 
                 camera_type_geometric_context_int = np.array(camera_type_geometric_context_int)
 
@@ -706,6 +707,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     'intrinsics_p_geometric_context': p_geometric_context,
                     'path_to_ego_mask_geometric_context': path_to_ego_mask_geometric_context,
                     'pose_matrix_geometric_context': relative_pose_matrix_geometric_context,
+                    'pose_matrix_geometric_context_absolute': absolute_pose_matrix_geometric_context,
                 })
             else:
                 sample.update({
@@ -719,6 +721,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
                     'intrinsics_p_geometric_context': [],
                     'path_to_ego_mask_geometric_context': [],
                     'pose_matrix_geometric_context': [],
+                    'pose_matrix_geometric_context_absolute': [],
 
                     'rgb_geometric_context_temporal_context': [],
                 })

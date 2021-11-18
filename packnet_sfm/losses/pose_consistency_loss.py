@@ -6,8 +6,9 @@ import torch.nn as nn
 from packnet_sfm.utils.image import match_scales
 from packnet_sfm.losses.loss_base import LossBase, ProgressiveScaling
 
-
 torch.autograd.set_detect_anomaly(True)
+
+
 ########################################################################################################################
 
 def mat2euler(M):
@@ -77,13 +78,16 @@ def mat2euler(M):
     #     z = torch.atan2(M[:, 1, 0], M[:, 1, 1])
     #     y = torch.atan2(M[:, 0, 2], cy)  # atan2(sin(y), cy)
     #     x = torch.zeros(B)
-    return torch.stack([x, y, z],dim=1) # z, y, x
+    return torch.stack([x, y, z], dim=1)  # z, y, x
+
 
 class PoseConsistencyLoss(LossBase):
     """
     Pose Consistency loss for spatio-temporal contexts.
     """
-    def __init__(self, pose_consistency_translation_loss_weight=0.1, pose_consistency_rotation_loss_weight=0.1, **kwargs):
+
+    def __init__(self, pose_consistency_translation_loss_weight=0.1, pose_consistency_rotation_loss_weight=0.1,
+                 **kwargs):
         super().__init__()
         self.pose_consistency_translation_loss_weight = pose_consistency_translation_loss_weight
         self.pose_consistency_rotation_loss_weight = pose_consistency_rotation_loss_weight
@@ -97,9 +101,9 @@ class PoseConsistencyLoss(LossBase):
 
         }
 
-########################################################################################################################
+    ########################################################################################################################
 
-    def calculate_loss(self, pose1, pose2, camera_type):
+    def calculate_loss(self, pose1, pose2, camera_type, pose_matrix, pose_matrix_geometric_context_absolute):
         """
         Calculates the pose consistency loss.
 
@@ -111,20 +115,26 @@ class PoseConsistencyLoss(LossBase):
         -------
 
         """
-        trans_loss = (pose1.mat[:, :3, 3] - pose2.mat[:, :3, 3]).norm(dim=-1)
-        rot_loss = (mat2euler(pose1.mat[:, :3, :3]) - mat2euler(pose2.mat[:, :3, :3])).norm(dim=-1)
+
+        pose1_newCoords = pose1.mat
+        pose2_newCoords = pose_matrix @ pose_matrix_geometric_context_absolute.inverse() @ pose2.mat @ pose_matrix_geometric_context_absolute @ pose_matrix.inverse()
+        
+        trans_loss = (pose1_newCoords[:, :3, 3] - pose2_newCoords[:, :3, 3]).norm(dim=-1)
+        rot_loss = (mat2euler(pose1_newCoords[:, :3, :3]) - mat2euler(pose2_newCoords[:, :3, :3])).norm(dim=-1)
 
         mask = (camera_type < 2).detach()
         trans_loss_final = trans_loss[mask].mean()
         rot_loss_final = rot_loss[mask].mean()
 
         return self.pose_consistency_translation_loss_weight * trans_loss_final \
-               + self.pose_consistency_rotation_loss_weight * rot_loss_final
+            + self.pose_consistency_rotation_loss_weight * rot_loss_final
 
     def forward(self,
                 poses_temporal_context,
                 poses_geometric_context_temporal_context,
                 camera_type_geometric_context,
+                pose_matrix,
+                pose_matrix_geometric_context_absolute,
                 **kwargs):
         """
         Calculates training supervised loss.
@@ -156,7 +166,9 @@ class PoseConsistencyLoss(LossBase):
                 for i_t in range(n_t):
                     losses.append(self.calculate_loss(poses_temporal_context[i_t],
                                                       poses_geometric_context_temporal_context[i_g * n_t + i_t],
-                                                      camera_type_geometric_context[:, i_g]))
+                                                      camera_type_geometric_context[:, i_g],
+                                                      pose_matrix,
+                                                      pose_matrix_geometric_context_absolute[i_g]))
 
         loss = sum(losses) / len(losses) if len(losses) > 0 else 0.
 

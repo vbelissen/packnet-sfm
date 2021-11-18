@@ -118,6 +118,12 @@ class PoseConsistencyLoss(LossBase):
         trans_loss_final = trans_loss[mask].mean()
         rot_loss_final = rot_loss[mask].mean()
 
+        print(mask)
+        print(trans_loss)
+        print(rot_loss)
+        print(trans_loss_final)
+        print(rot_loss_final)
+
         return self.pose_consistency_translation_loss_weight * trans_loss_final \
                + self.pose_consistency_rotation_loss_weight * rot_loss_final
 

@@ -167,6 +167,10 @@ class SelfSupModel_multifocal(SfmModel_multifocal):
             pose_consistency_loss = self._pose_consistency_loss(output['poses_temporal_context'],
                                                                 output['poses_geometric_context_temporal_context'],
                                                                 batch['camera_type_geometric_context'])
+            print('self_sup_output')
+            print(self_sup_output['loss'])
+            print('pose_consistency_loss')
+            print(pose_consistency_loss['loss'])
             # Return loss and metrics
             return {
                 'loss': self_sup_output['loss'] + pose_consistency_loss['loss'],

@@ -590,20 +590,10 @@ class MultiViewPhotometricLoss(LossBase):
                                         intrinsics_K_geometric_context[j],
                                         intrinsics_k_geometric_context[j],
                                         intrinsics_p_geometric_context[j])
-                #print(j)
-                #print(camera_type_geometric_context[:, j])
-                #print(ref_image)
-                #print(torch.isnan(ref_warped[0]).sum())
-                #print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
                 # Calculate and store image loss
                 photometric_loss = self.calc_photometric_loss(ref_warped, images)
-                #print(torch.isnan(photometric_loss[0]).sum())
                 for i in range(self.n):
                     photometric_loss[i][Cmask[:, j]] = 0.0
-                    #print(i)
-                    # A CORRIGER
-                    # COMPRENDRE POURQUOI DES NANS DANS REF_WARPED !
-                    #photometric_loss[i][torch.isnan(photometric_loss[i])] = 0.0
                     photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
                 # If using automask
                 if self.automask_loss:
@@ -619,12 +609,6 @@ class MultiViewPhotometricLoss(LossBase):
             j_geometric = j // n_temporal_context
             if Cmask[:, j_geometric].sum() < B:
                 # Calculate warped images
-                # print(j)
-                # print(j_geometric)
-                # print(intrinsics_principal_point_geometric_context)
-                # print(intrinsics_scale_factors_geometric_context)
-                # print(camera_type_geometric_context)
-                # print(camera_type_geometric_context[:, j_geometric])
                 ref_warped, ref_ego_mask_tensors_warped = \
                     self.warp_ref_image(inv_depths,
                                         camera_type,
@@ -644,26 +628,10 @@ class MultiViewPhotometricLoss(LossBase):
                                         intrinsics_K_geometric_context[j_geometric],
                                         intrinsics_k_geometric_context[j_geometric],
                                         intrinsics_p_geometric_context[j_geometric])
-                print('geotemp')
-                print(torch.isnan(ref_warped[0]).sum())
-                print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
                 # Calculate and store image loss
                 photometric_loss = self.calc_photometric_loss(ref_warped, images)
-                print(torch.isnan(photometric_loss[0]).sum())
                 for i in range(self.n):
                     photometric_loss[i][Cmask[:, j_geometric]] = 0.0
-                    # for i in range(self.n):
-                    #     for b in range(B):
-                    #         print(dummy_camera_geometric_context)
-                    #         print(ref_images_geometric_context)
-                    #         print(j)
-                    #         print(j_geometric)
-                    #         print(dummy_camera_geometric_context[b, j_geometric])
-                    #         print(photometric_loss[i][b, 0, :, :])
-                    #         print(ref_ego_mask_tensors_warped[i][b, 0, :, :])
-                    #         if dummy_camera_geometric_context[b, j_geometric] == 1:
-                    #             photometric_loss[i][b, 0, :, :] = 0.0
-                    #             ref_ego_mask_tensors_warped[i][b, 0, :, :] = 0.0
                     photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
                 # If using automask
                 if self.automask_loss:
@@ -677,12 +645,8 @@ class MultiViewPhotometricLoss(LossBase):
 
         # Calculate reduced photometric loss
         loss = self.nonzero_reduce_photometric_loss(photometric_losses)
-        print(loss)
-        print(torch.isnan(loss).sum())
         # Include smoothness loss if requested
         if self.smooth_loss_weight > 0.0:
-            print(torch.isnan(self.calc_smoothness_loss([a * b for a, b in zip(inv_depths, ego_mask_tensors)],
-                                              [a * b for a, b in zip(images,     ego_mask_tensors)])).sum())
             loss += self.calc_smoothness_loss([a * b for a, b in zip(inv_depths, ego_mask_tensors)],
                                               [a * b for a, b in zip(images,     ego_mask_tensors)])
         # Return losses and metrics

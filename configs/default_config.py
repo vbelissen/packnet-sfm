@@ -118,6 +118,8 @@ cfg.model.loss.add_margin_occlusion = 1.5                # Additive margin (in m
 cfg.model.loss.depth_consistency_weight = 0.0           # Weight for a depth consistency loss
 cfg.model.loss.allow_context_rotation = False           # Allow some rotation even in spatial context
 cfg.model.loss.predict_context_depth = False
+cfg.model.loss.pose_consistency_translation_loss_weight = 0.1
+cfg.model.loss.pose_consistency_rotation_loss_weight = 0.1
 ########################################################################################################################
 ### MODEL.DEPTH_NET
 ########################################################################################################################

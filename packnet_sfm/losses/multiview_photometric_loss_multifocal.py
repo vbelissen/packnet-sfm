@@ -558,14 +558,18 @@ class MultiViewPhotometricLoss(LossBase):
             # Calculate and store image loss
             photometric_loss = self.calc_photometric_loss(ref_warped, images)
             for i in range(self.n):
-                photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+                photometric_losses[i].append(
+                    photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i]
+                )
             # If using automask
             if self.automask_loss:
                 # Calculate and store unwarped image loss
                 ref_images = match_scales(ref_image, inv_depths, self.n)
                 unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
                 for i in range(self.n):
-                    photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ego_mask_tensors[i])
+                    photometric_losses[i].append(
+                        unwarped_image_loss[i] * ego_mask_tensors[i] * ego_mask_tensors[i]
+                    )
 
         # geometric context
         for j, (ref_image, pose) in enumerate(zip(ref_images_geometric_context, poses_geometric_context)):
@@ -594,7 +598,9 @@ class MultiViewPhotometricLoss(LossBase):
                 photometric_loss = self.calc_photometric_loss(ref_warped, images)
                 for i in range(self.n):
                     photometric_loss[i][Cmask[:, j]] = 0.0
-                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+                    photometric_losses[i].append(
+                        photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i]
+                    )
                 # If using automask
                 if self.automask_loss:
                     # Calculate and store unwarped image loss
@@ -602,7 +608,9 @@ class MultiViewPhotometricLoss(LossBase):
                     unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
                     for i in range(self.n):
                         unwarped_image_loss[i][Cmask[:, j]] = 0.0
-                        photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j][i])
+                        photometric_losses[i].append(
+                            unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j][i]
+                        )
 
         # geometric-temporal context
         for j, (ref_image, pose) in enumerate(zip(ref_images_geometric_context_temporal_context, poses_geometric_context_temporal_context)):
@@ -619,7 +627,7 @@ class MultiViewPhotometricLoss(LossBase):
                                         intrinsics_k,
                                         intrinsics_p,
                                         ref_image,
-                                        pose, # ATTENTION A CORRIGER (changement de repere !)
+                                        Pose(pose.mat @ poses_geometric_context[j_geometric]), # ATTENTION A CORRIGER (changement de repere !)
                                         ref_ego_mask_tensors_geometric_context[j_geometric],
                                         camera_type_geometric_context[:, j_geometric],
                                         intrinsics_poly_coeffs_geometric_context[j_geometric],
@@ -632,7 +640,9 @@ class MultiViewPhotometricLoss(LossBase):
                 photometric_loss = self.calc_photometric_loss(ref_warped, images)
                 for i in range(self.n):
                     photometric_loss[i][Cmask[:, j_geometric]] = 0.0
-                    photometric_losses[i].append(photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i])
+                    photometric_losses[i].append(
+                        photometric_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_warped[i]
+                    )
                 # If using automask
                 if self.automask_loss:
                     # Calculate and store unwarped image loss
@@ -641,7 +651,9 @@ class MultiViewPhotometricLoss(LossBase):
                     print(torch.isnan(unwarped_image_loss[0]).sum())
                     for i in range(self.n):
                         unwarped_image_loss[i][Cmask[:, j_geometric]] = 0.0
-                        photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j_geometric][i])
+                        photometric_losses[i].append(
+                            unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j_geometric][i]
+                        )
 
         # Calculate reduced photometric loss
         loss = self.nonzero_reduce_photometric_loss(photometric_losses)

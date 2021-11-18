@@ -648,7 +648,6 @@ class MultiViewPhotometricLoss(LossBase):
                     # Calculate and store unwarped image loss
                     ref_images = match_scales(ref_image, inv_depths, self.n)
                     unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
-                    print(torch.isnan(unwarped_image_loss[0]).sum())
                     for i in range(self.n):
                         unwarped_image_loss[i][Cmask[:, j_geometric]] = 0.0
                         photometric_losses[i].append(

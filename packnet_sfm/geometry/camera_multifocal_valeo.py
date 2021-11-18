@@ -313,18 +313,18 @@ class CameraMultifocal(nn.Module):
 
         rho = c1 * theta_1 + c2 * theta_2 + c3 * theta_3 + c4 * theta_4 # [B, HW]
         rho = rho * ((X != 0) | (Y != 0) | (Z != 0))
-        print('rho')
-        print(rho)
         u = rho * torch.cos(phi) / self.scale_factors[mask, 0].unsqueeze(1) + self.principal_point[mask, 0].unsqueeze(1) # [B, HW]
-        print('u')
-        print(torch.isnan(u).sum())
-        print(self.scale_factors[mask, 0].unsqueeze(1))
-        print(self.principal_point[mask, 0].unsqueeze(1))
+        if torch.isnan(u).sum() > 0:
+            print('u')
+            print(torch.isnan(u).sum())
+            print(self.scale_factors[mask, 0].unsqueeze(1))
+            print(self.principal_point[mask, 0].unsqueeze(1))
         v = rho * torch.sin(phi) / self.scale_factors[mask, 1].unsqueeze(1) + self.principal_point[mask, 1].unsqueeze(1) # [B, HW]
-        print('v')
-        print(torch.isnan(v).sum())
-        print(self.scale_factors[mask, 1].unsqueeze(1))
-        print(self.principal_point[mask, 1].unsqueeze(1))
+        if torch.isnan(v).sum() > 0:
+            print('v')
+            print(torch.isnan(v).sum())
+            print(self.scale_factors[mask, 1].unsqueeze(1))
+            print(self.principal_point[mask, 1].unsqueeze(1))
 
         # Normalize points
         Xnorm = 2 * u / (W - 1)# - 1.

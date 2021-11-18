@@ -531,7 +531,7 @@ class MultiViewPhotometricLoss(LossBase):
                     )
 
         # Dummy camera mask (B x n_geometric_context)
-        Cmask = (camera_type_geometric_context == 2)
+        Cmask = (camera_type_geometric_context == 2).detach()
 
         # temporal context
         for j, (ref_image, pose) in enumerate(zip(ref_images_temporal_context, poses_temporal_context)):
@@ -670,12 +670,15 @@ class MultiViewPhotometricLoss(LossBase):
                     # Calculate and store unwarped image loss
                     ref_images = match_scales(ref_image, inv_depths, self.n)
                     unwarped_image_loss = self.calc_photometric_loss(ref_images, images)
+                    print(torch.isnan(unwarped_image_loss[0]).sum())
                     for i in range(self.n):
                         unwarped_image_loss[i][Cmask[:, j_geometric]] = 0.0
                         photometric_losses[i].append(unwarped_image_loss[i] * ego_mask_tensors[i] * ref_ego_mask_tensors_geometric_context[j_geometric][i])
 
         # Calculate reduced photometric loss
         loss = self.nonzero_reduce_photometric_loss(photometric_losses)
+        print(loss)
+        print(torch.isnan(loss).sum())
         # Include smoothness loss if requested
         if self.smooth_loss_weight > 0.0:
             loss += self.calc_smoothness_loss([a * b for a, b in zip(inv_depths, ego_mask_tensors)],

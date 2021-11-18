@@ -635,7 +635,7 @@ class MultiViewPhotometricLoss(LossBase):
                                     ref_image,
                                     pose, # ATTENTION A CORRIGER (changement de repere !)
                                     ref_ego_mask_tensors_geometric_context[j_geometric],
-                                    camera_type_geometric_context[j_geometric],
+                                    camera_type_geometric_context[:, j_geometric],
                                     intrinsics_poly_coeffs_geometric_context[j_geometric],
                                     intrinsics_principal_point_geometric_context[j_geometric],
                                     intrinsics_scale_factors_geometric_context[j_geometric],

@@ -640,6 +640,7 @@ class MultiViewPhotometricLoss(LossBase):
             print(j_geometric)
             print(intrinsics_principal_point_geometric_context)
             print(intrinsics_scale_factors_geometric_context)
+            print(camera_type_geometric_context)
             print(camera_type_geometric_context[:, j_geometric])
             print(ref_image)
             print(ref_warped[0])

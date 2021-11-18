@@ -314,6 +314,7 @@ class CameraMultifocal(nn.Module):
         rho = c1 * theta_1 + c2 * theta_2 + c3 * theta_3 + c4 * theta_4 # [B, HW]
         rho = rho * ((X != 0) | (Y != 0) | (Z != 0))
         u = rho * torch.cos(phi) / self.scale_factors[mask, 0].unsqueeze(1) + self.principal_point[mask, 0].unsqueeze(1) # [B, HW]
+        print(self.scale_factors[mask, 0].unsqueeze(1))
         if torch.isnan(u).sum() > 0:
             print('u')
             print(torch.isnan(u).sum())

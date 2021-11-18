@@ -305,36 +305,26 @@ class CameraMultifocal(nn.Module):
         Y = Xc[:, 1] # [B, HW]
         Z = Xc[:, 2] # [B, HW]
         phi = torch.atan2(Y, X) # [B, HW]
-        print('phi')
-        print(torch.isnan(phi).sum())
         rc = torch.sqrt(torch.pow(X, 2) + torch.pow(Y, 2)) # [B, HW]
-        print('rc')
-        print(torch.isnan(rc).sum())
         theta_1 = math.pi / 2 - torch.atan2(Z, rc) # [B, HW]
-        print('theta_1')
-        print(torch.isnan(theta_1).sum())
         theta_2 = torch.pow(theta_1, 2) # [B, HW]
-        print('theta_2')
-        print(torch.isnan(theta_2).sum())
         theta_3 = torch.pow(theta_1, 3) # [B, HW]
-        print('theta_3')
-        print(torch.isnan(theta_3).sum())
         theta_4 = torch.pow(theta_1, 4) # [B, HW]
-        print('theta_4')
-        print(torch.isnan(theta_4).sum())
 
         rho = c1 * theta_1 + c2 * theta_2 + c3 * theta_3 + c4 * theta_4 # [B, HW]
-        print('rho')
-        print(torch.isnan(rho).sum())
         rho = rho * ((X != 0) | (Y != 0) | (Z != 0))
         print('rho')
-        print(torch.isnan(rho).sum())
+        print(rho)
         u = rho * torch.cos(phi) / self.scale_factors[mask, 0].unsqueeze(1) + self.principal_point[mask, 0].unsqueeze(1) # [B, HW]
         print('u')
         print(torch.isnan(u).sum())
+        print(self.scale_factors[mask, 0].unsqueeze(1))
+        print(self.principal_point[mask, 0].unsqueeze(1))
         v = rho * torch.sin(phi) / self.scale_factors[mask, 1].unsqueeze(1) + self.principal_point[mask, 1].unsqueeze(1) # [B, HW]
         print('v')
         print(torch.isnan(v).sum())
+        print(self.scale_factors[mask, 0].unsqueeze(1))
+        print(self.principal_point[mask, 0].unsqueeze(1))
 
         # Normalize points
         Xnorm = 2 * u / (W - 1)# - 1.

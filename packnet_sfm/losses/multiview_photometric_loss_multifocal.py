@@ -642,8 +642,6 @@ class MultiViewPhotometricLoss(LossBase):
             print(intrinsics_scale_factors_geometric_context)
             print(camera_type_geometric_context)
             print(camera_type_geometric_context[:, j_geometric])
-            print(ref_image)
-            print(ref_warped[0])
             print(torch.isnan(ref_warped[0]).sum())
             print(torch.isnan(ref_ego_mask_tensors_warped[0]).sum())
             # Calculate and store image loss

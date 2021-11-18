@@ -695,6 +695,7 @@ class KITTIBasedValeoDatasetMultifocal(Dataset):
 
                 camera_type_geometric_context_int = np.array(camera_type_geometric_context_int)
 
+                print(camera_type_geometric_context_int)
                 sample.update({
                     'rgb_geometric_context': image_geometric_context,
                     'camera_type_geometric_context': camera_type_geometric_context_int,

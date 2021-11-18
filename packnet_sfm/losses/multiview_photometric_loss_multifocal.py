@@ -532,6 +532,7 @@ class MultiViewPhotometricLoss(LossBase):
 
         # Dummy camera mask (B x n_geometric_context)
         Cmask = (camera_type_geometric_context == 2)
+        print(Cmask.shape)
 
         # temporal context
         for j, (ref_image, pose) in enumerate(zip(ref_images_temporal_context, poses_temporal_context)):

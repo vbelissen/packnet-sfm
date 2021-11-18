@@ -53,9 +53,6 @@ def view_synthesis(ref_image, depth, ref_cam, cam,
     # Reconstruct world points from target_camera
     world_points = cam.reconstruct(depth, frame='w')
     # Project world points onto reference camera
-    print('world_points')
-    print(torch.min(world_points))
-    print(torch.max(world_points))
     ref_coords = ref_cam.project(world_points, frame='w')
     # View-synthesis given the projected reference points
     return funct.grid_sample(ref_image, ref_coords, mode=mode,

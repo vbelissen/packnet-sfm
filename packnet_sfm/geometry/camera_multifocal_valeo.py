@@ -185,10 +185,16 @@ class CameraMultifocal(nn.Module):
         if self.n_batch_fisheye() > 0:
             mask_fisheye = self.mask_batch_fisheye()
             coords[mask_fisheye] = self.project_fisheye(X, mask_fisheye, frame)
+            print('coords fisheye')
+            print(torch.min(coords[mask_fisheye]))
+            print(torch.max(coords[mask_fisheye]))
 
         if self.n_batch_distorted() > 0:
             mask_distorted = self.mask_batch_distorted()
             coords[mask_distorted] = self.project_distorted(X, mask_distorted, frame)
+            print('coords distorted')
+            print(torch.min(coords[mask_distorted]))
+            print(torch.max(coords[mask_distorted]))
 
         return coords
 

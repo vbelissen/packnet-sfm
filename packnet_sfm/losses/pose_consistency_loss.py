@@ -103,7 +103,7 @@ class PoseConsistencyLoss(LossBase):
 
     ########################################################################################################################
 
-    def calculate_loss(self, pose1, pose2, camera_type, pose_matrix, pose_matrix_geometric_context_absolute):
+    def calculate_loss(self, pose1, pose2, camera_type):
         """
         Calculates the pose consistency loss.
 
@@ -116,11 +116,8 @@ class PoseConsistencyLoss(LossBase):
 
         """
 
-        pose1_newCoords = pose1.mat
-        pose2_newCoords = pose_matrix @ pose_matrix_geometric_context_absolute.inverse() @ pose2.mat @ pose_matrix_geometric_context_absolute @ pose_matrix.inverse()
-        
-        trans_loss = (pose1_newCoords[:, :3, 3] - pose2_newCoords[:, :3, 3]).norm(dim=-1)
-        rot_loss = (mat2euler(pose1_newCoords[:, :3, :3]) - mat2euler(pose2_newCoords[:, :3, :3])).norm(dim=-1)
+        trans_loss = (pose1[:, :3, 3] - pose2[:, :3, 3]).norm(dim=-1)
+        rot_loss = (mat2euler(pose1[:, :3, :3]) - mat2euler(pose2[:, :3, :3])).norm(dim=-1)
 
         mask = (camera_type < 2).detach()
         trans_loss_final = trans_loss[mask].mean()
@@ -164,11 +161,11 @@ class PoseConsistencyLoss(LossBase):
         for i_g in range(n_g):
             if trueCamMask[:, i_g].sum() > 0:
                 for i_t in range(n_t):
-                    losses.append(self.calculate_loss(poses_temporal_context[i_t],
-                                                      poses_geometric_context_temporal_context[i_g * n_t + i_t],
-                                                      camera_type_geometric_context[:, i_g],
-                                                      pose_matrix,
-                                                      pose_matrix_geometric_context_absolute[i_g]))
+                    losses.append(
+                        self.calculate_loss(poses_temporal_context[i_t].mat,
+                                            pose_matrix @ pose_matrix_geometric_context_absolute[i_g].inverse() @ poses_geometric_context_temporal_context[i_g * n_t + i_t].mat @ pose_matrix_geometric_context_absolute[i_g] @ pose_matrix.inverse(),
+                                            camera_type_geometric_context[:, i_g])
+                    )
 
         loss = sum(losses) / len(losses) if len(losses) > 0 else 0.
 

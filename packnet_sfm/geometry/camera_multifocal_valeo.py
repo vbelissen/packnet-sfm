@@ -12,6 +12,7 @@ from packnet_sfm.geometry.camera_fisheye_valeo_utils import scale_intrinsics_fis
 from packnet_sfm.geometry.camera_utils import scale_intrinsics
 from packnet_sfm.utils.image_valeo import image_grid, centered_2d_grid, meshgrid
 
+torch.autograd.set_detect_anomaly(True)
 
 ########################################################################################################################
 

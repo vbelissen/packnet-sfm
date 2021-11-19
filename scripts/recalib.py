@@ -62,7 +62,6 @@ def parse_args():
     parser.add_argument('--save_folder',            type=str,            default='/home/vbelissen/Downloads', help='Where to save pictures')
     parser.add_argument('--frozen_cams_trans',      type=int, nargs='+', default=None,                        help='List of frozen cameras in translation')
     parser.add_argument('--frozen_cams_rot',        type=int, nargs='+', default=None,                        help='List of frozen cameras in rotation')
-    parser.add_argument('--include_long_range',     action='store_false')
     args = parser.parse_args()
     checkpoints = args.checkpoints
     N = len(checkpoints)
@@ -73,7 +72,6 @@ def parse_args():
     assert (args.input_folder is None and args.input_imgs is not None) or (args.input_folder is not None and args.input_imgs is None), \
         'You need to provide either a list of input base folders for images or a list of input images, one for each camera'
     assert N == 4 or N == 5, 'You should have 4 or 5 cameras in the setup'
-    assert N == 5 or not args.include_long_range, 'If long range is included, you need 5 cameras in your list'
     return args, N
 
 def get_base_folder(image_file):

@@ -37,7 +37,7 @@ def is_image(file, ext=('.png', '.jpg',)):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Recalibration tool, for a specific sequence from the Valeo dataset')
-    parser.add_argument('--checkpoint',             type=str,                                                 help='Checkpoint file (.ckpt)')
+    parser.add_argument('--checkpoints',            type=str, nargs='+',                                      help='Checkpoint files (.ckpt)')
     parser.add_argument('--input_folder',           type=str,            default=None,                        help='Input base folder')
     parser.add_argument('--input_imgs',             type=str, nargs='+', default=None,                        help='Input images')
     parser.add_argument('--image_shape',            type=int, nargs='+', default=None,
@@ -59,12 +59,15 @@ def parse_args():
     parser.add_argument('--frozen_cams_trans',      type=int, nargs='+', default=None,                        help='List of frozen cameras in translation')
     parser.add_argument('--frozen_cams_rot',        type=int, nargs='+', default=None,                        help='List of frozen cameras in rotation')
     args = parser.parse_args()
-    assert args.checkpoint.endswith('.ckpt')
+    checkpoints = args.checkpoints
+    N = len(checkpoints)
+    for i in range(N):
+        assert checkpoints[i].endswith('.ckpt')
     assert args.image_shape is None or len(args.image_shape) == 2, \
         'You need to provide a 2-dimensional tuple as shape (H,W)'
     assert (args.input_folder is None and args.input_imgs is not None) or (args.input_folder is not None and args.input_imgs is None), \
         'You need to provide either a list of input base folders for images or a list of input images, one for each camera'
-    return args
+    return args, N
 
 def get_base_folder(image_file):
     """The base folder"""
@@ -288,7 +291,7 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
 
     return pose_matrix
 
-def infer_optimal_calib(input_files, model_wrapper, image_shape):
+def infer_optimal_calib(input_files, model_wrappers, image_shape):
     """
     Process a list of input files to infer correction in extrinsic calibration.
     Files should all correspond to the same car.
@@ -298,8 +301,8 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
     ----------
     input_file : list (number of cameras) of lists (number of files) of str
         Image file
-    model_wrapper : nn.Module
-        Model wrapper used for inference
+    model_wrappers : nn.Module
+        Model wrappers used for inference
     image_shape : Image shape
         Input image shape
     """
@@ -417,7 +420,7 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
                 if torch.cuda.is_available():
                     images[i_cam] = images[i_cam].to('cuda:{}'.format(rank()))
                 with torch.no_grad():
-                    pred_inv_depths.append(model_wrapper.depth(images[i_cam]))
+                    pred_inv_depths.append(model_wrappers[i_cam].depth(images[i_cam]))
                     pred_depths.append(inv2depth(pred_inv_depths[i_cam]))
 
             # Define a loss function between 2 images
@@ -556,31 +559,42 @@ def infer_optimal_calib(input_files, model_wrapper, image_shape):
         np.save(os.path.join(args.save_folder, get_sequence_name(input_files[0][0]) + '_rot_tab.npy'),
                 extra_rot_values_tab)
 
-def main(args):
+def main(args, N):
 
     # Initialize horovod
     hvd_init()
 
     # Parse arguments
-    config, state_dict = parse_test_file(args.checkpoint)
+    configs = []
+    state_dicts = []
+    for i in range(N):
+        config, state_dict = parse_test_file(args.checkpoints[i])
+        configs.append(config)
+        state_dicts.append(state_dict)
 
     # If no image shape is provided, use the checkpoint one
     image_shape = args.image_shape
     if image_shape is None:
-        image_shape = config.datasets.augmentation.image_shape
+        image_shape = configs[0].datasets.augmentation.image_shape
 
     # Set debug if requested
-    set_debug(config.debug)
+    set_debug(configs[0].debug)
 
-    model_wrapper = ModelWrapper(config, load_datasets=False)
-    model_wrapper.load_state_dict(state_dict)
+    model_wrappers = []
+    for i in range(N):
+        # Initialize model wrapper from checkpoint arguments
+        model_wrappers.append(ModelWrapper(configs[i], load_datasets=False))
+        # Restore monodepth_model state
+        model_wrappers[i].load_state_dict(state_dicts[i])
 
     # Send model to GPU if available
     if torch.cuda.is_available():
-        model_wrapper = model_wrapper.to('cuda:{}'.format(rank()))
+        for i in range(N):
+            model_wrappers[i] = model_wrappers[i].to('cuda:{}'.format(rank()))
 
     # Set to eval mode
-    model_wrapper.eval()
+    for i in range(N):
+        model_wrappers[i].eval()
 
     if args.input_folder is None:
         files = [[args.input_imgs[i]] for i in range(4)]
@@ -595,8 +609,8 @@ def main(args):
 
     n_files = len(files[0])
     # Process each file
-    infer_optimal_calib(files, model_wrapper, image_shape)
+    infer_optimal_calib(files, model_wrappers, image_shape)
 
 if __name__ == '__main__':
-    args = parse_args()
-    main(args)
+    args, N = parse_args()
+    main(args, N)

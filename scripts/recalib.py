@@ -314,7 +314,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
         Input image shape
     """
     N_files = len(input_files[0])
-    N_cams = N_files
+    N_cams = len(input_files)
     image_area = image_shape[0] * image_shape[1]
 
     camera_context_pairs = CAMERA_CONTEXT_PAIRS[N_cams]

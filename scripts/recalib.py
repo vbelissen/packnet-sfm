@@ -432,6 +432,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
             # Define a loss function between 2 images
             def photo_loss_2imgs(i_cam1, i_cam2, extra_trans_list, extra_rot_list, save_pictures):
+                print(i_cam1)
+                print(i_cam2)
                 # Computes the photometric loss between 2 images of adjacent cameras
                 # It reconstructs each image from the adjacent one, applying correction in rotation and translation
 
@@ -448,10 +450,14 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 # Reconstruct 3D points for each cam
                 world_points1 = cams[i_cam1].reconstruct(pred_depths[i_cam1], frame='w')
                 world_points2 = cams[i_cam2].reconstruct(pred_depths[i_cam2], frame='w')
+                print(world_points1)
+                print(world_points2)
 
                 # Get coordinates of projected points on other cam
                 ref_coords1to2 = cams[i_cam2].project(world_points1, frame='w')
                 ref_coords2to1 = cams[i_cam1].project(world_points2, frame='w')
+                print(ref_coords1to2)
+                print(ref_coords2to1)
 
                 # Reconstruct each image from the adjacent camera
                 reconstructedImg2to1 = funct.grid_sample(images[i_cam2]*not_masked[i_cam2],
@@ -460,7 +466,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 reconstructedImg1to2 = funct.grid_sample(images[i_cam1]*not_masked[i_cam1],
                                                          ref_coords2to1,
                                                          mode='bilinear', padding_mode='zeros', align_corners=True)
-
+                print(reconstructedImg2to1)
+                print(reconstructedImg1to2)
                 # Save pictures if requested
                 if save_pictures:
                     # Save original files if first epoch

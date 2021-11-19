@@ -513,7 +513,10 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 loss_2 = (photometric_loss_2 * mask2).sum() / s2 if s2 > 0 else 0
 
                 # The final loss can be regularized to encourage a similar overlap between images
-                return loss_1 + loss_2 + regul_weight_overlap * image_area * (1/s1 + 1/s2)
+                if s1 > 0 and s2 > 0:
+                    return loss_1 + loss_2 + regul_weight_overlap * image_area * (1/s1 + 1/s2)
+                else:
+                    return 0.
 
             # The final loss consists of summing the photometric loss of all pairs of adjacent cameras
             # and is regularized to prevent weights from exploding

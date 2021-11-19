@@ -177,7 +177,7 @@ This script is made to recalibrate cameras, especially in the case of Valeo data
 
 ```
 usage: python3 scripts/recalib.py [-h] 
-                                  [--checkpoint CHECKPOINT] 
+                                  [--checkpoints CHECKPOINTS [CHECKPOINTS ...]] 
                                   [--input_folder INPUT_FOLDER] 
                                   [--input_imgs INPUT_IMGS [INPUT_IMGS ...]]
                                   [--image_shape IMAGE_SHAPE [IMAGE_SHAPE ...]] 
@@ -203,8 +203,8 @@ Recalibration tool, for a specific sequence from the Valeo dataset
 optional arguments:
   -h, --help            
                         show this help message and exit
-  --checkpoint CHECKPOINT
-                        Checkpoint file (.ckpt)
+  --checkpoints CHECKPOINTS [CHECKPOINTS ...]
+                        Checkpoint files (.ckpt), one file per camera
   --input_folder INPUT_FOLDER [INPUT_FOLDER ...]
                         Input base folder
   --input_imgs INPUT_IMGS [INPUT_IMGS ...]
@@ -243,5 +243,5 @@ optional arguments:
 
 Example:
 ```
-python3 scripts/recalib.py --checkpoint /home/vbelissen/Downloads/test/config50.ckpt --input_folder /home/vbelissen/Downloads/test/images_multiview/fisheye/test/20170320_163113 --n_epochs 100 --every_n_files 20 --frozen_cams_trans 0 1 2 3 --save_pictures --regul_weight_rot 0.001
+python3 scripts/recalib.py --checkpoints config50.ckpt config50.ckpt config50.ckpt config50.ckpt --input_folder /home/vbelissen/Downloads/test/images_multiview/fisheye/test/20170320_163113 --n_epochs 100 --every_n_files 20 --frozen_cams_trans 0 1 2 3 --save_pictures --regul_weight_rot 0.001
 ```

@@ -27,9 +27,13 @@ import torch.nn.functional as funct
 import torch.nn as nn
 import torch.optim as optim
 
-
 import matplotlib.pyplot as plt
 import cv2
+
+CAMERA_CONTEXT_PAIRS = {
+    4: [[0, 1], [1, 2], [2, 3], [3, 0]],
+    5: [[0, 1], [1, 2], [2, 3], [3, 0], [4, 0], [4, 3], [4, 1]]
+}
 
 def is_image(file, ext=('.png', '.jpg',)):
     """Check if a file is an image with certain extensions"""
@@ -58,6 +62,7 @@ def parse_args():
     parser.add_argument('--save_folder',            type=str,            default='/home/vbelissen/Downloads', help='Where to save pictures')
     parser.add_argument('--frozen_cams_trans',      type=int, nargs='+', default=None,                        help='List of frozen cameras in translation')
     parser.add_argument('--frozen_cams_rot',        type=int, nargs='+', default=None,                        help='List of frozen cameras in rotation')
+    parser.add_argument('--include_long_range',     action='store_false')
     args = parser.parse_args()
     checkpoints = args.checkpoints
     N = len(checkpoints)
@@ -67,6 +72,8 @@ def parse_args():
         'You need to provide a 2-dimensional tuple as shape (H,W)'
     assert (args.input_folder is None and args.input_imgs is not None) or (args.input_folder is not None and args.input_imgs is None), \
         'You need to provide either a list of input base folders for images or a list of input images, one for each camera'
+    assert N == 4 or N == 5, 'You should have 4 or 5 cameras in the setup'
+    assert N == 5 or not args.include_long_range, 'If long range is included, you need 5 cameras in your list'
     return args, N
 
 def get_base_folder(image_file):
@@ -307,8 +314,10 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
         Input image shape
     """
     N_files = len(input_files[0])
-    N_cams = 4
+    N_cams = N_files
     image_area = image_shape[0] * image_shape[1]
+
+    camera_context_pairs = CAMERA_CONTEXT_PAIRS[N_cams]
 
     calib_data = {}
     for i_cam in range(N_cams):
@@ -355,8 +364,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
         not_masked.append(torch.from_numpy(ego_mask.astype(float)).cuda().float())
 
     # Learning variables
-    extra_trans_m = [torch.autograd.Variable(torch.zeros(3).cuda(), requires_grad=True) for _ in range(4)]
-    extra_rot_deg = [torch.autograd.Variable(torch.zeros(3).cuda(), requires_grad=True) for _ in range(4)]
+    extra_trans_m = [torch.autograd.Variable(torch.zeros(3).cuda(), requires_grad=True) for _ in range(N_cams)]
+    extra_rot_deg = [torch.autograd.Variable(torch.zeros(3).cuda(), requires_grad=True) for _ in range(N_cams)]
 
     # Constraints: translation
     frozen_cams_trans = args.frozen_cams_trans
@@ -380,7 +389,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
     loss_tab = np.zeros(n_epochs)
 
     # Table of extra rotation values
-    extra_rot_values_tab = np.zeros((12, N_files * n_epochs))
+    extra_rot_values_tab = np.zeros((N_cams * 3, N_files * n_epochs))
 
     # Optimizer
     optimizer = optim.Adam(extra_trans_m + extra_rot_deg, lr=learning_rate)
@@ -503,13 +512,13 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
             # The final loss consists of summing the photometric loss of all pairs of adjacent cameras
             # and is regularized to prevent weights from exploding
-            loss = sum([photo_loss_2imgs(i, (i + 1) % 4,
-                                         [extra_trans_m[i], extra_trans_m[(i + 1) % 4]],
-                                         [extra_rot_deg[i],   extra_rot_deg[(i + 1) % 4]],
+            loss = sum([photo_loss_2imgs(p[0], p[1],
+                                         [extra_trans_m[p[0]], extra_trans_m[p[1]]],
+                                         [extra_rot_deg[p[0]], extra_rot_deg[p[1]]],
                                          save_pictures)
-                        for i in range(4)]) \
-            + regul_weight_rot * sum([(extra_rot_deg[i]**2).sum() for i in range(4)]) \
-            + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(4)])
+                        for p in camera_context_pairs]) \
+                   + regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum() for i in range(N_cams)]) \
+                   + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(N_cams)])
 
             # Optimization steps
             optimizer.zero_grad()
@@ -519,7 +528,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
             # Save correction values and print loss
             with torch.no_grad():
                 loss_sum += loss.item()
-                for i_cam in range(4):
+                for i_cam in range(N_cams):
                     for j in range(3):
                         extra_rot_values_tab[3*i_cam + j, count] = extra_rot_deg[i_cam][j].item()
                 print('Loss:')
@@ -547,7 +556,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
     # Plot/save correction values if requested
     plt.figure()
-    for j in range(12):
+    for j in range(N_cams * 3):
         plt.plot(extra_rot_values_tab[j])
     if args.show_plots:
         plt.show()
@@ -597,10 +606,10 @@ def main(args, N):
         model_wrappers[i].eval()
 
     if args.input_folder is None:
-        files = [[args.input_imgs[i]] for i in range(4)]
+        files = [[args.input_imgs[i]] for i in range(N)]
     else:
-        files = [[] for _ in range(4)]
-        for i in range(4):
+        files = [[] for _ in range(N)]
+        for i in range(N):
             for ext in ['png', 'jpg']:
                 files[i] = glob((os.path.join(args.input_folder, 'cam_' + str(i) + '/', '*.{}'.format(ext))))
             files[i].sort()

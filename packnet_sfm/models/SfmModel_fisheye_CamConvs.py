@@ -167,14 +167,14 @@ class SfmModel_fisheye_CamConvs(nn.Module):
         # Generate inverse depth predictions
 
         inv_depths = self.compute_inv_depths_with_cam(batch['rgb'],
-                                                      batch['cam_features'])
+                                                      batch['cam_features'].detach())
         # Generate pose predictions if available
         pose = None
         if 'rgb_context' in batch and self.pose_net is not None:
             pose = self.compute_poses_with_cam(batch['rgb'],
-                                               batch['cam_features'],
+                                               batch['cam_features'].detach(),
                                                batch['rgb_context'],
-                                               batch['cam_features_context'])
+                                               batch['cam_features_context'].detach())
         # Return output dictionary
         return {
             'inv_depths': inv_depths,

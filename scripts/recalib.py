@@ -496,6 +496,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                         gt_depth.append(0)
                         gt_inv_depth.append(0)
 
+                # Apply correction on cams
                 pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file],
                                                                                calib_data,
                                                                                extra_trans_m[i_cam],
@@ -504,19 +505,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 cams[i_cam].Tcw = pose_tensor
 
             # Define a loss function between 2 images
-            def photo_loss_2imgs(i_cam1, i_cam2, extra_trans_list, extra_rot_list, save_pictures):
+            def photo_loss_2imgs(i_cam1, i_cam2, save_pictures):
                 # Computes the photometric loss between 2 images of adjacent cameras
                 # It reconstructs each image from the adjacent one, applying correction in rotation and translation
-
-                # # Apply correction on two cams
-                # for i, i_cam in enumerate([i_cam1, i_cam2]):
-                #     pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file],
-                #                                                                    calib_data,
-                #                                                                    extra_trans_list[i],
-                #                                                                    extra_rot_list[i]).unsqueeze(0)
-                #     pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()))
-                #     CameraMultifocal.Twc.fget.cache_clear()
-                #     cams[i_cam].Tcw = pose_tensor
 
                 # Reconstruct 3D points for each cam
                 world_points1 = cams[i_cam1].reconstruct(pred_depths[i_cam1], frame='w')
@@ -583,24 +574,10 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 else:
                     return 0.
 
-            def lidar_loss(i_cam1, extra_trans, extra_rot):
+            def lidar_loss(i_cam1, save_pictures):
                 if args.use_lidar and has_gt_depth[i_cam1]:
-                    # pose_matrix_oldCalib = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam1][i_file],
-                    #                                                                         calib_data,
-                    #                                                                         torch.zeros(3).cuda(),
-                    #                                                                         torch.zeros(3).cuda()).unsqueeze(0)
-                    # pose_tensor_oldCalib = Pose(pose_matrix_oldCalib).to('cuda:{}'.format(rank()))
-                    # cam_old = CameraMultifocal(cams[i_cam1])
-                    # cam_old.Tcw = pose_tensor_oldCalib
+                    # Ground truth lidar points were generated using the untouched camera extrinsics
                     world_points_gt_oldCalib = cams_untouched[i_cam1].reconstruct(gt_depth[i_cam1], frame='w')
-
-                    # pose_matrix_newCalib = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam1][i_file],
-                    #                                                                         calib_data,
-                    #                                                                         extra_trans,
-                    #                                                                         extra_rot).unsqueeze(0)
-                    # pose_tensor_newCalib = Pose(pose_matrix_newCalib).to('cuda:{}'.format(rank()))
-                    # CameraMultifocal.Twc.fget.cache_clear()
-                    # cams[i_cam1].Tcw = pose_tensor_newCalib
 
                     # Get coordinates of projected points on new cam
                     ref_coords = cams[i_cam1].project(world_points_gt_oldCalib, frame='w')
@@ -609,7 +586,17 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                     reprojected_gt_inv_depth = funct.grid_sample(gt_inv_depth[i_cam1], ref_coords,
                                                              mode='nearest', padding_mode='zeros', align_corners=True)
 
-                    return l1_lidar_loss(pred_inv_depths[i_cam1], reprojected_gt_inv_depth)
+                    mask_reprojected = ((reprojected_gt_inv_depth > 0.).sum() > 0).detach()
+                    if save_pictures:
+                        mask_reprojected_numpy = mask_reprojected.cpu().numpy()
+                        im = (images[i_cam1][0].permute(1, 2, 0))[:, :, [2, 1, 0]].detach().cpu().numpy() * 255
+                        print(mask_reprojected_numpy.shape)
+                        print(im.shape)
+
+                    if mask_reprojected.sum() > 0:
+                        return l1_lidar_loss(pred_inv_depths[i_cam1], reprojected_gt_inv_depth)
+                    else:
+                        return 0.
                 else:
                     return 0.
 
@@ -620,24 +607,12 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
             # The final loss consists of summing the photometric loss of all pairs of adjacent cameras
             # and is regularized to prevent weights from exploding
-            photo_loss = sum([photo_loss_2imgs(p[0], p[1],
-                                         [extra_trans_m[p[0]], extra_trans_m[p[1]]],
-                                         [extra_rot_deg[p[0]], extra_rot_deg[p[1]]],
-                                         save_pictures)
-                        for p in camera_context_pairs])
-            regul_rot_loss = regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum() for i in range(N_cams)])
-            regul_trans_loss = regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(N_cams)])
-            lidar_gt_loss = final_lidar_weight * sum([lidar_loss(i, extra_trans_m[i], extra_rot_deg[i]) for i in range(N_cams)])
+            photo_loss       =                1.0 * sum([photo_loss_2imgs(p[0], p[1], save_pictures) for p in camera_context_pairs])
+            regul_rot_loss   =   regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum()               for i in range(N_cams)])
+            regul_trans_loss = regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum()               for i in range(N_cams)])
+            lidar_gt_loss    = final_lidar_weight * sum([lidar_loss(i, save_pictures)                for i in range(N_cams)])
 
             loss = photo_loss + regul_rot_loss + regul_trans_loss + lidar_gt_loss
-            # loss = sum([photo_loss_2imgs(p[0], p[1],
-            #                              [extra_trans_m[p[0]], extra_trans_m[p[1]]],
-            #                              [extra_rot_deg[p[0]], extra_rot_deg[p[1]]],
-            #                              save_pictures)
-            #             for p in camera_context_pairs]) \
-            #        + regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum() for i in range(N_cams)]) \
-            #        + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(N_cams)]) \
-            #        + final_lidar_weight * sum([lidar_loss(i, extra_trans_m[i], extra_rot_deg[i]) for i in range(N_cams)])
 
             # Optimization steps
             optimizer.zero_grad()

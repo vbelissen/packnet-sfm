@@ -367,40 +367,40 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
         path_to_ego_mask = get_path_to_ego_mask(input_files[i_cam][0])
         poly_coeffs, principal_point, scale_factors, K, k, p = get_full_intrinsics(input_files[i_cam][0], calib_data)
 
-        poly_coeffs = torch.from_numpy(poly_coeffs).unsqueeze(0)
-        principal_point = torch.from_numpy(principal_point).unsqueeze(0)
-        scale_factors = torch.from_numpy(scale_factors).unsqueeze(0)
-        K = torch.from_numpy(K).unsqueeze(0)
-        k = torch.from_numpy(k).unsqueeze(0)
-        p = torch.from_numpy(p).unsqueeze(0)
-        pose_matrix = torch.from_numpy(get_extrinsics_pose_matrix(input_files[i_cam][0], calib_data)).unsqueeze(0)
-        pose_tensor = Pose(pose_matrix)
-        camera_type = get_camera_type(input_files[i_cam][0], calib_data)
-        camera_type_int = torch.tensor([get_camera_type_int(camera_type)])
+        poly_coeffs_untouched = torch.from_numpy(poly_coeffs).unsqueeze(0)
+        principal_point_untouched = torch.from_numpy(principal_point).unsqueeze(0)
+        scale_factors_untouched = torch.from_numpy(scale_factors).unsqueeze(0)
+        K_untouched = torch.from_numpy(K).unsqueeze(0)
+        k_untouched = torch.from_numpy(k).unsqueeze(0)
+        p_untouched = torch.from_numpy(p).unsqueeze(0)
+        pose_matrix_untouched = torch.from_numpy(get_extrinsics_pose_matrix(input_files[i_cam][0], calib_data)).unsqueeze(0)
+        pose_tensor_untouched = Pose(pose_matrix_untouched)
+        camera_type_untouched = get_camera_type(input_files[i_cam][0], calib_data)
+        camera_type_int_untouched = torch.tensor([get_camera_type_int(camera_type_untouched)])
 
-        cams.append(CameraMultifocal(poly_coeffs=poly_coeffs.float(),
-                                     principal_point=principal_point.float(),
-                                     scale_factors=scale_factors.float(),
-                                     K=K.float(),
-                                     k1=k[:, 0].float(),
-                                     k2=k[:, 1].float(),
-                                     k3=k[:, 2].float(),
-                                     p1=p[:, 0].float(),
-                                     p2=p[:, 1].float(),
-                                     camera_type=camera_type_int,
-                                     Tcw=pose_tensor))
+        cams.append(CameraMultifocal(poly_coeffs=poly_coeffs_untouched.float(),
+                                     principal_point=principal_point_untouched.float(),
+                                     scale_factors=scale_factors_untouched.float(),
+                                     K=K_untouched.float(),
+                                     k1=k_untouched[:, 0].float(),
+                                     k2=k_untouched[:, 1].float(),
+                                     k3=k_untouched[:, 2].float(),
+                                     p1=p_untouched[:, 0].float(),
+                                     p2=p_untouched[:, 1].float(),
+                                     camera_type=camera_type_int_untouched,
+                                     Tcw=pose_tensor_untouched))
 
-        cams_untouched.append(CameraMultifocal(poly_coeffs=poly_coeffs.float(),
-                                               principal_point=principal_point.float(),
-                                               scale_factors=scale_factors.float(),
-                                               K=K.float(),
-                                               k1=k[:, 0].float(),
-                                               k2=k[:, 1].float(),
-                                               k3=k[:, 2].float(),
-                                               p1=p[:, 0].float(),
-                                               p2=p[:, 1].float(),
-                                               camera_type=camera_type_int,
-                                               Tcw=pose_tensor))
+        cams_untouched.append(CameraMultifocal(poly_coeffs=poly_coeffs_untouched.float(),
+                                               principal_point=principal_point_untouched.float(),
+                                               scale_factors=scale_factors_untouched.float(),
+                                               K=K_untouched.float(),
+                                               k1=k_untouched[:, 0].float(),
+                                               k2=k_untouched[:, 1].float(),
+                                               k3=k_untouched[:, 2].float(),
+                                               p1=p_untouched[:, 0].float(),
+                                               p2=p_untouched[:, 1].float(),
+                                               camera_type=camera_type_int_untouched,
+                                               Tcw=pose_tensor_untouched))
         if torch.cuda.is_available():
             cams[i_cam] = cams[i_cam].to('cuda:{}'.format(rank()))
             cams_untouched[i_cam] = cams_untouched[i_cam].to('cuda:{}'.format(rank()))
@@ -576,6 +576,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
             def lidar_loss(i_cam1, save_pictures):
                 if args.use_lidar and has_gt_depth[i_cam1]:
+                    cams_untouched[i_cam1].Tcw = pose_tensor_untouched
+
                     # Ground truth lidar points were generated using the untouched camera extrinsics
                     world_points_gt_oldCalib = cams_untouched[i_cam1].reconstruct(gt_depth[i_cam1], frame='w')
 

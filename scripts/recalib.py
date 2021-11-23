@@ -292,6 +292,7 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
         x_rad = np.pi / 180. * (float(extr['rot_x_deg']) + extra_xyz_deg[0])
         z1_rad = np.pi / 180. * (float(extr['rot_z1_deg']) + extra_xyz_deg[1])
         z2_rad = np.pi / 180. * (float(extr['rot_z2_deg']) + extra_xyz_deg[2])
+        x_rad += np.pi  # gcam
     else:
         sys.exit('Wrong camera type')
 

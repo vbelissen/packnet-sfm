@@ -619,14 +619,24 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
             # The final loss consists of summing the photometric loss of all pairs of adjacent cameras
             # and is regularized to prevent weights from exploding
-            loss = sum([photo_loss_2imgs(p[0], p[1],
+            photo_loss = sum([photo_loss_2imgs(p[0], p[1],
                                          [extra_trans_m[p[0]], extra_trans_m[p[1]]],
                                          [extra_rot_deg[p[0]], extra_rot_deg[p[1]]],
                                          save_pictures)
-                        for p in camera_context_pairs]) \
-                   + regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum() for i in range(N_cams)]) \
-                   + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(N_cams)]) \
-                   + final_lidar_weight * sum([lidar_loss(i, extra_trans_m[i], extra_rot_deg[i]) for i in range(N_cams)])
+                        for p in camera_context_pairs])
+            regul_rot_loss = regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum() for i in range(N_cams)])
+            regul_trans_loss = regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(N_cams)])
+            lidar_gt_loss = final_lidar_weight * sum([lidar_loss(i, extra_trans_m[i], extra_rot_deg[i]) for i in range(N_cams)])
+
+            loss = photo_loss + regul_rot_loss + regul_trans_loss + lidar_gt_loss
+            # loss = sum([photo_loss_2imgs(p[0], p[1],
+            #                              [extra_trans_m[p[0]], extra_trans_m[p[1]]],
+            #                              [extra_rot_deg[p[0]], extra_rot_deg[p[1]]],
+            #                              save_pictures)
+            #             for p in camera_context_pairs]) \
+            #        + regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum() for i in range(N_cams)]) \
+            #        + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(N_cams)]) \
+            #        + final_lidar_weight * sum([lidar_loss(i, extra_trans_m[i], extra_rot_deg[i]) for i in range(N_cams)])
 
             # Optimization steps
             optimizer.zero_grad()
@@ -639,8 +649,12 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 for i_cam in range(N_cams):
                     for j in range(3):
                         extra_rot_values_tab[3 * i_cam + j, count] = extra_rot_deg[i_cam][j].item()
-                print('Loss:')
-                print(loss)
+                print('Loss: ' + str(loss.item()))
+                print('Photometric loss: ' + str(photo_loss.item()))
+                print('Rotation regularization loss: ' + str(regul_rot_loss.item()))
+                print('Translation regularization loss: ' + str(regul_trans_loss.item()))
+                print('Lidar loss: ' + str(lidar_gt_loss.item()))
+                print('Number of ground truth lidar maps: ' + str(nb_gt_depths))
 
             count += 1
 

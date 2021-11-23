@@ -587,6 +587,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                                                              mode='nearest', padding_mode='zeros', align_corners=True)
 
                     mask_reprojected = (reprojected_gt_inv_depth > 0.).detach()
+                    print(mask_reprojected.sum())
                     if save_pictures:
                         mask_reprojected_numpy = mask_reprojected[0, 0, :, :].cpu().numpy()
                         reprojected_gt_depth_numpy = inv2depth(reprojected_gt_inv_depth)[0, 0, :, :].detach().cpu().numpy()

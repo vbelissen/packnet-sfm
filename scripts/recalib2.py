@@ -6,18 +6,20 @@ import os
 import torch
 
 from glob import glob
+from cv2 import imwrite
 import sys
 
 from packnet_sfm.models.model_wrapper import ModelWrapper
 from packnet_sfm.datasets.augmentations import resize_image, to_tensor
-from packnet_sfm.utils.horovod import hvd_init, rank, print0
+from packnet_sfm.utils.horovod import hvd_init, rank, world_size, print0
 from packnet_sfm.utils.image import load_image
 from packnet_sfm.utils.config import parse_test_file
 from packnet_sfm.utils.load import set_debug
-from packnet_sfm.utils.depth import inv2depth, depth2inv
+from packnet_sfm.utils.depth import write_depth, inv2depth, viz_inv_depth
+from packnet_sfm.utils.logging import pcolor
 from packnet_sfm.geometry.camera_multifocal_valeo import CameraMultifocal
 from packnet_sfm.datasets.kitti_based_valeo_dataset_utils import \
-    read_raw_calib_files_camera_valeo_with_suffix, transform_from_rot_trans
+    read_raw_calib_files_camera_valeo, transform_from_rot_trans
 from packnet_sfm.geometry.pose import Pose
 from packnet_sfm.losses.multiview_photometric_loss import SSIM
 
@@ -28,14 +30,14 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 import cv2
 
-# Pairs of adjacent cameras
-# If 4 cameras are included, adjacent pairs are front-right, right-rear, rear-left, left-front.
-# If 5 cameras are included, must add pairs with long range (LR):
-#       LR-left, LR-front, LR-right (LR is not adjacent to the rear camera)
 CAMERA_CONTEXT_PAIRS = {
     4: [[0, 1], [1, 2], [2, 3], [3, 0]],
     5: [[0, 1], [1, 2], [2, 3], [3, 0], [4, 0], [4, 3], [4, 1]]
 }
+
+def is_image(file, ext=('.png', '.jpg',)):
+    """Check if a file is an image with certain extensions"""
+    return file.endswith(ext)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Recalibration tool, for a specific sequence from the Valeo dataset')
@@ -60,11 +62,6 @@ def parse_args():
     parser.add_argument('--save_folder',            type=str,            default='/home/vbelissen/Downloads', help='Where to save pictures')
     parser.add_argument('--frozen_cams_trans',      type=int, nargs='+', default=None,                        help='List of frozen cameras in translation')
     parser.add_argument('--frozen_cams_rot',        type=int, nargs='+', default=None,                        help='List of frozen cameras in rotation')
-    parser.add_argument('--calibrations_suffix',    type=str,            default='',                          help='If you want another calibration folder')
-    parser.add_argument('--depth_suffix',           type=str,            default='',                          help='If you want another folder for depth maps (according to calibration)')
-    parser.add_argument('--use_lidar',              action='store_false')
-    parser.add_argument('--lidar_weight',           type=float,          default=0.01,                        help='Weight in lidar loss')
-
     args = parser.parse_args()
     checkpoints = args.checkpoints
     N = len(checkpoints)
@@ -178,38 +175,16 @@ def get_full_intrinsics(image_file, calib_data):
         sys.exit('Wrong camera type')
     return poly_coeffs, principal_point, scale_factors, K, k, p
 
-def get_depth_file(image_file, depth_suffix):
-    """
-    Get the corresponding depth file from an image file.
-
-    Parameters
-    ----------
-    image_file: string
-        The image filename
-    depth_suffix: string
-        Can be empty ('') or like '_1' if you want to use another depth map folder
-        (typically for recalibrated depth maps)
-    """
-    base, ext = os.path.splitext(os.path.basename(image_file))
-    return os.path.join(get_base_folder(image_file),
-                        'depth_maps' + depth_suffix,
-                        'fisheye',
-                        get_split_type(image_file),
-                        get_sequence_name(image_file),
-                        get_camera_name(image_file).replace('cam', 'velodyne'),
-                        base.replace('cam', 'velodyne') + '.npz')
 
 def transform_from_rot_trans_torch(R, t):
     """
     Transformation matrix from rotation matrix and translation vector.
-
     Parameters
     ----------
     R : np.array [3,3]
         Rotation matrix
     t : np.array [3]
         translation vector
-
     Returns
     -------
     matrix : np.array [4,4]
@@ -319,16 +294,11 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
 
     return pose_matrix
 
-def l1_lidar_loss(inv_pred, inv_gt):
-    mask = (inv_gt > 0.).detach()
-    return nn.L1Loss(inv_pred[mask], inv_gt[mask])
-
 def infer_optimal_calib(input_files, model_wrappers, image_shape):
     """
     Process a list of input files to infer correction in extrinsic calibration.
     Files should all correspond to the same car.
-    Number of cameras is assumed to be 4 or 5.
-
+    Number of cameras is assumed to be 4.
     Parameters
     ----------
     input_file : list (number of cameras) of lists (number of files) of str
@@ -350,14 +320,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
         split_type_str  = get_split_type(input_files[i_cam][0])
         seq_name_str    = get_sequence_name(input_files[i_cam][0])
         camera_str      = get_camera_name(input_files[i_cam][0])
-        calib_data[camera_str] = read_raw_calib_files_camera_valeo_with_suffix(base_folder_str,
-                                                                               split_type_str,
-                                                                               seq_name_str,
-                                                                               camera_str,
-                                                                               args.calibrations_suffix)
+        calib_data[camera_str] = read_raw_calib_files_camera_valeo(base_folder_str, split_type_str, seq_name_str, camera_str)
 
     cams = []
-    cams_untouched=[]
     not_masked = []
 
     # Assume all images are from the same sequence (thus same cameras)
@@ -387,21 +352,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                                      p2=p[:, 1].float(),
                                      camera_type=camera_type_int,
                                      Tcw=pose_tensor))
-
-        cams_untouched.append(CameraMultifocal(poly_coeffs=poly_coeffs.float(),
-                                               principal_point=principal_point.float(),
-                                               scale_factors=scale_factors.float(),
-                                               K=K.float(),
-                                               k1=k[:, 0].float(),
-                                               k2=k[:, 1].float(),
-                                               k3=k[:, 2].float(),
-                                               p1=p[:, 0].float(),
-                                               p2=p[:, 1].float(),
-                                               camera_type=camera_type_int,
-                                               Tcw=pose_tensor))
         if torch.cuda.is_available():
             cams[i_cam] = cams[i_cam].to('cuda:{}'.format(rank()))
-            cams_untouched[i_cam] = cams_untouched[i_cam].to('cuda:{}'.format(rank()))
 
         ego_mask = np.load(path_to_ego_mask)
         not_masked.append(torch.from_numpy(ego_mask.astype(float)).cuda().float())
@@ -461,13 +413,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
             print(base_0)
 
             # Initialize list of tensors: images, predicted inverse depths and predicted depths
-            images, pred_inv_depths, pred_depths = [], [], []
-            input_depth_files, has_gt_depth, gt_depth, gt_inv_depth = [], [], [], []
-            nb_gt_depths = 0
-
-            # Reset camera poses Twc
-            CameraMultifocal.Twc.fget.cache_clear()
-
+            images          = []
+            pred_inv_depths = []
+            pred_depths     = []
             # Loop on cams and predict depth
             for i_cam in range(N_cams):
                 images.append(load_image(input_files[i_cam][i_file]).convert('RGB'))
@@ -479,42 +427,20 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                     pred_inv_depths.append(model_wrappers[i_cam].depth(images[i_cam]))
                     pred_depths.append(inv2depth(pred_inv_depths[i_cam]))
 
-                if args.use_lidar:
-                    input_depth_files.append(get_depth_file(input_files[i_cam][i_file], args.depth_suffix))
-                    has_gt_depth.append(os.path.exists(input_depth_files[i_cam]))
-                    if has_gt_depth[i_cam]:
-                        nb_gt_depths += 1
-                        gt_depth.append(np.load(input_depth_files[i_cam])['velodyne_depth'].astype(np.float32))
-                        gt_depth[i_cam] = torch.from_numpy(gt_depth[i_cam]).unsqueeze(0).unsqueeze(0)
-                        gt_inv_depth.append(depth2inv(gt_depth[i_cam]))
-                        if torch.cuda.is_available():
-                            gt_depth[i_cam] = gt_depth[i_cam].to('cuda:{}'.format(rank()))
-                            gt_inv_depth[i_cam] = gt_inv_depth[i_cam].to('cuda:{}'.format(rank()))
-                    else:
-                        gt_depth.append(0)
-                        gt_inv_depth.append(0)
-
-                pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file],
-                                                                               calib_data,
-                                                                               extra_trans_m[i_cam],
-                                                                               extra_rot_deg[i_cam]).unsqueeze(0)
-                pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()))
-                cams[i_cam].Tcw = pose_tensor
-
             # Define a loss function between 2 images
             def photo_loss_2imgs(i_cam1, i_cam2, extra_trans_list, extra_rot_list, save_pictures):
                 # Computes the photometric loss between 2 images of adjacent cameras
                 # It reconstructs each image from the adjacent one, applying correction in rotation and translation
 
-                # # Apply correction on two cams
-                # for i, i_cam in enumerate([i_cam1, i_cam2]):
-                #     pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file],
-                #                                                                    calib_data,
-                #                                                                    extra_trans_list[i],
-                #                                                                    extra_rot_list[i]).unsqueeze(0)
-                #     pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()))
-                #     CameraMultifocal.Twc.fget.cache_clear()
-                #     cams[i_cam].Tcw = pose_tensor
+                # Apply correction on two cams
+                for i, i_cam in enumerate([i_cam1, i_cam2]):
+                    pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file],
+                                                                                   calib_data,
+                                                                                   extra_trans_list[i],
+                                                                                   extra_rot_list[i]).unsqueeze(0)
+                    pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()))
+                    CameraMultifocal.Twc.fget.cache_clear()
+                    cams[i_cam].Tcw = pose_tensor
 
                 # Reconstruct 3D points for each cam
                 world_points1 = cams[i_cam1].reconstruct(pred_depths[i_cam1], frame='w')
@@ -525,10 +451,10 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 ref_coords2to1 = cams[i_cam1].project(world_points2, frame='w')
 
                 # Reconstruct each image from the adjacent camera
-                reconstructedImg2to1 = funct.grid_sample(images[i_cam2] * not_masked[i_cam2],
+                reconstructedImg2to1 = funct.grid_sample(images[i_cam2]*not_masked[i_cam2],
                                                          ref_coords1to2,
                                                          mode='bilinear', padding_mode='zeros', align_corners=True)
-                reconstructedImg1to2 = funct.grid_sample(images[i_cam1] * not_masked[i_cam1],
+                reconstructedImg1to2 = funct.grid_sample(images[i_cam1]*not_masked[i_cam1],
                                                          ref_coords2to1,
                                                          mode='bilinear', padding_mode='zeros', align_corners=True)
                 # Save pictures if requested
@@ -536,26 +462,26 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                     # Save original files if first epoch
                     if epoch == 0:
                         cv2.imwrite(args.save_folder + '/cam_' + str(i_cam1) + '_file_' + str(i_file) + '_orig.png',
-                                    (images[i_cam1][0].permute(1, 2, 0))[:, :, [2, 1, 0]].detach().cpu().numpy() * 255)
+                                    (images[i_cam1][0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
                         cv2.imwrite(args.save_folder + '/cam_' + str(i_cam2) + '_file_' + str(i_file) + '_orig.png',
-                                    (images[i_cam2][0].permute(1, 2, 0))[:, :, [2, 1, 0]].detach().cpu().numpy() * 255)
+                                    (images[i_cam2][0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
                     # Save reconstructed images
                     cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam1) + '_recons_from_' + str(i_cam2) + '.png',
-                                ((reconstructedImg2to1 * not_masked[i_cam1])[0].permute(1, 2, 0))[:, :, [2, 1, 0]].detach().cpu().numpy() * 255)
+                                ((reconstructedImg2to1*not_masked[i_cam1])[0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
                     cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam2) + '_recons_from_' + str(i_cam1) + '.png',
-                                ((reconstructedImg1to2 * not_masked[i_cam2])[0].permute(1, 2, 0))[:, :, [2, 1, 0]].detach().cpu().numpy() * 255)
+                                ((reconstructedImg1to2*not_masked[i_cam2])[0].permute(1, 2, 0))[:,:,[2,1,0]].detach().cpu().numpy() * 255)
 
                 # L1 loss
-                l1_loss_1 = torch.abs(images[i_cam1] * not_masked[i_cam1] - reconstructedImg2to1 * not_masked[i_cam1])
-                l1_loss_2 = torch.abs(images[i_cam2] * not_masked[i_cam2] - reconstructedImg1to2 * not_masked[i_cam2])
+                l1_loss_1 = torch.abs(images[i_cam1]*not_masked[i_cam1] - reconstructedImg2to1*not_masked[i_cam1])
+                l1_loss_2 = torch.abs(images[i_cam2]*not_masked[i_cam2] - reconstructedImg1to2*not_masked[i_cam2])
 
                 # SSIM loss
                 ssim_loss_weight = 0.85
-                ssim_loss_1 = SSIM(images[i_cam1] * not_masked[i_cam1],
-                                   reconstructedImg2to1 * not_masked[i_cam1],
+                ssim_loss_1 = SSIM(images[i_cam1]*not_masked[i_cam1],
+                                   reconstructedImg2to1*not_masked[i_cam1],
                                    C1=1e-4, C2=9e-4, kernel_size=3)
-                ssim_loss_2 = SSIM(images[i_cam2] * not_masked[i_cam2],
-                                   reconstructedImg1to2 * not_masked[i_cam2],
+                ssim_loss_2 = SSIM(images[i_cam2]*not_masked[i_cam2],
+                                   reconstructedImg1to2*not_masked[i_cam2],
                                    C1=1e-4, C2=9e-4, kernel_size=3)
 
                 ssim_loss_1 = torch.clamp((1. - ssim_loss_1) / 2., 0., 1.)
@@ -577,44 +503,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
                 # The final loss can be regularized to encourage a similar overlap between images
                 if s1 > 0 and s2 > 0:
-                    return loss_1 + loss_2 + regul_weight_overlap * image_area * (1 / s1 + 1 / s2)
+                    return loss_1 + loss_2 + regul_weight_overlap * image_area * (1/s1 + 1/s2)
                 else:
                     return 0.
-
-            def lidar_loss(i_cam1, extra_trans, extra_rot):
-                if args.use_lidar and has_gt_depth[i_cam1]:
-                    # pose_matrix_oldCalib = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam1][i_file],
-                    #                                                                         calib_data,
-                    #                                                                         torch.zeros(3).cuda(),
-                    #                                                                         torch.zeros(3).cuda()).unsqueeze(0)
-                    # pose_tensor_oldCalib = Pose(pose_matrix_oldCalib).to('cuda:{}'.format(rank()))
-                    # cam_old = CameraMultifocal(cams[i_cam1])
-                    # cam_old.Tcw = pose_tensor_oldCalib
-                    world_points_gt_oldCalib = cams_untouched[i_cam1].reconstruct(gt_depth[i_cam1], frame='w')
-
-                    # pose_matrix_newCalib = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam1][i_file],
-                    #                                                                         calib_data,
-                    #                                                                         extra_trans,
-                    #                                                                         extra_rot).unsqueeze(0)
-                    # pose_tensor_newCalib = Pose(pose_matrix_newCalib).to('cuda:{}'.format(rank()))
-                    # CameraMultifocal.Twc.fget.cache_clear()
-                    # cams[i_cam1].Tcw = pose_tensor_newCalib
-
-                    # Get coordinates of projected points on new cam
-                    ref_coords = cams[i_cam1].project(world_points_gt_oldCalib, frame='w')
-
-                    # Reconstruct projected lidar from the new camera
-                    reprojected_gt_inv_depth = funct.grid_sample(gt_inv_depth[i_cam1], ref_coords,
-                                                             mode='nearest', padding_mode='zeros', align_corners=True)
-
-                    return l1_lidar_loss(pred_inv_depths[i_cam1], reprojected_gt_inv_depth)
-                else:
-                    return 0.
-
-            if nb_gt_depths > 0:
-                final_lidar_weight = (N_cams / nb_gt_depths) * args.lidar_weight
-            else:
-                final_lidar_weight = 0.
 
             # The final loss consists of summing the photometric loss of all pairs of adjacent cameras
             # and is regularized to prevent weights from exploding
@@ -624,8 +515,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                                          save_pictures)
                         for p in camera_context_pairs]) \
                    + regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum() for i in range(N_cams)]) \
-                   + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(N_cams)]) \
-                   + final_lidar_weight * sum([lidar_loss(i, extra_trans_m[i], extra_rot_deg[i]) for i in range(N_cams)])
+                   + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(N_cams)])
 
             # Optimization steps
             optimizer.zero_grad()
@@ -637,7 +527,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 loss_sum += loss.item()
                 for i_cam in range(N_cams):
                     for j in range(3):
-                        extra_rot_values_tab[3 * i_cam + j, count] = extra_rot_deg[i_cam][j].item()
+                        extra_rot_values_tab[3*i_cam + j, count] = extra_rot_deg[i_cam][j].item()
                 print('Loss:')
                 print(loss)
 

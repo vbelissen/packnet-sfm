@@ -253,6 +253,7 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
     #       fisheye cams are encoded with 3 rotation values and the position of COP
     #       perspective cams are encoded with a rotation matrix and the position of the origin in the cam reference
     if camera_type == 'perspective':
+        print('perspective')
         T_other_convention = torch.from_numpy(np.array([float(extr['t_x_m']),
                                                         float(extr['t_y_m']),
                                                         float(extr['t_z_m'])])).float().cuda() + extra_xyz_m
@@ -261,6 +262,7 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
         z1_rad = np.pi / 180. * extra_xyz_deg[1]
         z2_rad = np.pi / 180. * extra_xyz_deg[2]
     elif camera_type == 'fisheye':
+        print('fisheye')
         t = torch.from_numpy(np.array([float(extr['pos_x_m']),
                                        float(extr['pos_y_m']),
                                        float(extr['pos_z_m'])])).float().cuda() + extra_xyz_m

@@ -589,16 +589,20 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                                                              mode='nearest', padding_mode='zeros', align_corners=True)
 
                     mask_reprojected = (reprojected_gt_inv_depth > 0.).detach()
-                    print(mask_reprojected.sum())
                     if save_pictures:
                         mask_reprojected_numpy = mask_reprojected[0, 0, :, :].cpu().numpy()
+                        u = np.where(mask_reprojected_numpy)[0]
+                        v = np.where(mask_reprojected_numpy)[1]
+                        n_lidar = u.size
                         reprojected_gt_depth_numpy = inv2depth(reprojected_gt_inv_depth)[0, 0, :, :].detach().cpu().numpy()
 
                         im = (images[i_cam1][0].permute(1, 2, 0))[:, :, [2, 1, 0]].detach().cpu().numpy() * 255
                         dmax = 100.
-                        im[mask_reprojected_numpy, 0] = np.power(reprojected_gt_depth_numpy[mask_reprojected_numpy] / dmax, .7) * 255
-                        im[mask_reprojected_numpy, 1] = np.power((dmax - reprojected_gt_depth_numpy[mask_reprojected_numpy]) / dmax, 4.0) * 255
-                        im[mask_reprojected_numpy, 2] = np.power(np.abs(2 * (reprojected_gt_depth_numpy[mask_reprojected_numpy] - .5 * dmax) / dmax), 3.0) * 255
+                        s = 2
+                        for i_l in range(n_lidar):
+                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 0] = np.power(reprojected_gt_depth_numpy[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s] / dmax, .7) * 255
+                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 1] = np.power((dmax - reprojected_gt_depth_numpy[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s]) / dmax, 4.0) * 255
+                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 2] = np.power(np.abs(2 * (reprojected_gt_depth_numpy[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s] - .5 * dmax) / dmax), 3.0) * 255
 
                         cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam1) + '_lidar.png', im)
 

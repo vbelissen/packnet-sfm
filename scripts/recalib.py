@@ -653,7 +653,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 print('Photometric loss: ' + str(photo_loss.item()))
                 print('Rotation regularization loss: ' + str(regul_rot_loss.item()))
                 print('Translation regularization loss: ' + str(regul_trans_loss.item()))
-                print('Lidar loss: ' + str(lidar_gt_loss.item()))
+                print('Lidar loss: ' + str(lidar_gt_loss))
                 print('Number of ground truth lidar maps: ' + str(nb_gt_depths))
 
             count += 1

@@ -593,9 +593,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
                         im = (images[i_cam1][0].permute(1, 2, 0))[:, :, [2, 1, 0]].detach().cpu().numpy() * 255
                         dmax = 100.
-                        im[mask_reprojected_numpy, 0] = np.power(reprojected_gt_depth_numpy / dmax, .7) * 255
-                        im[mask_reprojected_numpy, 1] = np.power((dmax - reprojected_gt_depth_numpy)/dmax, 4.0) * 255
-                        im[mask_reprojected_numpy, 2] = np.power(np.abs(2*(reprojected_gt_depth_numpy-.5*dmax)/dmax), 3.0) * 255
+                        im[mask_reprojected_numpy, 0] = np.power(reprojected_gt_depth_numpy[mask_reprojected_numpy] / dmax, .7) * 255
+                        im[mask_reprojected_numpy, 1] = np.power((dmax - reprojected_gt_depth_numpy[mask_reprojected_numpy]) / dmax, 4.0) * 255
+                        im[mask_reprojected_numpy, 2] = np.power(np.abs(2 * (reprojected_gt_depth_numpy[mask_reprojected_numpy] - .5 * dmax) / dmax), 3.0) * 255
 
                         cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam1) + '_lidar.png', im)
 

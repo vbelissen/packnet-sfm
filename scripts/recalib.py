@@ -649,11 +649,11 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 for i_cam in range(N_cams):
                     for j in range(3):
                         extra_rot_values_tab[3 * i_cam + j, count] = extra_rot_deg[i_cam][j].item()
-                print('Loss: ' + str(loss.item()))
-                print('Photometric loss: ' + str(photo_loss.item()))
-                print('Rotation regularization loss: ' + str(regul_rot_loss.item()))
-                print('Translation regularization loss: ' + str(regul_trans_loss.item()))
-                print('Lidar loss: ' + str(lidar_gt_loss))
+                print('Loss: ' + str(0.01 * int(100*loss.item())) \
+                      + '(photometric: ' + str(0.001 * int(1000*photo_loss.item())) \
+                      + 'rotation reg.: ' + str(0.0001 * int(10000*regul_rot_loss.item())) \
+                      + 'translation reg.: ' + str(0.0001 * int(10000 * regul_trans_loss.item()))
+                      + 'lidar: ' + str(0.0001 * int(10000*lidar_gt_loss)))
                 print('Number of ground truth lidar maps: ' + str(nb_gt_depths))
 
             count += 1

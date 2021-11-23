@@ -650,7 +650,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                     for j in range(3):
                         extra_rot_values_tab[3 * i_cam + j, count] = extra_rot_deg[i_cam][j].item()
                 print('Loss: ' + "{:.3f}".format(loss.item()) \
-                      + '(photometric: ' + "{:.3f}".format(photo_loss.item()) \
+                      + ' (photometric: ' + "{:.3f}".format(photo_loss.item()) \
                       + ', rotation reg.: ' + "{:.4f}".format(regul_rot_loss.item()) \
                       + ', translation reg.: ' + "{:.4f}".format(regul_trans_loss.item())
                       + ', lidar: ' + "{:.3f}".format(lidar_gt_loss) +')')

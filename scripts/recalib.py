@@ -600,9 +600,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                         dmax = 100.
                         s = 2
                         for i_l in range(n_lidar):
-                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 0] = np.power(reprojected_gt_depth_numpy[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s] / dmax, .7) * 255
-                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 1] = np.power((dmax - reprojected_gt_depth_numpy[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s]) / dmax, 4.0) * 255
-                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 2] = np.power(np.abs(2 * (reprojected_gt_depth_numpy[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s] - .5 * dmax) / dmax), 3.0) * 255
+                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 0] = np.clip(np.power(reprojected_gt_depth_numpy[u[i_l], v[i_l]] / dmax, .7) * 255, 10, 245)
+                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 1] = np.clip(np.power((dmax - reprojected_gt_depth_numpy[u[i_l], v[i_l]]) / dmax, 4.0) * 255, 10, 245)
+                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 2] = np.clip(np.power(np.abs(2 * (reprojected_gt_depth_numpy[u[i_l], v[i_l]] - .5 * dmax) / dmax), 3.0) * 255, 10, 245)
 
                         cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam1) + '_lidar.png', im)
 

@@ -321,7 +321,7 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
 
 def l1_lidar_loss(inv_pred, inv_gt):
     mask = (inv_gt > 0.).detach()
-    loss = nn.L1Loss()
+    loss = nn.L1Loss(size_average=None, reduce=None)
     return loss(inv_pred[mask], inv_gt[mask])
 
 def infer_optimal_calib(input_files, model_wrappers, image_shape):

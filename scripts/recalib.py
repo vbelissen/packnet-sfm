@@ -451,6 +451,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
             input_depth_files, has_gt_depth, gt_depth, gt_inv_depth = [], [], [], []
             nb_gt_depths = 0
 
+            # Reset camera poses
+            CameraMultifocal.Twc.fget.cache_clear()
+
             # Loop on cams and predict depth
             for i_cam in range(N_cams):
                 images.append(load_image(input_files[i_cam][i_file]).convert('RGB'))
@@ -477,20 +480,27 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                         gt_depth.append(0)
                         gt_inv_depth.append(0)
 
+                pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file],
+                                                                               calib_data,
+                                                                               extra_trans_m[i_cam],
+                                                                               extra_rot_deg[i_cam]).unsqueeze(0)
+                pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()))
+                cams[i_cam].Tcw = pose_tensor
+
             # Define a loss function between 2 images
             def photo_loss_2imgs(i_cam1, i_cam2, extra_trans_list, extra_rot_list, save_pictures):
                 # Computes the photometric loss between 2 images of adjacent cameras
                 # It reconstructs each image from the adjacent one, applying correction in rotation and translation
 
-                # Apply correction on two cams
-                for i, i_cam in enumerate([i_cam1, i_cam2]):
-                    pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file],
-                                                                                   calib_data,
-                                                                                   extra_trans_list[i],
-                                                                                   extra_rot_list[i]).unsqueeze(0)
-                    pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()))
-                    CameraMultifocal.Twc.fget.cache_clear()
-                    cams[i_cam].Tcw = pose_tensor
+                # # Apply correction on two cams
+                # for i, i_cam in enumerate([i_cam1, i_cam2]):
+                #     pose_matrix = get_extrinsics_pose_matrix_extra_trans_rot_torch(input_files[i_cam][i_file],
+                #                                                                    calib_data,
+                #                                                                    extra_trans_list[i],
+                #                                                                    extra_rot_list[i]).unsqueeze(0)
+                #     pose_tensor = Pose(pose_matrix).to('cuda:{}'.format(rank()))
+                #     CameraMultifocal.Twc.fget.cache_clear()
+                #     cams[i_cam].Tcw = pose_tensor
 
                 # Reconstruct 3D points for each cam
                 world_points1 = cams[i_cam1].reconstruct(pred_depths[i_cam1], frame='w')

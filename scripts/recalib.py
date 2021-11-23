@@ -607,6 +607,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                     reprojected_gt_inv_depth = funct.grid_sample(gt_inv_depth[i_cam1], ref_coords,
                                                              mode='nearest', padding_mode='zeros', align_corners=True)
 
+                    print(pred_inv_depths[i_cam1].shape)
+                    print(reprojected_gt_inv_depth.shape)
+                    
                     return l1_lidar_loss(pred_inv_depths[i_cam1], reprojected_gt_inv_depth)
                 else:
                     return 0.

@@ -509,13 +509,13 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
             # The final loss consists of summing the photometric loss of all pairs of adjacent cameras
             # and is regularized to prevent weights from exploding
-            loss = sum([photo_loss_2imgs(p[0], p[1],
-                                         [extra_trans_m[p[0]], extra_trans_m[p[1]]],
-                                         [extra_rot_deg[p[0]], extra_rot_deg[p[1]]],
+            loss = sum([photo_loss_2imgs(i, (i + 1) % 4,
+                                         [extra_trans_m[i], extra_trans_m[(i + 1) % 4]],
+                                         [extra_rot_deg[i], extra_rot_deg[(i + 1) % 4]],
                                          save_pictures)
-                        for p in camera_context_pairs]) \
-                   + regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum() for i in range(N_cams)]) \
-                   + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(N_cams)])
+                        for i in range(4)]) \
+                   + regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum() for i in range(4)]) \
+                   + regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum() for i in range(4)])
 
             # Optimization steps
             optimizer.zero_grad()

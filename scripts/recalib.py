@@ -630,15 +630,15 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
             print(lidar_gt_loss)
 
             loss = photo_loss + regul_rot_loss + regul_trans_loss + lidar_gt_loss
-            print(extra_trans_m)
+            print(extra_rot_deg)
 
             # Optimization steps
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            print(extra_trans_m)
-            
+            print(extra_rot_deg)
+
             # Save correction values and print loss
             with torch.no_grad():
                 loss_sum += loss.item()

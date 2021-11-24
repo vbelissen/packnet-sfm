@@ -661,8 +661,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 trans_change_file = 0.
 
                 for i_cam in range(N_cams):
-                    rot_change_file += torch.abs(extra_rot_deg_after - extra_rot_deg_before).mean().item()
-                    trans_change_file += torch.abs(extra_trans_m_after - extra_trans_m_before).mean().item()
+                    rot_change_file += torch.abs(extra_rot_deg_after[i_cam] - extra_rot_deg_before[i_cam]).mean().item()
+                    trans_change_file += torch.abs(extra_trans_m_after[i_cam] - extra_trans_m_before[i_cam]).mean().item()
 
                 rot_change_file /= N_cams
                 trans_change_file /= N_cams

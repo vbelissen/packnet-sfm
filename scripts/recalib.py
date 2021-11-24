@@ -586,6 +586,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                     reprojected_gt_inv_depth = funct.grid_sample(gt_inv_depth[i_cam1], ref_coords,
                                                              mode='nearest', padding_mode='zeros', align_corners=True)
 
+                    print(reprojected_gt_inv_depth)
+                    print(torch.isnan(reprojected_gt_inv_depth).sum())
+
                     mask_reprojected = (reprojected_gt_inv_depth > 0.).detach()
                     if save_pictures:
                         mask_reprojected_numpy = mask_reprojected[0, 0, :, :].cpu().numpy()

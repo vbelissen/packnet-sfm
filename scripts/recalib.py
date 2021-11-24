@@ -63,7 +63,7 @@ def parse_args():
     parser.add_argument('--calibrations_suffix',    type=str,            default='',                          help='If you want another calibration folder')
     parser.add_argument('--depth_suffix',           type=str,            default='',                          help='If you want another folder for depth maps (according to calibration)')
     parser.add_argument('--use_lidar',              action='store_true', default=False)
-    parser.add_argument('--lidar_weight',           type=float,          default=0.01,                        help='Weight in lidar loss')
+    parser.add_argument('--lidar_weight',           type=float,          default=1.,                          help='Weight in lidar loss')
 
     args = parser.parse_args()
     checkpoints = args.checkpoints
@@ -596,18 +596,17 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
                         im = (images[i_cam1][0].permute(1, 2, 0))[:, :, [2, 1, 0]].detach().cpu().numpy() * 255
                         dmax = 100.
-                        s = 2
                         for i_l in range(n_lidar):
                             d = reprojected_gt_depth_numpy[u[i_l], v[i_l]]
-                            s = int((5/d))+1
-                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 0] = np.clip(np.power(reprojected_gt_depth_numpy[u[i_l], v[i_l]] / dmax, .7) * 255, 10, 245)
-                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 1] = np.clip(np.power((dmax - reprojected_gt_depth_numpy[u[i_l], v[i_l]]) / dmax, 4.0) * 255, 10, 245)
-                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 2] = np.clip(np.power(np.abs(2 * (reprojected_gt_depth_numpy[u[i_l], v[i_l]] - .5 * dmax) / dmax), 3.0) * 255, 10, 245)
+                            s = int((8/d))+1
+                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 0] = np.clip(np.power(d / dmax, .7) * 255, 10, 245)
+                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 1] = np.clip(np.power((dmax - d) / dmax, 4.0) * 255, 10, 245)
+                            im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 2] = np.clip(np.power(np.abs(2 * (d - .5 * dmax) / dmax), 3.0) * 255, 10, 245)
 
                         cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam1) + '_lidar.png', im)
 
                     if mask_reprojected.sum() > 0:
-                        return l1_lidar_loss(pred_inv_depths[i_cam1], reprojected_gt_inv_depth)
+                        return l1_lidar_loss(pred_inv_depths[i_cam1] * not_masked[i_cam1], reprojected_gt_inv_depth * not_masked[i_cam1])
                     else:
                         return 0.
                 else:

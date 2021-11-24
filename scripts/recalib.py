@@ -326,8 +326,6 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
 def l1_lidar_loss(inv_pred, inv_gt):
     mask = (inv_gt > 0.).detach()
     loss = nn.L1Loss(size_average=None, reduce=None)
-    print('l1_lidar_loss')
-    print(loss(inv_pred[mask], inv_gt[mask]))
     return loss(inv_pred[mask], inv_gt[mask])
 
 def infer_optimal_calib(input_files, model_wrappers, image_shape):
@@ -597,11 +595,6 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                                                              mode='nearest', padding_mode='zeros', align_corners=True)
                     reprojected_gt_inv_depth[0, 0, mask_zeros_lidar] = 0.
 
-                    print(i_cam1)
-                    print(reprojected_gt_inv_depth)
-                    print(torch.isnan(reprojected_gt_inv_depth).sum())
-                    print((reprojected_gt_inv_depth > 0).sum())
-
                     mask_reprojected = (reprojected_gt_inv_depth > 0.).detach()
                     if save_pictures:
                         mask_reprojected_numpy = mask_reprojected[0, 0, :, :].cpu().numpy()
@@ -639,11 +632,6 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
             regul_rot_loss   =   regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum()               for i in range(N_cams)])
             regul_trans_loss = regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum()               for i in range(N_cams)])
             lidar_gt_loss    = final_lidar_weight * sum([lidar_loss(i, save_pictures)                for i in range(N_cams)])
-
-            print(photo_loss)
-            print(regul_rot_loss)
-            print(regul_trans_loss)
-            print(lidar_gt_loss)
 
             loss = photo_loss + regul_rot_loss + regul_trans_loss + lidar_gt_loss
             print(extra_rot_deg)

@@ -300,6 +300,9 @@ class CameraMultifocal(nn.Module):
         c3 = self.poly_coeffs[mask, 2].unsqueeze(1)
         c4 = self.poly_coeffs[mask, 3].unsqueeze(1)
 
+        print('Xc')
+        print(Xc)
+        
         # Project 3D points onto the camera image plane
         X = Xc[:, 0] # [B, HW]
         Y = Xc[:, 1] # [B, HW]

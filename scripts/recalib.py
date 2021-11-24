@@ -349,6 +349,12 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
     camera_context_pairs = CAMERA_CONTEXT_PAIRS[N_cams]
 
+    # Rotation will be optimized if not all cams are frozen
+    optimize_rotation = (args.frozen_cams_rot != [i for i in range(N_cams)])
+
+    # Rotation will be optimized if not all cams are frozen
+    optimize_translation = (args.frozen_cams_trans != [i for i in range(N_cams)])
+
     calib_data = {}
     for i_cam in range(N_cams):
         base_folder_str = get_base_folder(input_files[i_cam][0])
@@ -438,6 +444,9 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
     # Table of extra rotation values
     extra_rot_values_tab = np.zeros((N_cams * 3, N_files * n_epochs))
+
+    # Table of extra translation values
+    extra_trans_values_tab = np.zeros((N_cams * 3, N_files * n_epochs))
 
     # Optimizer
     optimizer = optim.Adam(extra_trans_m + extra_rot_deg, lr=learning_rate)
@@ -634,27 +643,49 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
             lidar_gt_loss    = final_lidar_weight * sum([lidar_loss(i, save_pictures)                for i in range(N_cams)])
 
             loss = photo_loss + regul_rot_loss + regul_trans_loss + lidar_gt_loss
-            print(extra_rot_deg)
+
+            with torch.no_grad():
+                extra_rot_deg_before = extra_rot_deg.copy()
+                extra_trans_m_before = extra_trans_m.copy()
 
             # Optimization steps
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            print(extra_rot_deg)
+            with torch.no_grad():
+                extra_rot_deg_after = extra_rot_deg.copy()
+                extra_trans_m_after = extra_trans_m.copy()
+
+                rot_change_file = 0.
+                trans_change_file = 0.
+
+                for i_cam in range(N_cams):
+                    rot_change_file += torch.abs(extra_rot_deg_after - extra_rot_deg_before).mean().item()
+                    trans_change_file += torch.abs(extra_trans_m_after - extra_trans_m_before).mean().item()
+
+                rot_change_file /= N_cams
+                trans_change_file /= N_cams
+
+                print('Average rotation change (deg.): ' + str(rot_change_file))
+                print('Average translation change (deg.): ' + str(trans_change_file))
 
             # Save correction values and print loss
             with torch.no_grad():
                 loss_sum += loss.item()
                 for i_cam in range(N_cams):
                     for j in range(3):
-                        extra_rot_values_tab[3 * i_cam + j, count] = extra_rot_deg[i_cam][j].item()
+                        if optimize_rotation:
+                            extra_rot_values_tab[3 * i_cam + j, count] = extra_rot_deg[i_cam][j].item()
+                        if optimize_translation:
+                            extra_trans_values_tab[3 * i_cam + j, count] = extra_trans_m[i_cam][j].item()
                 print('Loss: ' + "{:.3f}".format(loss.item()) \
                       + ' (photometric: ' + "{:.3f}".format(photo_loss.item()) \
                       + ', rotation reg.: ' + "{:.4f}".format(regul_rot_loss.item()) \
                       + ', translation reg.: ' + "{:.4f}".format(regul_trans_loss.item())
                       + ', lidar: ' + "{:.3f}".format(lidar_gt_loss) +')')
-                print('Number of ground truth lidar maps: ' + str(nb_gt_depths))
+                if nb_gt_depths > 0:
+                    print('Number of ground truth lidar maps: ' + str(nb_gt_depths))
 
             count += 1
 
@@ -663,8 +694,13 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
         scheduler.step()
         with torch.no_grad():
             print('End of epoch')
-            print(extra_trans_m)
-            print(extra_rot_deg)
+            if optimize_translation:
+                print('New translation correction values: ')
+                print(extra_trans_m)
+            if optimize_rotation:
+                print('New rotation correction values: ')
+                print(extra_rot_deg)
+            print('Average rotation change in epoch:')
 
         loss_tab[epoch] = loss_sum/N_files
 
@@ -677,13 +713,23 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
         plt.savefig(os.path.join(args.save_folder, get_sequence_name(input_files[0][0]) + '_loss.png'))
 
     # Plot/save correction values if requested
-    plt.figure()
-    for j in range(N_cams * 3):
-        plt.plot(extra_rot_values_tab[j])
-    if args.show_plots:
-        plt.show()
-    if args.save_plots:
-        plt.savefig(os.path.join(args.save_folder, get_sequence_name(input_files[0][0]) + '_extra_rot.png'))
+    if optimize_rotation:
+        plt.figure()
+        for j in range(N_cams * 3):
+            plt.plot(extra_rot_values_tab[j])
+        if args.show_plots:
+            plt.show()
+        if args.save_plots:
+            plt.savefig(os.path.join(args.save_folder, get_sequence_name(input_files[0][0]) + '_extra_rot.png'))
+
+    if optimize_translation:
+        plt.figure()
+        for j in range(N_cams * 3):
+            plt.plot(extra_trans_values_tab[j])
+        if args.show_plots:
+            plt.show()
+        if args.save_plots:
+            plt.savefig(os.path.join(args.save_folder, get_sequence_name(input_files[0][0]) + '_extra_trans.png'))
 
     # Save correction values table if requested
     if args.save_rot_tab:

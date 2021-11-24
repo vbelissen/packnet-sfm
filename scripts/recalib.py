@@ -645,8 +645,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
             loss = photo_loss + regul_rot_loss + regul_trans_loss + lidar_gt_loss
 
             with torch.no_grad():
-                extra_rot_deg_before = extra_rot_deg.copy()
-                extra_trans_m_before = extra_trans_m.copy()
+                extra_rot_deg_before = extra_rot_deg.clone()
+                extra_trans_m_before = extra_trans_m.clone()
 
             # Optimization steps
             optimizer.zero_grad()
@@ -654,8 +654,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
             optimizer.step()
 
             with torch.no_grad():
-                extra_rot_deg_after = extra_rot_deg.copy()
-                extra_trans_m_after = extra_trans_m.copy()
+                extra_rot_deg_after = extra_rot_deg.clone()
+                extra_trans_m_after = extra_trans_m.clone()
 
                 rot_change_file = 0.
                 trans_change_file = 0.
@@ -668,7 +668,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 trans_change_file /= N_cams
 
                 print('Average rotation change (deg.): ' + str(rot_change_file))
-                print('Average translation change (deg.): ' + str(trans_change_file))
+                print('Average translation change (m.): ' + str(trans_change_file))
 
             # Save correction values and print loss
             with torch.no_grad():

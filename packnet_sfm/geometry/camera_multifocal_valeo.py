@@ -302,7 +302,7 @@ class CameraMultifocal(nn.Module):
 
         print('Xc')
         print(Xc)
-        
+
         # Project 3D points onto the camera image plane
         X = Xc[:, 0] # [B, HW]
         Y = Xc[:, 1] # [B, HW]

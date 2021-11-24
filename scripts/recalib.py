@@ -582,15 +582,20 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
             def lidar_loss(i_cam1, save_pictures):
                 if args.use_lidar and has_gt_depth[i_cam1]:
+                    mask_zeros_lidar = (gt_depth[i_cam1][0, 0, :, :] == 0).detach()
+
                     # Ground truth sparse depth maps were generated using the untouched camera extrinsics
                     world_points_gt_oldCalib = cams_untouched[i_cam1].reconstruct(gt_depth[i_cam1], frame='w')
+                    world_points_gt_oldCalib[0, 0, mask_zeros_lidar] = 0.
 
                     # Get coordinates of projected points on new cam
                     ref_coords = cams[i_cam1].project(world_points_gt_oldCalib, frame='w')
+                    ref_coords[0, mask_zeros_lidar, :] = 0.
 
                     # Reconstruct projected lidar from the new camera
                     reprojected_gt_inv_depth = funct.grid_sample(gt_inv_depth[i_cam1], ref_coords,
                                                              mode='nearest', padding_mode='zeros', align_corners=True)
+                    reprojected_gt_inv_depth[0, 0, mask_zeros_lidar] = 0.
 
                     print(i_cam1)
                     print(reprojected_gt_inv_depth)

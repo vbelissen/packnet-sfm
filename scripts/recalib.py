@@ -28,6 +28,9 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 import cv2
 
+torch.autograd.set_detect_anomaly(True)
+
+
 # Pairs of adjacent cameras
 # If 4 cameras are included, adjacent pairs are front-right, right-rear, rear-left, left-front.
 # If 5 cameras are included, must add pairs with long range (LR):

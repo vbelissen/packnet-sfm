@@ -673,8 +673,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                 rot_change_file /= N_cams
                 trans_change_file /= N_cams
 
-                print('Average rotation change (deg.): ' + str(rot_change_file))
-                print('Average translation change (m.): ' + str(trans_change_file))
+                print('Average rotation change (deg.): ' + "{:.4f}".format(rot_change_file))
+                print('Average translation change (m.): ' + "{:.4f}".format(trans_change_file))
 
             # Save correction values and print loss
             with torch.no_grad():

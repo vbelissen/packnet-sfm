@@ -606,7 +606,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                         cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam1) + '_lidar.png', im)
 
                     if mask_reprojected.sum() > 0:
-                        return l1_lidar_loss(pred_inv_depths[i_cam1], reprojected_gt_inv_depth)
+                        return l1_lidar_loss(pred_inv_depths[i_cam1] * not_masked[i_cam1], reprojected_gt_inv_depth * not_masked[i_cam1])
                     else:
                         return 0.
                 else:
@@ -623,6 +623,11 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
             regul_rot_loss   =   regul_weight_rot * sum([(extra_rot_deg[i] ** 2).sum()               for i in range(N_cams)])
             regul_trans_loss = regul_weight_trans * sum([(extra_trans_m[i] ** 2).sum()               for i in range(N_cams)])
             lidar_gt_loss    = final_lidar_weight * sum([lidar_loss(i, save_pictures)                for i in range(N_cams)])
+
+            print(photo_loss)
+            print(regul_rot_loss)
+            print(regul_trans_loss)
+            print(lidar_gt_loss)
 
             loss = photo_loss + regul_rot_loss + regul_trans_loss + lidar_gt_loss
 

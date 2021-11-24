@@ -576,13 +576,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
             def lidar_loss(i_cam1, save_pictures):
                 if args.use_lidar and has_gt_depth[i_cam1]:
-
-                    # # Resetting the untouched
-                    # pose_matrix_untouched = torch.from_numpy(get_extrinsics_pose_matrix(input_files[i_cam][0], calib_data)).unsqueeze(0)
-                    # pose_tensor_untouched = Pose(pose_matrix_untouched)
-                    # cams_untouched[i_cam1].Tcw = pose_tensor_untouched
-
-                    # Ground truth lidar points were generated using the untouched camera extrinsics
+                    # Ground truth sparse depth maps were generated using the untouched camera extrinsics
                     world_points_gt_oldCalib = cams_untouched[i_cam1].reconstruct(gt_depth[i_cam1], frame='w')
 
                     # Get coordinates of projected points on new cam
@@ -604,6 +598,8 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                         dmax = 100.
                         s = 2
                         for i_l in range(n_lidar):
+                            d = reprojected_gt_depth_numpy[u[i_l], v[i_l]]
+                            s = int((5/d))+1
                             im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 0] = np.clip(np.power(reprojected_gt_depth_numpy[u[i_l], v[i_l]] / dmax, .7) * 255, 10, 245)
                             im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 1] = np.clip(np.power((dmax - reprojected_gt_depth_numpy[u[i_l], v[i_l]]) / dmax, 4.0) * 255, 10, 245)
                             im[u[i_l]-s:u[i_l]+s, v[i_l]-s:v[i_l]+s, 2] = np.clip(np.power(np.abs(2 * (reprojected_gt_depth_numpy[u[i_l], v[i_l]] - .5 * dmax) / dmax), 3.0) * 255, 10, 245)

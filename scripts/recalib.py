@@ -576,7 +576,11 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
 
             def lidar_loss(i_cam1, save_pictures):
                 if args.use_lidar and has_gt_depth[i_cam1]:
-                    cams_untouched[i_cam1].Tcw = pose_tensor_untouched
+
+                    # # Resetting the untouched
+                    # pose_matrix_untouched = torch.from_numpy(get_extrinsics_pose_matrix(input_files[i_cam][0], calib_data)).unsqueeze(0)
+                    # pose_tensor_untouched = Pose(pose_matrix_untouched)
+                    # cams_untouched[i_cam1].Tcw = pose_tensor_untouched
 
                     # Ground truth lidar points were generated using the untouched camera extrinsics
                     world_points_gt_oldCalib = cams_untouched[i_cam1].reconstruct(gt_depth[i_cam1], frame='w')

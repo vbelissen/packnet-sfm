@@ -323,6 +323,8 @@ def get_extrinsics_pose_matrix_extra_trans_rot_torch(image_file, calib_data, ext
 def l1_lidar_loss(inv_pred, inv_gt):
     mask = (inv_gt > 0.).detach()
     loss = nn.L1Loss(size_average=None, reduce=None)
+    print('l1_lidar_loss')
+    print(loss(inv_pred[mask], inv_gt[mask]))
     return loss(inv_pred[mask], inv_gt[mask])
 
 def infer_optimal_calib(input_files, model_wrappers, image_shape):
@@ -458,6 +460,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
         # Loop on the number of files
         for i_file in range(N_files):
 
+            print('')
             # Filename for camera 0
             base_0, ext_0 = os.path.splitext(os.path.basename(input_files[0][i_file]))
             print(base_0)

@@ -606,7 +606,7 @@ def infer_optimal_calib(input_files, model_wrappers, image_shape):
                         cv2.imwrite(args.save_folder + '/epoch_' + str(epoch) + '_file_' + str(i_file) + '_cam_' + str(i_cam1) + '_lidar.png', im)
 
                     if mask_reprojected.sum() > 0:
-                        return l1_lidar_loss(pred_inv_depths[i_cam1] * not_masked[i_cam1], reprojected_gt_inv_depth * not_masked[i_cam1])
+                        return l1_lidar_loss(pred_inv_depths[i_cam1], reprojected_gt_inv_depth)
                     else:
                         return 0.
                 else:

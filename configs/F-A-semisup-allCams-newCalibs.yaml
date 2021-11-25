@@ -1,0 +1,65 @@
+arch:
+    max_epochs: 30
+model:
+    checkpoint_path: '/home/users/vbelissen/saved_models_v4/default_config-F-A-semisup-2021.10.20-21h02m24s/epoch=23_valeo_multiview-list_cam_0_frames_camera0annotated_test_sync_dataset2viewsUS-velodyne-cam_0-abs_rel=0.157.ckpt'
+    loss:
+        supervised_method: 'sparse-abs_rel'
+        mask_ego: True
+        supervised_loss_weight: 0.005
+    name: 'SemiSupModel_fisheye_valeo'
+    optimizer:
+        name: 'Adam'
+        depth:
+            lr: 0.0002
+        pose:
+            lr: 0.0002
+    scheduler:
+        name: 'StepLR'
+        step_size: 30
+        gamma: 0.5
+    depth_net:
+        name: 'DepthResNet'
+        version: '18pt'
+    pose_net:
+        name: 'PoseResNet'
+        version: '18pt'
+    params:
+        crop: ''
+        min_depth: 0.0
+        max_depth: 40.0
+datasets:
+    augmentation:
+        image_shape: (800, 1280)
+    train:
+        batch_size: 2
+        dataset: ['KITTIValeoFisheye']
+        path: ['/home/data/vbelissen/valeo_multiview']
+        split: ['list_frames_all_cams_annotated_train_shuffled.txt']
+        depth_type: ['velodyne']
+        cameras: [['mixed']]
+        repeat: [1]
+        with_geometric_context: False
+        calibrations_suffix: '_1'
+        depth_suffix: '_1'
+    validation:
+        dataset: ['KITTIValeoFisheye']
+        path: ['/home/data/vbelissen/valeo_multiview']
+        split: ['list_frames_all_cams_annotated_test_sync_shuffled.txt']
+        depth_type: ['velodyne']
+        cameras: [['mixed']]
+        calibrations_suffix: '_1'
+        depth_suffix: '_1'
+    test:
+        dataset: ['KITTIValeoFisheye']
+        path: ['/home/data/vbelissen/valeo_multiview']
+        split: ['list_frames_all_cams_annotated_test_sync_shuffled.txt']
+        depth_type: ['velodyne']
+        cameras: [['mixed']]
+        calibrations_suffix: '_1'
+        depth_suffix: '_1'
+checkpoint:
+    save_top_k: 0
+    filepath: '/home/users/vbelissen/saved_models_v4' # Where the models will be saved
+    monitor: 'abs_rel' # which metric is observed
+    monitor_index: 0 # from which validation dataset the metric is observed
+    mode: 'min' # if the metric is minimized or maximized

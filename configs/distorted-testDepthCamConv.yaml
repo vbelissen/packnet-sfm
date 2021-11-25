@@ -1,0 +1,54 @@
+arch:
+    max_epochs: 20
+model:
+    name: 'SelfSupModel_distorted'
+    optimizer:
+        name: 'Adam'
+        depth:
+            lr: 0.0002
+        pose:
+            lr: 0.0002
+    scheduler:
+        name: 'StepLR'
+        step_size: 30
+        gamma: 0.5
+    depth_net:
+        name: 'DepthCAMResNet'
+        version: '18pt'
+    pose_net:
+        name: 'PoseCAMResNet'
+        version: '18pt'
+    params:
+        crop: ''
+        min_depth: 0.0
+        max_depth: 150.0
+datasets:
+    augmentation:
+        image_shape: (384, 640)
+    train:
+        batch_size: 10
+        dataset: ['KITTIValeoDistorted']
+        path: ['/home/data/vbelissen/valeo_multiview']
+        split: ['list_cam_4_overfit_fake.txt']
+        depth_type: ['']
+        cameras: [['cam_4']]
+        repeat: [1]
+        with_geometric_context: False
+    validation:
+        dataset: ['KITTIValeoDistorted']
+        path: ['/home/data/vbelissen/valeo_multiview']
+        split: ['list_cam_4_overfit_fake.txt']
+        depth_type: ['velodyne']
+        cameras: [['cam_4']]
+    test:
+        dataset: ['KITTIValeoDistorted']
+        path: ['/home/data/vbelissen/valeo_multiview']
+        split: ['list_cam_4_overfit_fake.txt']
+        depth_type: ['velodyne']
+        cameras: [['cam_4']]
+checkpoint:
+    save_top_k: 0
+    filepath: '/home/users/vbelissen/saved_models_distorted' # Where the models will be saved
+    monitor: 'abs_rel_gt' # which metric is observed
+    monitor_index: 0 # from which validation dataset the metric is observed
+    mode: 'min' # if the metric is minimized or maximized

@@ -1,0 +1,58 @@
+arch:
+    max_epochs: 20
+model:
+    checkpoint_path: '/home/users/vbelissen/saved_models_distorted/default_config-distorted-smaller-2021.10.15-20h52m36s/epoch=01_valeo_multiview-list_cam_4_frames_camera4annotated_test_sync_shuffled_dataset2viewsUS-velodyne-cam_4-abs_rel_gt=0.232.ckpt'
+    loss:
+        mask_ego: True
+        supervised_loss_weight: 0.05
+    name: 'SemiSupModel_distorted'
+    optimizer:
+        name: 'Adam'
+        depth:
+            lr: 0.0002
+        pose:
+            lr: 0.0002
+    scheduler:
+        name: 'StepLR'
+        step_size: 30
+        gamma: 0.5
+    depth_net:
+        name: 'DepthResNet'
+        version: '18pt'
+    pose_net:
+        name: 'PoseResNet'
+        version: '18pt'
+    params:
+        crop: ''
+        min_depth: 0.0
+        max_depth: 40.0
+datasets:
+    augmentation:
+        image_shape: (384, 640)
+    train:
+        batch_size: 10
+        dataset: ['KITTIValeoDistorted']
+        path: ['/home/data/vbelissen/valeo_multiview']
+        split: ['list_cam_4_frames_camera4annotated_test_sync_shuffled_dataset2viewsUS.txt']
+        depth_type: ['velodyne']
+        cameras: [['cam_4']]
+        repeat: [1]
+        with_geometric_context: False
+    validation:
+        dataset: ['KITTIValeoDistorted']
+        path: ['/home/data/vbelissen/valeo_multiview']
+        split: ['list_cam_4_frames_camera4annotated_test_sync_shuffled_dataset2viewsUS.txt']
+        depth_type: ['velodyne']
+        cameras: [['cam_4']]
+    test:
+        dataset: ['KITTIValeoDistorted']
+        path: ['/home/data/vbelissen/valeo_multiview']
+        split: ['list_cam_4_frames_camera4annotated_test_sync_shuffled_dataset2viewsUS.txt']
+        depth_type: ['velodyne']
+        cameras: [['cam_4']]
+checkpoint:
+    save_top_k: 0
+    filepath: '/home/users/vbelissen/saved_models_distorted' # Where the models will be saved
+    monitor: 'abs_rel_gt' # which metric is observed
+    monitor_index: 0 # from which validation dataset the metric is observed
+    mode: 'min' # if the metric is minimized or maximized

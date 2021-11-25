@@ -604,6 +604,7 @@ def infer_plot_and_save_3D_pcl(input_files, output_folder, model_wrappers, image
             # Set of operations to remove outliers
             # We remove points that are below -1.0 meter, or points that are higher than 1.5 meters
             # and of blue/green color (typically the sky)
+            # TODO: replace with semantic "sky" masks
             points_tmp = np.asarray(pcl.points)
             colors_tmp = images_numpy[i_cam]  # np.asarray(pcl.colors)
             mask_below = points_tmp[:, 2] < -1.0

@@ -188,8 +188,6 @@ class SupervisedLoss(LossBase):
             for i in range(self.n):
                 B, C, H, W = inv_depths[i].shape
                 if W < W_full:
-                    inv_scale_factor = int(1280 / W)
-                    #ego_mask_tensors.append(-nn.MaxPool2d(inv_scale_factor, inv_scale_factor)(-ego_mask_tensor).to(device))
                     ego_mask_tensors.append(interpolate_image(ego_mask_tensor,
                                                               shape=(B, 1, H, W),
                                                               mode='nearest',
